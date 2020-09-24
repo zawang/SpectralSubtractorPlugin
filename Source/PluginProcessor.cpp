@@ -22,10 +22,20 @@ ExperimentalFilterAudioProcessor::ExperimentalFilterAudioProcessor()
                        .withOutput ("Output", AudioChannelSet::stereo(), true)
                      #endif
                        ),
+       parameters(*this, nullptr, juce::Identifier("ExperimentalFilter"),
+                  {
+                      std::make_unique<juce::AudioParameterFloat> (ParameterID[kParameter_SubtractionStrength],   // parameterID
+                                                                   ParameterLabel[kParameter_SubtractionStrength],   // parameter name
+                                                                   0.0f,                    // minimum value
+                                                                   5.0f,                    // maximum value
+                                                                   0.0f)                    // default value
+                  }),
        mSpectrogramMaker(2048, 512)
        // ^TODO: ALLOW USER TO SELECT PARAMETERS!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 #endif
 {
+    mSubtractionStrengthParameter = parameters.getRawParameterValue(ParameterID[kParameter_SubtractionStrength]);
+    
     mFormatManager = std::make_unique<AudioFormatManager>();
     mFormatManager->registerBasicFormats();
     mNoiseBuffer = std::make_unique<AudioSampleBuffer>(0, 0);
@@ -181,7 +191,7 @@ void ExperimentalFilterAudioProcessor::processBlock (AudioBuffer<float>& buffer,
     auto totalNumInputChannels  = getTotalNumInputChannels();
     auto totalNumOutputChannels = getTotalNumOutputChannels();
     
-    mFilter.processBlock(buffer);
+    mFilter.processBlock(buffer, *mSubtractionStrengthParameter);
     
     // In case we have more outputs than inputs, this code clears any output
     // channels that didn't contain input data, (because these aren't
@@ -332,12 +342,20 @@ void ExperimentalFilterAudioProcessor::getStateInformation (MemoryBlock& destDat
     // You should use this method to store your parameters in the memory block.
     // You could do that either as raw data, or use the XML or ValueTree classes
     // as intermediaries to make it easy to save and load complex data.
+    auto state = parameters.copyState();
+    std::unique_ptr<juce::XmlElement> xml (state.createXml());
+    copyXmlToBinary (*xml, destData);
 }
 
 void ExperimentalFilterAudioProcessor::setStateInformation (const void* data, int sizeInBytes)
 {
     // You should use this method to restore your parameters from this memory block,
     // whose contents will have been created by the getStateInformation() call.
+    std::unique_ptr<juce::XmlElement> xmlState (getXmlFromBinary (data, sizeInBytes));
+    
+    if (xmlState.get() != nullptr)
+        if (xmlState->hasTagName (parameters.state.getType()))
+            parameters.replaceState (juce::ValueTree::fromXml (*xmlState));
 }
 
 //void ExperimentalFilterAudioProcessor::initializeDSP() {

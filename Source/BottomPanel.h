@@ -10,12 +10,19 @@
 
 #pragma once
 #include "PanelBase.h"
+#include "ParameterSlider.h"
+#include "HelperFunctions.h"
 
 class BottomPanel
 :   public PanelBase {
 public:
     BottomPanel(ExperimentalFilterAudioProcessor* inProcessor);
     ~BottomPanel();
+    
+    void paint(Graphics& g) override;
+    
+    void setParameterID(int inParameterID);
 
 private:
+    std::unique_ptr<ParameterSlider> mSlider;
 };

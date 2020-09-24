@@ -50,7 +50,7 @@ public:
     
     //======================================
     
-    void processBlock (AudioSampleBuffer& block) {
+    void processBlock (AudioSampleBuffer& block, float subtractionStrength) {
         numSamples = block.getNumSamples();
         
         for (int channel = 0; channel < numChannels; ++channel) {
@@ -76,7 +76,7 @@ public:
                     currentSamplesSinceLastFFT = 0;
                     
                     analysis (channel);
-                    modification();
+                    modification(subtractionStrength);
                     synthesis (channel);
                 }
             }
@@ -176,7 +176,7 @@ private:
     }
     
     // Where we do our time-frequency domain processing.
-    void modification() {
+    void modification(float subtractionStrength) {
         // Forward FFT
         fft->perform (timeDomainBuffer, frequencyDomainBuffer, false);
         
@@ -186,7 +186,7 @@ private:
             float magnitude = abs (frequencyDomainBuffer[index]);
             float phase = arg (frequencyDomainBuffer[index]);
             
-            float newMagnitude = magnitude - 5.0*mNoiseSpectrum[index];
+            float newMagnitude = magnitude - subtractionStrength*mNoiseSpectrum[index];
             newMagnitude = (newMagnitude < 0.0) ? 0.0 : newMagnitude;
             
             frequencyDomainBuffer[index].real (newMagnitude * cosf (phase));

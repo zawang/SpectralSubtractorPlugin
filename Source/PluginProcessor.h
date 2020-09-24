@@ -14,6 +14,7 @@
 #include "AudioFunctions.h"
 #include "Filter.h"
 #include "SpectrogramMaker.h"
+#include "Parameters.h"
 
 constexpr auto MINBLOCKSPERWINDOW = 16;
 
@@ -76,6 +77,8 @@ public:
     int* getPosition() {
         return mPosition.get();
     }
+    
+    AudioProcessorValueTreeState parameters;
 
 private:
     //==============================================================================
@@ -92,6 +95,8 @@ private:
     
     // mPosition is only useful for the purposes of getNextAudioBlock (not used in the final plugin)
     std::unique_ptr<int> mPosition;
+    
+    std::atomic<float>* mSubtractionStrengthParameter = nullptr;        // The amount of the "noise" spectrum to remove
     
 //    juce::dsp::FFT mFFT;
 //    std::unique_ptr<float> mFileBufferFifo[2][kFFTSize];
