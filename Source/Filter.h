@@ -44,13 +44,13 @@ public:
         updateWindow (newWindowType);
     }
     
-    HeapBlock<float>& getNoiseSpectrum() {
-        return mNoiseSpectrum;
-    }
+//    HeapBlock<float>& getNoiseSpectrum() {
+//        return mNoiseSpectrum;
+//    }
     
     //======================================
     
-    void processBlock (AudioSampleBuffer& block, float subtractionStrength) {
+    void processBlock (AudioSampleBuffer& block, HeapBlock<float>& noiseSpectrum, float subtractionStrength) {
         numSamples = block.getNumSamples();
         
         for (int channel = 0; channel < numChannels; ++channel) {
@@ -76,7 +76,7 @@ public:
                     currentSamplesSinceLastFFT = 0;
                     
                     analysis (channel);
-                    modification(subtractionStrength);
+                    modification(noiseSpectrum, subtractionStrength);
                     synthesis (channel);
                 }
             }
@@ -112,8 +112,8 @@ private:
         frequencyDomainBuffer.realloc (fftSize);
         frequencyDomainBuffer.clear (fftSize);
         
-        mNoiseSpectrum.realloc (fftSize);
-        mNoiseSpectrum.clear (fftSize);
+//        mNoiseSpectrum.realloc (fftSize);
+//        mNoiseSpectrum.clear (fftSize);
         
         inputBufferWritePosition = 0;
         outputBufferWritePosition = 0;
@@ -176,7 +176,7 @@ private:
     }
     
     // Where we do our time-frequency domain processing.
-    void modification(float subtractionStrength) {
+    void modification(HeapBlock<float>& noiseSpectrum, float subtractionStrength) {
         // Forward FFT
         fft->perform (timeDomainBuffer, frequencyDomainBuffer, false);
         
@@ -186,7 +186,7 @@ private:
             float magnitude = abs (frequencyDomainBuffer[index]);
             float phase = arg (frequencyDomainBuffer[index]);
             
-            float newMagnitude = magnitude - subtractionStrength*mNoiseSpectrum[index];
+            float newMagnitude = magnitude - subtractionStrength*noiseSpectrum[index];
             newMagnitude = (newMagnitude < 0.0) ? 0.0 : newMagnitude;
             
             frequencyDomainBuffer[index].real (newMagnitude * cosf (phase));
@@ -234,7 +234,7 @@ protected:
     HeapBlock<float> fftWindow;
     HeapBlock<dsp::Complex<float>> timeDomainBuffer;
     HeapBlock<dsp::Complex<float>> frequencyDomainBuffer;
-    HeapBlock<float> mNoiseSpectrum;
+//    HeapBlock<float> mNoiseSpectrum;
     
     int overlap;
     int hopSize;

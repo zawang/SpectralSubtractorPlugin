@@ -43,6 +43,8 @@ ExperimentalFilterAudioProcessor::ExperimentalFilterAudioProcessor()
     
     mPosition = std::unique_ptr<int>(new int (0));
     
+    initializeDSP();
+    
 //    for (int i = 0; i < 2; i++) {
 //        for (int j = 0; j < 2 * kFFTSize; j++) {
 //            if (j < kFFTSize) {
@@ -52,8 +54,6 @@ ExperimentalFilterAudioProcessor::ExperimentalFilterAudioProcessor()
 //        }
 //    }
 //    mFileBufferFifoIndex = std::unique_ptr<int>(new int (0));
-    
-//    initializeDSP();
 }
 
 ExperimentalFilterAudioProcessor::~ExperimentalFilterAudioProcessor()
@@ -140,14 +140,6 @@ void ExperimentalFilterAudioProcessor::prepareToPlay (double sampleRate, int sam
         windowLength *= 2;
     }
     
-    // Initialize filter
-    mFilter.setup(getTotalNumInputChannels());
-    mFilter.updateParameters(2048,
-                             4,
-                             2);
-    // ^2048 fft size, 1/4 hop size, Hann window
-    // ^TODO: ALLOW USER TO SELECT PARAMETERS!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-    
 //    mFilter.updateParameters((int) paramFftSize.getTargetValue(),
 //                             (int) paramHopSize.getTargetValue(),
 //                             (int) paramWindowType.getTargetValue());
@@ -191,7 +183,7 @@ void ExperimentalFilterAudioProcessor::processBlock (AudioBuffer<float>& buffer,
     auto totalNumInputChannels  = getTotalNumInputChannels();
     auto totalNumOutputChannels = getTotalNumOutputChannels();
     
-    mFilter.processBlock(buffer, *mSubtractionStrengthParameter);
+    mFilter.processBlock(buffer, mNoiseSpectrum, *mSubtractionStrengthParameter);
     
     // In case we have more outputs than inputs, this code clears any output
     // channels that didn't contain input data, (because these aren't
@@ -321,7 +313,7 @@ void ExperimentalFilterAudioProcessor::getNextAudioBlock (const AudioSourceChann
 void ExperimentalFilterAudioProcessor::storeNoiseSpectrum(const AudioSampleBuffer& noiseSignal) {
     Spectrogram spectrogram;
     mSpectrogramMaker.perform(noiseSignal, spectrogram);
-    averageSpectrum(spectrogram, mFilter.getNoiseSpectrum(), 2048);
+    averageSpectrum(spectrogram, mNoiseSpectrum, 2048);
     // ^TODO: ALLOW USER TO SELECT PARAMETERS!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 }
 
@@ -358,11 +350,27 @@ void ExperimentalFilterAudioProcessor::setStateInformation (const void* data, in
             parameters.replaceState (juce::ValueTree::fromXml (*xmlState));
 }
 
-//void ExperimentalFilterAudioProcessor::initializeDSP() {
+void ExperimentalFilterAudioProcessor::initializeDSP() {
+    // Initialize filter
+    mFilter.setup(getTotalNumInputChannels());
+    mFilter.updateParameters(2048,
+                             4,
+                             2);
+    // ^2048 fft size, 1/4 hop size, Hann window
+    
+    mNoiseSpectrum.realloc(2048);
+    mNoiseSpectrum.clear(2048);
+    
+    // ^TODO: ALLOW USER TO SELECT PARAMETERS!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+    
+    
+    
+    
+    
 //    for (int i = 0; i < 2; i++) {
 //        mFilters[i] = std::make_unique<Filter>();
 //    }
-//}
+}
 
 //==============================================================================
 // This creates new instances of the plugin..

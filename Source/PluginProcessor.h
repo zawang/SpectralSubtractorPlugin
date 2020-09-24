@@ -88,15 +88,15 @@ private:
     
     Filter mFilter;
     SpectrogramMaker mSpectrogramMaker;
-//    HeapBlock<dsp::Complex<float>> mNoiseSpectrum;
     
     std::unique_ptr<AudioFormatManager> mFormatManager;    // manages what audio formats are allowed
     std::unique_ptr<AudioSampleBuffer> mNoiseBuffer;       // buffer that holds the noise signal
+    HeapBlock<float> mNoiseSpectrum;
     
     // mPosition is only useful for the purposes of getNextAudioBlock (not used in the final plugin)
     std::unique_ptr<int> mPosition;
     
-    std::atomic<float>* mSubtractionStrengthParameter = nullptr;        // The amount of the "noise" spectrum to remove
+    std::atomic<float>* mSubtractionStrengthParameter = nullptr;        // The amount of the noise spectrum to remove
     
 //    juce::dsp::FFT mFFT;
 //    std::unique_ptr<float> mFileBufferFifo[2][kFFTSize];
