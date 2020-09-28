@@ -32,7 +32,7 @@ private:
     // access the processor object that created it.
     ExperimentalFilterAudioProcessor& processor;
     
-    std::unique_ptr<MainPanel> mMainPanel;
+    std::unique_ptr<MainPanel> mMainPanel;      // mMainPanel will contain all the other sub panels
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (ExperimentalFilterAudioProcessorEditor)
 };

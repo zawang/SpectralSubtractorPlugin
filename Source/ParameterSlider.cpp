@@ -16,8 +16,10 @@ ParameterSlider::ParameterSlider(AudioProcessorValueTreeState& state,
 :   juce::Slider(parameterLabel) {
     setSliderStyle(SliderStyle::RotaryHorizontalVerticalDrag);
     setTextBoxStyle(Slider::TextEntryBoxPosition::TextBoxBelow, false, 0, 0);
-    setRange(0.f, 5.f, 0.001f);
     
+    
+    // We don't even need to set up the slider's value range. This is done automatically by the SliderAttachment class.
+    // All we need to do is pass the attachment constructor the APVTS, the parameter ID and the Slider object that it should attach to.
     mAttachment =
     std::make_unique<SliderAttachment>(state,
                                        parameterID,

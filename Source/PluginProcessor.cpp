@@ -24,11 +24,11 @@ ExperimentalFilterAudioProcessor::ExperimentalFilterAudioProcessor()
                        ),
        parameters(*this, nullptr, juce::Identifier("ExperimentalFilter"),
                   {
-                      std::make_unique<juce::AudioParameterFloat> (ParameterID[kParameter_SubtractionStrength],   // parameterID
+                      std::make_unique<juce::AudioParameterFloat> (ParameterID[kParameter_SubtractionStrength],      // parameterID
                                                                    ParameterLabel[kParameter_SubtractionStrength],   // parameter name
-                                                                   0.0f,                    // minimum value
-                                                                   5.0f,                    // maximum value
-                                                                   0.0f)                    // default value
+                                                                   0.0f,                                             // minimum value
+                                                                   5.0f,                                             // maximum value
+                                                                   0.0f)                                             // default value
                   }),
        mSpectrogramMaker(2048, 512)
        // ^TODO: ALLOW USER TO SELECT PARAMETERS!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
@@ -329,16 +329,18 @@ AudioProcessorEditor* ExperimentalFilterAudioProcessor::createEditor()
 }
 
 //==============================================================================
+// Store the plugin's state in an XML object
 void ExperimentalFilterAudioProcessor::getStateInformation (MemoryBlock& destData)
 {
     // You should use this method to store your parameters in the memory block.
     // You could do that either as raw data, or use the XML or ValueTree classes
     // as intermediaries to make it easy to save and load complex data.
-    auto state = parameters.copyState();
-    std::unique_ptr<juce::XmlElement> xml (state.createXml());
+    ValueTree state = parameters.copyState();
+    std::unique_ptr<juce::XmlElement> xml (state.createXml());      // Creates an XmlElement with a tag name of "ExperimentalFilter" that holds a complete image of state and all its children
     copyXmlToBinary (*xml, destData);
 }
 
+// Restore the plugin's state from an XML object
 void ExperimentalFilterAudioProcessor::setStateInformation (const void* data, int sizeInBytes)
 {
     // You should use this method to restore your parameters from this memory block,

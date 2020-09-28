@@ -63,7 +63,7 @@ public:
     void getStateInformation (MemoryBlock& destData) override;
     void setStateInformation (const void* data, int sizeInBytes) override;
     
-    // Given a noise signal, calculate its spectrogram, then calculate the average spectrum from the spectrogram and store it in mNoiseSpectrum
+    // Given a noise signal, calculate its magnitude spectrogram, then calculate the average spectrum from the spectrogram and store it in mNoiseSpectrum
     void storeNoiseSpectrum(const AudioSampleBuffer& noiseSignal);
     
     AudioFormatManager* getFormatManager() {
@@ -78,6 +78,8 @@ public:
         return mPosition.get();
     }
     
+    // Contains a ValueTree that is used to manage the processor's entire state.
+    // Adding parameters to an APVTS automatically adds them to the attached processor too.
     AudioProcessorValueTreeState parameters;
 
 private:
@@ -87,16 +89,14 @@ private:
     void initializeDSP();
     
     Filter mFilter;
-    SpectrogramMaker mSpectrogramMaker;
-    
-    std::unique_ptr<AudioFormatManager> mFormatManager;    // manages what audio formats are allowed
-    std::unique_ptr<AudioSampleBuffer> mNoiseBuffer;       // buffer that holds the noise signal
-    HeapBlock<float> mNoiseSpectrum;
+    SpectrogramMaker mSpectrogramMaker;                                 // Used to produce a magnitude spectrogram of the noise signal
+    std::unique_ptr<AudioFormatManager> mFormatManager;                 // Manages what audio formats are allowed
+    std::unique_ptr<AudioSampleBuffer> mNoiseBuffer;                    // Buffer that holds the noise signal
+    HeapBlock<float> mNoiseSpectrum;                                    // Holds the average magnitude spectrum of the noise signal
+    std::atomic<float>* mSubtractionStrengthParameter = nullptr;        // The amount of the noise spectrum to remove
     
     // mPosition is only useful for the purposes of getNextAudioBlock (not used in the final plugin)
     std::unique_ptr<int> mPosition;
-    
-    std::atomic<float>* mSubtractionStrengthParameter = nullptr;        // The amount of the noise spectrum to remove
     
 //    juce::dsp::FFT mFFT;
 //    std::unique_ptr<float> mFileBufferFifo[2][kFFTSize];
