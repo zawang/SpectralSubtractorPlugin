@@ -10,6 +10,7 @@
 
 #include "PluginProcessor.h"
 #include "PluginEditor.h"
+#include "IDs.h"
 
 //==============================================================================
 ExperimentalFilterAudioProcessor::ExperimentalFilterAudioProcessor()
@@ -34,6 +35,16 @@ ExperimentalFilterAudioProcessor::ExperimentalFilterAudioProcessor()
        // ^TODO: ALLOW USER TO SELECT PARAMETERS!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 #endif
 {
+    initializeDSP();
+    
+    test.add(1.0f, 2.0f);
+    
+    // Set up the ValueTree that holds mNoiseSpectrum
+    ValueTree child{IDs::audioData};                                                        // Create a node
+    parameters.state.addChild(child, 0, nullptr);                                           // Add node to root ValueTree
+
+//    nonParmStringVal.referTo(child.getPropertyAsValue(IDs::noiseSpectrumID, nullptr));      // Make nonParmStringVal refer to the IDs::noiseSpectrumID property inside child so changes to one are reflected by both
+    
     mSubtractionStrengthParameter = parameters.getRawParameterValue(ParameterID[kParameter_SubtractionStrength]);
     
     mFormatManager = std::make_unique<AudioFormatManager>();
@@ -42,8 +53,6 @@ ExperimentalFilterAudioProcessor::ExperimentalFilterAudioProcessor()
     mNoiseBuffer->clear();
     
     mPosition = std::unique_ptr<int>(new int (0));
-    
-    initializeDSP();
     
 //    for (int i = 0; i < 2; i++) {
 //        for (int j = 0; j < 2 * kFFTSize; j++) {
@@ -166,7 +175,7 @@ bool ExperimentalFilterAudioProcessor::isBusesLayoutSupported (const BusesLayout
      && layouts.getMainOutputChannelSet() != AudioChannelSet::stereo())
         return false;
 
-    // This checks if the input layout matches the output layout
+    // This checks if c input layout matches the output layout
    #if ! JucePlugin_IsSynth
     if (layouts.getMainOutputChannelSet() != layouts.getMainInputChannelSet())
         return false;
@@ -179,6 +188,10 @@ bool ExperimentalFilterAudioProcessor::isBusesLayoutSupported (const BusesLayout
 
 void ExperimentalFilterAudioProcessor::processBlock (AudioBuffer<float>& buffer, MidiBuffer& midiMessages)
 {
+//    nonParmStringVal = "value changed";
+//    DBG(nonParmStringVal.toString());
+//    DBG((parameters.state.getChild(0).getProperty(IDs::noiseSpectrumID)).toString());
+    
     ScopedNoDenormals noDenormals;
     auto totalNumInputChannels  = getTotalNumInputChannels();
     auto totalNumOutputChannels = getTotalNumOutputChannels();
@@ -335,9 +348,21 @@ void ExperimentalFilterAudioProcessor::getStateInformation (MemoryBlock& destDat
     // You should use this method to store your parameters in the memory block.
     // You could do that either as raw data, or use the XML or ValueTree classes
     // as intermediaries to make it easy to save and load complex data.
+    File file("/Users/zach/Desktop/toDAW.xml");
+    
+    if (mNoiseSpectrum != nullptr) {
+        var mNoiseSpectrumAsString = var(varArrayToDelimitedString(heapBlockToArray(mNoiseSpectrum)));
+        parameters.state.getChild(0).setProperty(IDs::noiseSpectrumID, mNoiseSpectrumAsString, nullptr);
+    }
+
+//    parameters.state.getChild(0).setProperty(IDs::noiseSpectrumID, var(heapBlockToArray(mNoiseSpectrum)), nullptr);
+    
     ValueTree state = parameters.copyState();
     std::unique_ptr<juce::XmlElement> xml (state.createXml());      // Creates an XmlElement with a tag name of "ExperimentalFilter" that holds a complete image of state and all its children
     copyXmlToBinary (*xml, destData);
+    
+    if (xml->writeTo(file, XmlElement::TextFormat())) DBG("toDAW written");
+    else DBG("toDAW not written");
 }
 
 // Restore the plugin's state from an XML object
@@ -345,11 +370,24 @@ void ExperimentalFilterAudioProcessor::setStateInformation (const void* data, in
 {
     // You should use this method to restore your parameters from this memory block,
     // whose contents will have been created by the getStateInformation() call.
+    File file("/Users/zach/Desktop/fromDAW.xml");
+    
     std::unique_ptr<juce::XmlElement> xmlState (getXmlFromBinary (data, sizeInBytes));
     
     if (xmlState.get() != nullptr)
         if (xmlState->hasTagName (parameters.state.getType()))
             parameters.replaceState (juce::ValueTree::fromXml (*xmlState));
+    
+            mNoiseSpectrum.realloc(2048);
+            mNoiseSpectrum.clear(2048);
+            Array<var> mNoiseSpectrumAsArray = delimitedStringToVarArray(parameters.state.getChild(0).getProperty(IDs::noiseSpectrumID).toString());
+            arrayToHeapBlock(mNoiseSpectrumAsArray, mNoiseSpectrum);
+//            memcpy(mNoiseSpectrum, &mNoiseSpectrumAsArray, 2048 * sizeof(float));
+            DBG(mNoiseSpectrum[0]);
+            // ^TODO: ALLOW USER TO SELECT PARAMETERS!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+    
+            if (xmlState->writeTo(file, XmlElement::TextFormat())) DBG("fromDAW written");
+            else DBG("fromDAW not written");
 }
 
 void ExperimentalFilterAudioProcessor::initializeDSP() {
@@ -372,6 +410,43 @@ void ExperimentalFilterAudioProcessor::initializeDSP() {
 //    for (int i = 0; i < 2; i++) {
 //        mFilters[i] = std::make_unique<Filter>();
 //    }
+}
+
+Array<var> ExperimentalFilterAudioProcessor::heapBlockToArray(HeapBlock<float>& heapBlock) {
+    Array<var> array;
+    
+    for (int i = 0; i < 2048; ++i) {
+        array.add (heapBlock[i]);
+    }
+    // ^TODO: ALLOW USER TO SELECT PARAMETERS!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+    return array;
+}
+
+void ExperimentalFilterAudioProcessor::arrayToHeapBlock(Array<var>& array, HeapBlock<float>& heapBlock) {
+    for (int i = 0; i < 2048; i++) {
+        heapBlock[i] = array[i];
+    }
+    // ^TODO: ALLOW USER TO SELECT PARAMETERS!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+}
+
+String ExperimentalFilterAudioProcessor::varArrayToDelimitedString (const Array<var>& input) {
+    // if you are trying to control a var that is an array then you need to
+    // set a delimiter string that will be used when writing to XML!
+    StringArray elements;
+
+    for (auto& v : input)
+        elements.add (v.toString());
+
+    return elements.joinIntoString (",");
+}
+
+Array<var> ExperimentalFilterAudioProcessor::delimitedStringToVarArray (StringRef input) {
+    Array<var> arr;
+    
+    for (auto t : StringArray::fromTokens (input, ",", {}))
+        arr.add (t);
+    
+    return arr;
 }
 
 //==============================================================================

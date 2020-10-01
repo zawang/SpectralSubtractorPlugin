@@ -87,6 +87,11 @@ private:
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (ExperimentalFilterAudioProcessor)
     // internal
     void initializeDSP();
+    Array<var> heapBlockToArray(HeapBlock<float>& heapBlock);
+    void arrayToHeapBlock(Array<var>& array, HeapBlock<float>& heapBlock);
+    
+    String varArrayToDelimitedString(const Array<var>& input);
+    Array<var> delimitedStringToVarArray (StringRef input);
     
     Filter mFilter;
     SpectrogramMaker mSpectrogramMaker;                                 // Used to produce a magnitude spectrogram of the noise signal
@@ -94,6 +99,9 @@ private:
     std::unique_ptr<AudioSampleBuffer> mNoiseBuffer;                    // Buffer that holds the noise signal
     HeapBlock<float> mNoiseSpectrum;                                    // Holds the average magnitude spectrum of the noise signal
     std::atomic<float>* mSubtractionStrengthParameter = nullptr;        // The amount of the noise spectrum to remove
+
+    Array<var> test;
+    Value nonParmStringVal{"this works!"};
     
     // mPosition is only useful for the purposes of getNextAudioBlock (not used in the final plugin)
     std::unique_ptr<int> mPosition;

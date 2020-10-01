@@ -19,6 +19,7 @@
             file="Source/AudioFunctions.h"/>
       <FILE id="IjqWqX" name="HelperFunctions.h" compile="0" resource="0"
             file="Source/HelperFunctions.h"/>
+      <FILE id="Wv7MgY" name="IDs.h" compile="0" resource="0" file="Source/IDs.h"/>
       <FILE id="FqwYnF" name="InterfaceDefines.h" compile="0" resource="0"
             file="Source/InterfaceDefines.h"/>
       <FILE id="w3rdqX" name="Parameters.h" compile="0" resource="0" file="Source/Parameters.h"/>
