@@ -13,7 +13,8 @@
 
 class TopPanel
 :   public PanelBase,
-    public Button::Listener {
+    public Button::Listener
+{
 public:
     TopPanel(ExperimentalFilterAudioProcessor* inProcessor);
     ~TopPanel();

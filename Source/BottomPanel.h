@@ -14,7 +14,8 @@
 #include "HelperFunctions.h"
 
 class BottomPanel
-:   public PanelBase {
+:   public PanelBase
+{
 public:
     BottomPanel(ExperimentalFilterAudioProcessor* inProcessor);
     ~BottomPanel();

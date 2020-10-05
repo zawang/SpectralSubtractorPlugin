@@ -11,7 +11,8 @@
 #include "TopPanel.h"
 
 TopPanel::TopPanel(ExperimentalFilterAudioProcessor* inProcessor)
-:    PanelBase(inProcessor) {
+:    PanelBase(inProcessor)
+{
     setSize(TOP_PANEL_WIDTH, TOP_PANEL_HEIGHT);
     
     mLoadFileButton = std::make_unique<TextButton>();
@@ -21,17 +22,18 @@ TopPanel::TopPanel(ExperimentalFilterAudioProcessor* inProcessor)
     addAndMakeVisible(*mLoadFileButton);
 }
 
-TopPanel::~TopPanel() {
-    
-}
+TopPanel::~TopPanel() {}
 
-void TopPanel::buttonClicked(Button* b) {
-    if (b == mLoadFileButton.get()) {
+void TopPanel::buttonClicked(Button* b)
+{
+    if (b == mLoadFileButton.get())
+    {
         loadFile();
     }
 }
 
-void TopPanel::loadFile() {
+void TopPanel::loadFile()
+{
     mProcessor->suspendProcessing(true);
     
     // Choose a file
@@ -43,14 +45,16 @@ void TopPanel::loadFile() {
                          nullptr);
     
     // If the user chooses a file
-    if (chooser.browseForFileToOpen()) {
+    if (chooser.browseForFileToOpen())
+    {
         // What did the user choose?
         File file = chooser.getResult();
         
         // Read the file
         std::unique_ptr<AudioFormatReader> reader (mProcessor->getFormatManager()->createReaderFor(file));
         
-        if (reader != nullptr) {
+        if (reader != nullptr)
+        {
             AudioSampleBuffer* noiseBuffer = mProcessor->getNoiseBuffer();
             noiseBuffer->clear();
             
@@ -67,7 +71,8 @@ void TopPanel::loadFile() {
             
             // Calculate and store the average magnitude spectrum of mNoiseBuffer.
             mProcessor->storeNoiseSpectrum(*noiseBuffer);
-        } else {
+        } else
+        {
             // Error handling here...
             DBG("reader error!!!");
         }

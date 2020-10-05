@@ -15,7 +15,8 @@
 
 // All other panels are derived from PanelBase
 class PanelBase :
-    public Component {
+    public Component
+{
 public:
     PanelBase(ExperimentalFilterAudioProcessor* inProcessor);
     ~PanelBase();

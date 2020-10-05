@@ -11,7 +11,8 @@
 #include "MainPanel.h"
 
 MainPanel::MainPanel(ExperimentalFilterAudioProcessor* inProcessor)
-:   PanelBase(inProcessor) {
+:   PanelBase(inProcessor)
+{
     setSize(MAIN_PANEL_WIDTH, MAIN_PANEL_HEIGHT);
     
     mTopPanel = std::make_unique<TopPanel>(inProcessor);
@@ -24,6 +25,4 @@ MainPanel::MainPanel(ExperimentalFilterAudioProcessor* inProcessor)
     addAndMakeVisible(*mBottomPanel);
 }
 
-MainPanel::~MainPanel() {
-    
-}
+MainPanel::~MainPanel() {}

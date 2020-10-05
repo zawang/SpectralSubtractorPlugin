@@ -15,45 +15,42 @@
 
 //==============================================================================
 
-class Filter {
+class Filter
+{
 public:
-    enum windowTypeIndex {
-        windowTypeRectangular = 0,
-        windowTypeBartlett,
-        windowTypeHann,
-        windowTypeHamming,
-    };
+    //======================================
+    
+    Filter() : numChannels (1) {}
+    
+    virtual ~Filter() {}
     
     //======================================
     
-    Filter() : numChannels (1) {
-    }
-    
-    virtual ~Filter() {
-    }
-    
-    //======================================
-    
-    void setup (const int numInputChannels) {
+    void setup (const int numInputChannels)
+    {
         numChannels = (numInputChannels > 0) ? numInputChannels : 1;
     }
     
-    void updateParameters (const int newFftSize, const int newOverlap, const int newWindowType) {
+    void updateParameters (const int newFftSize, const int newOverlap, const int newWindowType)
+    {
         updateFftSize (newFftSize);
         updateHopSize (newOverlap);
         updateWindow (newWindowType);
     }
     
-//    HeapBlock<float>& getNoiseSpectrum() {
+//    HeapBlock<float>& getNoiseSpectrum()
+//    {
 //        return mNoiseSpectrum;
 //    }
     
     //======================================
     
-    void processBlock (AudioSampleBuffer& block, HeapBlock<float>& noiseSpectrum, float subtractionStrength) {
+    void processBlock (AudioSampleBuffer& block, HeapBlock<float>& noiseSpectrum, float subtractionStrength)
+    {
         numSamples = block.getNumSamples();
         
-        for (int channel = 0; channel < numChannels; ++channel) {
+        for (int channel = 0; channel < numChannels; ++channel)
+        {
             float* channelData = block.getWritePointer (channel);
             
             currentInputBufferWritePosition = inputBufferWritePosition;
@@ -61,7 +58,8 @@ public:
             currentOutputBufferReadPosition = outputBufferReadPosition;
             currentSamplesSinceLastFFT = samplesSinceLastFFT;
             
-            for (int sample = 0; sample < numSamples; ++sample) {
+            for (int sample = 0; sample < numSamples; ++sample)
+            {
                 const float inputSample = channelData[sample];
                 inputBuffer.setSample (channel, currentInputBufferWritePosition, inputSample);
                 if (++currentInputBufferWritePosition >= inputBufferLength)
@@ -72,7 +70,8 @@ public:
                 if (++currentOutputBufferReadPosition >= outputBufferLength)
                     currentOutputBufferReadPosition = 0;
                 
-                if (++currentSamplesSinceLastFFT >= hopSize) {
+                if (++currentSamplesSinceLastFFT >= hopSize)
+                {
                     currentSamplesSinceLastFFT = 0;
                     
                     analysis (channel);
@@ -91,7 +90,8 @@ public:
 private:
     //======================================
     
-    void updateFftSize (const int newFftSize) {
+    void updateFftSize (const int newFftSize)
+    {
         fftSize = newFftSize;
         fft = std::make_unique<dsp::FFT>(log2 (fftSize));
         
@@ -121,32 +121,40 @@ private:
         samplesSinceLastFFT = 0;
     }
     
-    void updateHopSize (const int newOverlap) {
+    void updateHopSize (const int newOverlap)
+    {
         overlap = newOverlap;
-        if (overlap != 0) {
+        if (overlap != 0)
+        {
             hopSize = fftSize / overlap;
             outputBufferWritePosition = hopSize % outputBufferLength;
         }
     }
     
-    void updateWindow (const int newWindowType) {
-        switch (newWindowType) {
-            case windowTypeRectangular: {
+    void updateWindow (const int newWindowType)
+    {
+        switch (newWindowType)
+        {
+            case windowTypeRectangular:
+            {
                 for (int sample = 0; sample < fftSize; ++sample)
                     fftWindow[sample] = 1.0f;
                 break;
             }
-            case windowTypeBartlett: {
+            case windowTypeBartlett:
+            {
                 for (int sample = 0; sample < fftSize; ++sample)
                     fftWindow[sample] = 1.0f - fabs (2.0f * (float)sample / (float)(fftSize - 1) - 1.0f);
                 break;
             }
-            case windowTypeHann: {
+            case windowTypeHann:
+            {
                 for (int sample = 0; sample < fftSize; ++sample)
                     fftWindow[sample] = 0.5f - 0.5f * cosf (2.0f * M_PI * (float)sample / (float)(fftSize - 1));
                 break;
             }
-            case windowTypeHamming: {
+            case windowTypeHamming:
+            {
                 for (int sample = 0; sample < fftSize; ++sample)
                     fftWindow[sample] = 0.54f - 0.46f * cosf (2.0f * M_PI * (float)sample / (float)(fftSize - 1));
                 break;
@@ -164,9 +172,11 @@ private:
     
     //======================================
     
-    void analysis (const int channel) {
+    void analysis (const int channel)
+    {
         int inputBufferIndex = currentInputBufferWritePosition;
-        for (int index = 0; index < fftSize; ++index) {
+        for (int index = 0; index < fftSize; ++index)
+        {
             timeDomainBuffer[index].real (fftWindow[index] * inputBuffer.getSample (channel, inputBufferIndex));
             timeDomainBuffer[index].imag (0.0f);
             
@@ -176,12 +186,14 @@ private:
     }
     
     // Where we do our time-frequency domain processing.
-    void modification(HeapBlock<float>& noiseSpectrum, float subtractionStrength) {
+    void modification(HeapBlock<float>& noiseSpectrum, float subtractionStrength)
+    {
         // Forward FFT
         fft->perform (timeDomainBuffer, frequencyDomainBuffer, false);
         
         // Iterate through frequency bins. We only go up to (fftSize / 2 + 1) in order to ignore the negative frequency bins.
-        for (int index = 0; index < fftSize / 2 + 1; ++index) {
+        for (int index = 0; index < fftSize / 2 + 1; ++index)
+        {
             // Separate magnitude and phase
             float magnitude = abs (frequencyDomainBuffer[index]);
             float phase = arg (frequencyDomainBuffer[index]);
@@ -191,7 +203,8 @@ private:
             
             frequencyDomainBuffer[index].real (newMagnitude * cosf (phase));
             frequencyDomainBuffer[index].imag (newMagnitude * sinf (phase));
-            if (index > 0 && index < fftSize / 2) {
+            if (index > 0 && index < fftSize / 2)
+            {
                 frequencyDomainBuffer[fftSize - index].real (newMagnitude * cosf (phase));
                 frequencyDomainBuffer[fftSize - index].imag (newMagnitude * sinf (-phase));
             }
@@ -201,9 +214,11 @@ private:
         fft->perform (frequencyDomainBuffer, timeDomainBuffer, true);
     }
     
-    void synthesis (const int channel) {
+    void synthesis (const int channel)
+    {
         int outputBufferIndex = currentOutputBufferWritePosition;
-        for (int index = 0; index < fftSize; ++index) {
+        for (int index = 0; index < fftSize; ++index)
+        {
             float outputSample = outputBuffer.getSample (channel, outputBufferIndex);
             outputSample += timeDomainBuffer[index].real() * windowScaleFactor;
             outputBuffer.setSample (channel, outputBufferIndex, outputSample);

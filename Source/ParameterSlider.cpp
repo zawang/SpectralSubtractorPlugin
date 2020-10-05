@@ -13,7 +13,8 @@
 ParameterSlider::ParameterSlider(AudioProcessorValueTreeState& state,
                                        const String& parameterID,
                                        const String& parameterLabel)
-:   juce::Slider(parameterLabel) {
+:   juce::Slider(parameterLabel)
+{
     setSliderStyle(SliderStyle::RotaryHorizontalVerticalDrag);
     setTextBoxStyle(Slider::TextEntryBoxPosition::TextBoxBelow, false, 0, 0);
     
@@ -26,6 +27,4 @@ ParameterSlider::ParameterSlider(AudioProcessorValueTreeState& state,
                                        *this);
 }
 
-ParameterSlider::~ParameterSlider() {
-    
-}
+ParameterSlider::~ParameterSlider() {}

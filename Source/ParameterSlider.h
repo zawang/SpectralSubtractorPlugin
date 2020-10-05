@@ -16,7 +16,8 @@
 // This easily allow us to ensure that the attachment class has the same lifetime as the Slider object.
 
 class ParameterSlider
-:   public Slider {
+:   public Slider
+{
 public:
     ParameterSlider(AudioProcessorValueTreeState& state,
                        const String& parameterID,

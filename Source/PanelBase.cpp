@@ -11,15 +11,12 @@
 #include "PanelBase.h"
 
 PanelBase::PanelBase(ExperimentalFilterAudioProcessor* inProcessor)
-:   mProcessor(inProcessor) {
-    
-}
+:   mProcessor(inProcessor) {}
 
-PanelBase::~PanelBase() {
-    
-}
+PanelBase::~PanelBase() {}
 
-void PanelBase::paint(Graphics& g) {
+void PanelBase::paint(Graphics& g)
+{
     g.setColour(Colours::whitesmoke);
     g.fillAll();
     

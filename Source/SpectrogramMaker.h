@@ -13,18 +13,20 @@
 #include "JuceHeader.h"
 #include "AudioFunctions.h"
 
-class SpectrogramMaker {
+class SpectrogramMaker
+{
 public:
     SpectrogramMaker(int fftBins, size_t hopSize)
         : fFft(std::log2(fftBins)),
-          fWindow(fFft.getSize() + 1, dsp::WindowingFunction<float>::hann, false) {
+          fWindow(fFft.getSize() + 1, dsp::WindowingFunction<float>::hann, false)
+    {
         hop = hopSize;
     }
     
-    ~SpectrogramMaker() {
-    }
+    ~SpectrogramMaker() {}
     
-    void perform(const AudioSampleBuffer& signal, Spectrogram& spectrogram) {
+    void perform(const AudioSampleBuffer& signal, Spectrogram& spectrogram)
+    {
         const float* data = signal.getReadPointer(0);       // Read from channel 0
         const size_t dataCount = signal.getNumSamples();
         
@@ -36,7 +38,8 @@ public:
         
         // Initialize spectrogram
         spectrogram.resize(numHops+1);
-        for (auto i = 0; i <= numHops; i++) {
+        for (auto i = 0; i <= numHops; i++)
+        {
             spectrogram[i].realloc(fftSize);
             spectrogram[i].clear(fftSize);
         }
@@ -48,7 +51,8 @@ public:
         std::vector<float> fftBuffer(fftSize * 2UL);
         
         // While data remains
-        for (int i = 0; i <= numHops; ++i) {
+        for (int i = 0; i <= numHops; ++i)
+        {
             // Prepare segment to perform FFT on.
             std::memcpy(fftBuffer.data(), data, fftSize * sizeof(float));
             
@@ -72,7 +76,4 @@ private:
     size_t hop;
     dsp::FFT fFft;
     dsp::WindowingFunction<float> fWindow;
-    
-//    std::vector<std::unique_ptr<HeapBlock<dsp::Complex<float>>>> spectrogram;
-//    HeapBlock<dsp::Complex<float>> spectrogram;
 };

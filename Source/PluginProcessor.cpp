@@ -31,19 +31,14 @@ ExperimentalFilterAudioProcessor::ExperimentalFilterAudioProcessor()
                                                                    5.0f,                                             // maximum value
                                                                    0.0f)                                             // default value
                   }),
-       mSpectrogramMaker(2048, 512)
-       // ^TODO: ALLOW USER TO SELECT PARAMETERS!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+       mSpectrogramMaker(globalFFTSize, globalHopSize)
 #endif
 {
     initializeDSP();
     
-    test.add(1.0f, 2.0f);
-    
     // Set up the ValueTree that holds mNoiseSpectrum
     ValueTree child{IDs::audioData};                                                        // Create a node
     parameters.state.addChild(child, 0, nullptr);                                           // Add node to root ValueTree
-
-//    nonParmStringVal.referTo(child.getPropertyAsValue(IDs::noiseSpectrumID, nullptr));      // Make nonParmStringVal refer to the IDs::noiseSpectrumID property inside child so changes to one are reflected by both
     
     mSubtractionStrengthParameter = parameters.getRawParameterValue(ParameterID[kParameter_SubtractionStrength]);
     
@@ -188,10 +183,6 @@ bool ExperimentalFilterAudioProcessor::isBusesLayoutSupported (const BusesLayout
 
 void ExperimentalFilterAudioProcessor::processBlock (AudioBuffer<float>& buffer, MidiBuffer& midiMessages)
 {
-//    nonParmStringVal = "value changed";
-//    DBG(nonParmStringVal.toString());
-//    DBG((parameters.state.getChild(0).getProperty(IDs::noiseSpectrumID)).toString());
-    
     ScopedNoDenormals noDenormals;
     auto totalNumInputChannels  = getTotalNumInputChannels();
     auto totalNumOutputChannels = getTotalNumOutputChannels();
@@ -293,18 +284,21 @@ void ExperimentalFilterAudioProcessor::processBlock (AudioBuffer<float>& buffer,
     }
 } */
 
-void ExperimentalFilterAudioProcessor::getNextAudioBlock (const AudioSourceChannelInfo& bufferToFill) {
+void ExperimentalFilterAudioProcessor::getNextAudioBlock (const AudioSourceChannelInfo& bufferToFill)
+{
     auto numInputChannels = mNoiseBuffer->getNumChannels();
     auto numOutputChannels = bufferToFill.buffer->getNumChannels();
     
     auto outputSamplesRemaining = bufferToFill.numSamples;
     auto outputSamplesOffset = bufferToFill.startSample;
     
-    while (outputSamplesRemaining > 0) {
+    while (outputSamplesRemaining > 0)
+    {
         auto bufferSamplesRemaining = mNoiseBuffer->getNumSamples() - *mPosition;
         auto samplesThisTime = jmin(outputSamplesRemaining, bufferSamplesRemaining);
         
-        for (auto channel = 0; channel < numOutputChannels; ++channel) {
+        for (auto channel = 0; channel < numOutputChannels; ++channel)
+        {
             bufferToFill.buffer->copyFrom (channel,
                                            outputSamplesOffset,
                                            *mNoiseBuffer,
@@ -317,17 +311,18 @@ void ExperimentalFilterAudioProcessor::getNextAudioBlock (const AudioSourceChann
         outputSamplesOffset += samplesThisTime;
         *mPosition += samplesThisTime;
         
-        if (*mPosition >= mNoiseBuffer->getNumSamples()) {
+        if (*mPosition >= mNoiseBuffer->getNumSamples())
+        {
             return;
         }
     }
 }
 
-void ExperimentalFilterAudioProcessor::storeNoiseSpectrum(const AudioSampleBuffer& noiseSignal) {
+void ExperimentalFilterAudioProcessor::storeNoiseSpectrum(const AudioSampleBuffer& noiseSignal)
+{
     Spectrogram spectrogram;
     mSpectrogramMaker.perform(noiseSignal, spectrogram);
-    averageSpectrum(spectrogram, mNoiseSpectrum, 2048);
-    // ^TODO: ALLOW USER TO SELECT PARAMETERS!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+    averageSpectrum(spectrogram, mNoiseSpectrum, globalFFTSize);
 }
 
 //==============================================================================
@@ -350,12 +345,13 @@ void ExperimentalFilterAudioProcessor::getStateInformation (MemoryBlock& destDat
     // as intermediaries to make it easy to save and load complex data.
     File file("/Users/zach/Desktop/toDAW.xml");
     
-    if (mNoiseSpectrum != nullptr) {
-        var mNoiseSpectrumAsString = var(varArrayToDelimitedString(heapBlockToArray(mNoiseSpectrum)));
+    if (mNoiseSpectrum != nullptr)
+    {
+        Array<var> temp;
+        heapBlockToArray(mNoiseSpectrum, temp);
+        var mNoiseSpectrumAsString = var(varArrayToDelimitedString(temp));
         parameters.state.getChild(0).setProperty(IDs::noiseSpectrumID, mNoiseSpectrumAsString, nullptr);
     }
-
-//    parameters.state.getChild(0).setProperty(IDs::noiseSpectrumID, var(heapBlockToArray(mNoiseSpectrum)), nullptr);
     
     ValueTree state = parameters.copyState();
     std::unique_ptr<juce::XmlElement> xml (state.createXml());      // Creates an XmlElement with a tag name of "ExperimentalFilter" that holds a complete image of state and all its children
@@ -375,33 +371,32 @@ void ExperimentalFilterAudioProcessor::setStateInformation (const void* data, in
     std::unique_ptr<juce::XmlElement> xmlState (getXmlFromBinary (data, sizeInBytes));
     
     if (xmlState.get() != nullptr)
+    {
         if (xmlState->hasTagName (parameters.state.getType()))
+        {
             parameters.replaceState (juce::ValueTree::fromXml (*xmlState));
     
-            mNoiseSpectrum.realloc(2048);
-            mNoiseSpectrum.clear(2048);
+            mNoiseSpectrum.realloc(globalFFTSize);
+            mNoiseSpectrum.clear(globalFFTSize);
             Array<var> mNoiseSpectrumAsArray = delimitedStringToVarArray(parameters.state.getChild(0).getProperty(IDs::noiseSpectrumID).toString());
             arrayToHeapBlock(mNoiseSpectrumAsArray, mNoiseSpectrum);
-//            memcpy(mNoiseSpectrum, &mNoiseSpectrumAsArray, 2048 * sizeof(float));
-            DBG(mNoiseSpectrum[0]);
-            // ^TODO: ALLOW USER TO SELECT PARAMETERS!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
     
             if (xmlState->writeTo(file, XmlElement::TextFormat())) DBG("fromDAW written");
             else DBG("fromDAW not written");
+        }
+    }
 }
 
-void ExperimentalFilterAudioProcessor::initializeDSP() {
+void ExperimentalFilterAudioProcessor::initializeDSP()
+{
     // Initialize filter
     mFilter.setup(getTotalNumInputChannels());
-    mFilter.updateParameters(2048,
-                             4,
-                             2);
-    // ^2048 fft size, 1/4 hop size, Hann window
+    mFilter.updateParameters(globalFFTSize,
+                             globalFFTSize / globalHopSize,
+                             windowTypeHann);
     
-    mNoiseSpectrum.realloc(2048);
-    mNoiseSpectrum.clear(2048);
-    
-    // ^TODO: ALLOW USER TO SELECT PARAMETERS!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+    mNoiseSpectrum.realloc(globalFFTSize);
+    mNoiseSpectrum.clear(globalFFTSize);
     
     
     
@@ -412,24 +407,24 @@ void ExperimentalFilterAudioProcessor::initializeDSP() {
 //    }
 }
 
-Array<var> ExperimentalFilterAudioProcessor::heapBlockToArray(HeapBlock<float>& heapBlock) {
-    Array<var> array;
-    
-    for (int i = 0; i < 2048; ++i) {
+void ExperimentalFilterAudioProcessor::heapBlockToArray(HeapBlock<float>& heapBlock, Array<var>& array)
+{
+    for (int i = 0; i < globalFFTSize; i++)
+    {
         array.add (heapBlock[i]);
     }
-    // ^TODO: ALLOW USER TO SELECT PARAMETERS!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-    return array;
 }
 
-void ExperimentalFilterAudioProcessor::arrayToHeapBlock(Array<var>& array, HeapBlock<float>& heapBlock) {
-    for (int i = 0; i < 2048; i++) {
+void ExperimentalFilterAudioProcessor::arrayToHeapBlock(Array<var>& array, HeapBlock<float>& heapBlock)
+{
+    for (int i = 0; i < globalFFTSize; i++)
+    {
         heapBlock[i] = array[i];
     }
-    // ^TODO: ALLOW USER TO SELECT PARAMETERS!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 }
 
-String ExperimentalFilterAudioProcessor::varArrayToDelimitedString (const Array<var>& input) {
+String ExperimentalFilterAudioProcessor::varArrayToDelimitedString (const Array<var>& input)
+{
     // if you are trying to control a var that is an array then you need to
     // set a delimiter string that will be used when writing to XML!
     StringArray elements;
@@ -440,7 +435,8 @@ String ExperimentalFilterAudioProcessor::varArrayToDelimitedString (const Array<
     return elements.joinIntoString (",");
 }
 
-Array<var> ExperimentalFilterAudioProcessor::delimitedStringToVarArray (StringRef input) {
+Array<var> ExperimentalFilterAudioProcessor::delimitedStringToVarArray (StringRef input)
+{
     Array<var> arr;
     
     for (auto t : StringArray::fromTokens (input, ",", {}))
