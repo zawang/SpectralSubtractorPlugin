@@ -22,8 +22,6 @@ public:
     
     void paint(Graphics& g) override;
     
-    void setParameterID(int inParameterID);
-
 private:
     std::unique_ptr<ParameterSlider> mSlider;
 };

@@ -47,7 +47,7 @@ ExperimentalFilterAudioProcessor::ExperimentalFilterAudioProcessor()
     mNoiseBuffer = std::make_unique<AudioSampleBuffer>(0, 0);
     mNoiseBuffer->clear();
     
-    mPosition = std::unique_ptr<int>(new int (0));
+    mPosition = std::make_unique<int>(0);
     
 //    for (int i = 0; i < 2; i++) {
 //        for (int j = 0; j < 2 * kFFTSize; j++) {
@@ -131,9 +131,6 @@ void ExperimentalFilterAudioProcessor::prepareToPlay (double sampleRate, int sam
 {
     // Use this method as the place to do any pre-playback
     // initialisation that you need..
-    phase = 0;
-    freq = 440.0;       // for creating a 440 Hz sine wave
-    phaseDelta = freq/sampleRate; // in radians
     
     // Determine FFT order
     int minWindowLength = MINBLOCKSPERWINDOW * samplesPerBlock;
@@ -198,124 +195,10 @@ void ExperimentalFilterAudioProcessor::processBlock (AudioBuffer<float>& buffer,
     for (auto i = totalNumInputChannels; i < totalNumOutputChannels; ++i)
         buffer.clear (i, 0, buffer.getNumSamples());
     
-    // If mNoiseBuffer doesn’t hold a valid buffer of data.
-    /** if (mNoiseBuffer->getNumChannels() == 0 || mNoiseBuffer->getNumSamples() == 0 || *mPosition >= mNoiseBuffer->getNumSamples()) {
-        buffer.clear();
-        return;
-    }
-    
-    // Use the getNextAudioBlock() function to fill buffer
-    AudioSourceChannelInfo bufferToFill;
-    bufferToFill.buffer = &buffer;
-    bufferToFill.startSample = 0;
-    bufferToFill.numSamples = buffer.getNumSamples();
-    getNextAudioBlock(bufferToFill); */
-    
 //    for (int channel = 0; channel < totalNumInputChannels; ++channel) {
 //        float* channelData = buffer.getWritePointer(channel);
 //        mFilters[channel]->processBlock(channelData, channelData, buffer.getNumSamples());
 //    }
-}
-
-// Performs a forward FFT on the signal then an inverse FFT on it to recover the original signal.
-/** void ExperimentalFilterAudioProcessor::getNextAudioBlock(const AudioSourceChannelInfo& bufferToFill) {
-    jassert(bufferToFill.numSamples == 512);
-    int numSamples = bufferToFill.numSamples;
-
-    // Create a FFT object for the forward transform and a FFT object for the inverse transform.
-    // The number of points the FFT objects will operate on is 2^9 = 512.
-    dsp::FFT forwardFFT(9);
-    dsp::FFT reverseFFT(9);
-
-    // DBG(forwardFFT.getSize());       // returns 512
-
-    // Iterate over all channels
-    for (int chan = 0; chan < bufferToFill.buffer->getNumChannels(); ++chan) {
-        float* const channelData = bufferToFill.buffer->getWritePointer(chan, bufferToFill.startSample);
-        
-        // The size of the array passed into performRealOnlyForwardTransform() must be 2 * forwardFFT.getSize()
-        float tempData[2 * forwardFFT.getSize()];
-        // Fill the first half of tempData with the signal in channelData
-        std::memcpy(tempData, channelData, numSamples * sizeof(float));
-
-        forwardFFT.performRealOnlyForwardTransform(tempData, true);     // in-place forward FFT
-        reverseFFT.performRealOnlyInverseTransform(tempData);           // in-place inverse FFT
-
-        // Fill channelData with the recovered original signal.
-        std::memcpy(channelData, tempData, numSamples * sizeof(float));
-    }
- } */
-
-// Generates a sine signal, performs a forward FFT on it then an inverse FFT on it to recover the original signal.
-/** void ExperimentalFilterAudioProcessor::getNextAudioBlock(const AudioSourceChannelInfo& bufferToFill) {
-    jassert(bufferToFill.numSamples == 512);
-    int numSamples = bufferToFill.numSamples;
-    
-    // Create a FFT object for the forward transform and a FFT object for the inverse transform.
-    // The number of points the FFT objects will operate on is 2^9 = 512.
-    dsp::FFT forwardFFT(9);
-    dsp::FFT reverseFFT(9);
-    
-    // DBG(forwardFFT.getSize());       // returns 512
-    
-    float level = 0.5;      // volume level
-    double initialPhase = phase;
-    // Iterate over all channels
-    for (int chan = 0; chan < bufferToFill.buffer->getNumChannels(); ++chan) {
-        // phase will have to be reset to its initial value in the function for every channel, that is,
-        // phase should evolve the same way across all channels.
-        phase = initialPhase;
-        
-        // The size of the array passed into performRealOnlyForwardTransform() must be 2 * forwardFFT.getSize()
-        float sineData[2 * forwardFFT.getSize()];
-        // Fill the first half of sineData with a sine time series signal.
-        for (int i = 0; i < numSamples; ++i)
-        {
-            sineData[i] = (float) std::sin(double_Pi * 2.0 * phase) * level;
-            phase += phaseDelta;
-        }
-        
-        forwardFFT.performRealOnlyForwardTransform(sineData, true);     // in-place forward FFT
-        reverseFFT.performRealOnlyInverseTransform(sineData);           // in-place inverse FFT
-        
-        float* const channelData = bufferToFill.buffer->getWritePointer(chan, bufferToFill.startSample);
-        // Fill channelData with the sine signal.
-        std::memcpy(channelData, sineData, numSamples * sizeof(float));
-    }
-} */
-
-void ExperimentalFilterAudioProcessor::getNextAudioBlock (const AudioSourceChannelInfo& bufferToFill)
-{
-    auto numInputChannels = mNoiseBuffer->getNumChannels();
-    auto numOutputChannels = bufferToFill.buffer->getNumChannels();
-    
-    auto outputSamplesRemaining = bufferToFill.numSamples;
-    auto outputSamplesOffset = bufferToFill.startSample;
-    
-    while (outputSamplesRemaining > 0)
-    {
-        auto bufferSamplesRemaining = mNoiseBuffer->getNumSamples() - *mPosition;
-        auto samplesThisTime = jmin(outputSamplesRemaining, bufferSamplesRemaining);
-        
-        for (auto channel = 0; channel < numOutputChannels; ++channel)
-        {
-            bufferToFill.buffer->copyFrom (channel,
-                                           outputSamplesOffset,
-                                           *mNoiseBuffer,
-                                           channel % numInputChannels,
-                                           *mPosition,
-                                           samplesThisTime);
-        }
-        
-        outputSamplesRemaining -= samplesThisTime;
-        outputSamplesOffset += samplesThisTime;
-        *mPosition += samplesThisTime;
-        
-        if (*mPosition >= mNoiseBuffer->getNumSamples())
-        {
-            return;
-        }
-    }
 }
 
 void ExperimentalFilterAudioProcessor::storeNoiseSpectrum(const AudioSampleBuffer& noiseSignal)
@@ -393,7 +276,7 @@ void ExperimentalFilterAudioProcessor::initializeDSP()
     mFilter.setup(getTotalNumInputChannels());
     mFilter.updateParameters(globalFFTSize,
                              globalFFTSize / globalHopSize,
-                             windowTypeHann);
+                             kWindowTypeHann);
     
     mNoiseSpectrum.realloc(globalFFTSize);
     mNoiseSpectrum.clear(globalFFTSize);

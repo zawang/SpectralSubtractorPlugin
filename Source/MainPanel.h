@@ -13,6 +13,8 @@
 #include "TopPanel.h"
 #include "BottomPanel.h"
 
+// This class will be the parent component of all the other sub panels
+
 class MainPanel
 :   public PanelBase
 {

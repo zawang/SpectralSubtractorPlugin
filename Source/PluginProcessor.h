@@ -37,8 +37,6 @@ public:
    #endif
 
     void processBlock (AudioBuffer<float>&, MidiBuffer&) override;
-    
-    void getNextAudioBlock (const AudioSourceChannelInfo& bufferToFill);
 
     //==============================================================================
     AudioProcessorEditor* createEditor() override;
@@ -110,8 +108,4 @@ private:
 //    std::unique_ptr<int> mFileBufferFifoIndex;
     
 //    std::unique_ptr<Filter> mFilter[2];
-    
-    double phase;
-    double phaseDelta;
-    double freq;
 };

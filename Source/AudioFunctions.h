@@ -21,10 +21,10 @@ const static int globalHopSize = 512;
 
 enum windowTypeIndex        // Used in Filter.h
 {
-    windowTypeRectangular = 0,
-    windowTypeBartlett,
-    windowTypeHann,
-    windowTypeHamming,
+    kWindowTypeRectangular = 0,
+    kWindowTypeBartlett,
+    kWindowTypeHann,
+    kWindowTypeHamming,
 };
 
 inline void averageSpectrum(Spectrogram& spectrogram, HeapBlock<float>& magSpectrum, int fftSize)

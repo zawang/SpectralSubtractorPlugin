@@ -21,7 +21,6 @@ MainPanel::MainPanel(ExperimentalFilterAudioProcessor* inProcessor)
     
     mBottomPanel = std::make_unique<BottomPanel>(inProcessor);
     mBottomPanel->setTopLeftPosition(0, TOP_PANEL_HEIGHT);
-    mBottomPanel->setParameterID(kParameter_SubtractionStrength);
     addAndMakeVisible(*mBottomPanel);
 }
 

@@ -135,25 +135,25 @@ private:
     {
         switch (newWindowType)
         {
-            case windowTypeRectangular:
+            case kWindowTypeRectangular:
             {
                 for (int sample = 0; sample < fftSize; ++sample)
                     fftWindow[sample] = 1.0f;
                 break;
             }
-            case windowTypeBartlett:
+            case kWindowTypeBartlett:
             {
                 for (int sample = 0; sample < fftSize; ++sample)
                     fftWindow[sample] = 1.0f - fabs (2.0f * (float)sample / (float)(fftSize - 1) - 1.0f);
                 break;
             }
-            case windowTypeHann:
+            case kWindowTypeHann:
             {
                 for (int sample = 0; sample < fftSize; ++sample)
                     fftWindow[sample] = 0.5f - 0.5f * cosf (2.0f * M_PI * (float)sample / (float)(fftSize - 1));
                 break;
             }
-            case windowTypeHamming:
+            case kWindowTypeHamming:
             {
                 for (int sample = 0; sample < fftSize; ++sample)
                     fftWindow[sample] = 0.54f - 0.46f * cosf (2.0f * M_PI * (float)sample / (float)(fftSize - 1));
