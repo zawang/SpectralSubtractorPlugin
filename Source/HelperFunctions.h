@@ -27,7 +27,12 @@ inline void paintComponentLabel(Graphics& g, Component* inComponent)
     g.fillRoundedRectangle(x, y, w, h, cornerSize);
     
     g.setColour(Colour_6);
-    g.setFont(font_1);
+    
+    Font temp_font_1 ("Helvetica Neue", 12.00f, Font::bold);
+    g.setFont(temp_font_1);
+    
+    // TODO: FIGURE OUT WHY THE LINE BELOW RESULTS IN A LEAK ERROR WHEN THE HOST QUITS!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+//    g.setFont(font_1);
     
     g.drawFittedText(label, x, y, w, h, Justification::centred, 1);
 }
