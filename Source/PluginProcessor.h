@@ -16,8 +16,6 @@
 #include "SpectrogramMaker.h"
 #include "Parameters.h"
 
-constexpr auto MINBLOCKSPERWINDOW = 16;
-
 //==============================================================================
 /**
 */
@@ -72,10 +70,6 @@ public:
         return mNoiseBuffer.get();
     }
     
-    int* getPosition() {
-        return mPosition.get();
-    }
-    
     // Contains a ValueTree that is used to manage the processor's entire state.
     // Adding parameters to an APVTS automatically adds them to the attached processor too.
     AudioProcessorValueTreeState parameters;
@@ -98,9 +92,6 @@ private:
     std::unique_ptr<AudioSampleBuffer> mNoiseBuffer;                    // Buffer that holds the noise signal
     HeapBlock<float> mNoiseSpectrum;                                    // Holds the average magnitude spectrum of the noise signal
     std::atomic<float>* mSubtractionStrengthParameter = nullptr;        // The amount of the noise spectrum to remove
-    
-    // mPosition is only useful for the purposes of getNextAudioBlock (not used in the final plugin)
-    std::unique_ptr<int> mPosition;
     
 //    juce::dsp::FFT mFFT;
 //    std::unique_ptr<float> mFileBufferFifo[2][kFFTSize];

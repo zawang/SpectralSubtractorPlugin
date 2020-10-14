@@ -30,7 +30,7 @@ public:
         const float* data = signal.getReadPointer(0);       // Read from channel 0
         const size_t dataCount = signal.getNumSamples();
         
-        // fftSize will be the number of bins we used to initialize the ASpectroMaker.
+        // fftSize will be the number of bins we used to initialize the SpectrogramMaker.
         ptrdiff_t fftSize = fFft.getSize();
         
         // Calculate number of hops

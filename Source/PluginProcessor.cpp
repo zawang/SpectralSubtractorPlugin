@@ -47,8 +47,6 @@ ExperimentalFilterAudioProcessor::ExperimentalFilterAudioProcessor()
     mNoiseBuffer = std::make_unique<AudioSampleBuffer>(0, 0);
     mNoiseBuffer->clear();
     
-    mPosition = std::make_unique<int>(0);
-    
 //    for (int i = 0; i < 2; i++) {
 //        for (int j = 0; j < 2 * kFFTSize; j++) {
 //            if (j < kFFTSize) {
@@ -132,14 +130,7 @@ void ExperimentalFilterAudioProcessor::prepareToPlay (double sampleRate, int sam
     // Use this method as the place to do any pre-playback
     // initialisation that you need..
     
-    // Determine FFT order
-    int minWindowLength = MINBLOCKSPERWINDOW * samplesPerBlock;
-    int order = 0;
-    int windowLength = 1;
-    while (windowLength < minWindowLength) {
-        order++;
-        windowLength *= 2;
-    }
+    initializeDSP();
     
 //    mFilter.updateParameters((int) paramFftSize.getTargetValue(),
 //                             (int) paramHopSize.getTargetValue(),

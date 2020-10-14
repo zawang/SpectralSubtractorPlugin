@@ -66,9 +66,6 @@ void TopPanel::loadFile()
                           true,
                           true);
             
-            // Reset mPosition to 0. This only matters for the purposes of the getNextAudioBlock function in PluginProcessor (not used in the final plugin).
-            *(mProcessor->getPosition()) = 0;
-            
             // Calculate and store the average magnitude spectrum of mNoiseBuffer.
             mProcessor->storeNoiseSpectrum(*noiseBuffer);
         } else
