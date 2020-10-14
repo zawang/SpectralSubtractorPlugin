@@ -15,10 +15,6 @@
 // One audio channel of FFT data over time, really 2-dimensional
 using Spectrogram = std::vector<HeapBlock<float>>;
 
-const static int globalFFTSize = 2048;
-const static int globalHopSize = 512;
-
-
 enum windowTypeIndex        // Used in Filter.h
 {
     kWindowTypeRectangular = 0,
@@ -26,6 +22,10 @@ enum windowTypeIndex        // Used in Filter.h
     kWindowTypeHann,
     kWindowTypeHamming,
 };
+
+const static int globalFFTSize = 2048;
+const static int globalHopSize = 512;
+const static int globalWindow = kWindowTypeHann;
 
 inline void averageSpectrum(Spectrogram& spectrogram, HeapBlock<float>& magSpectrum, int fftSize)
 {
@@ -46,30 +46,3 @@ inline void averageSpectrum(Spectrogram& spectrogram, HeapBlock<float>& magSpect
         magSpectrum[i] = sum / numSamples;
     }
 }
-
-
-
-
-//template<class T>
-//inline constexpr const T& clamp( const T& v, const T& lo, const T& hi )
-//{
-//    assert(! (hi < lo) );
-//    return (v < lo) ? lo : (hi < v) ? hi : v;
-//}
-
-
-
-
-
-
-//inline float kap_linear_interpolation(float v0, float v1, float t)
-//{
-//    return (1 - t) * v0 + t * v1;
-//}
-
-
-
-//enum FFTConstants
-//{
-//
-//};

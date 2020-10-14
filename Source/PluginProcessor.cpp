@@ -267,7 +267,7 @@ void ExperimentalFilterAudioProcessor::initializeDSP()
     mFilter.setup(getTotalNumInputChannels());
     mFilter.updateParameters(globalFFTSize,
                              globalFFTSize / globalHopSize,
-                             kWindowTypeHann);
+                             globalWindow);
     
     mNoiseSpectrum.realloc(globalFFTSize);
     mNoiseSpectrum.clear(globalFFTSize);
