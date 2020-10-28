@@ -66,6 +66,9 @@ void TopPanel::loadFile()
                           true,
                           true);
             
+            // For testing purposes... Delete later
+            mProcessor->testFFT(*noiseBuffer);
+            
             // Calculate and store the average magnitude spectrum of mNoiseBuffer.
             mProcessor->storeNoiseSpectrum(*noiseBuffer);
         } else

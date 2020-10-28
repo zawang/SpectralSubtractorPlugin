@@ -20,6 +20,11 @@ public:
         : fFft(std::log2(fftBins)),
           fWindow(fFft.getSize() + 1, dsp::WindowingFunction<float>::hann, false)
     {
+        // For testing purposes... Delete later
+        ptrdiff_t fftSize = fFft.getSize();
+        std::vector<float> buffer (fftSize, 1.0f);
+        fWindow.multiplyWithWindowingTable(buffer.data(), fftSize);
+        
         hop = hopSize;
     }
     
@@ -54,7 +59,7 @@ public:
             const float* data = signal.getReadPointer(channel);
             
             // fFft works on the data in place, and needs twice as much space as the input size.
-            std::vector<float> fftBuffer(fftSize * 2UL);
+            std::vector<float> fftBuffer (fftSize * 2UL);
         
             // While data remains
             for (int i = 0; i <= numHops; ++i)

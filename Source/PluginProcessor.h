@@ -62,6 +62,9 @@ public:
     // Given a noise signal, calculate its magnitude spectrogram, then calculate the average spectrum from the spectrogram and store it in mNoiseSpectrum
     void storeNoiseSpectrum(const AudioSampleBuffer& noiseSignal);
     
+    // For testing purposes... Delete later
+    void testFFT(const AudioSampleBuffer& noiseSignal);
+    
     AudioFormatManager* getFormatManager() {
         return mFormatManager.get();
     }
@@ -93,10 +96,6 @@ private:
     HeapBlock<float> mNoiseSpectrum;                                    // Holds the average magnitude spectrum of the noise signal
     std::atomic<float>* mSubtractionStrengthParameter = nullptr;        // The amount of the noise spectrum to remove
     
-//    juce::dsp::FFT mFFT;
-//    std::unique_ptr<float> mFileBufferFifo[2][kFFTSize];
-//    std::unique_ptr<float> mFileBufferFFTData[2][2 * kFFTSize];
-//    std::unique_ptr<int> mFileBufferFifoIndex;
-    
-//    std::unique_ptr<Filter> mFilter[2];
+    // For testing purposes... Delete later
+    dsp::FFT mFFT;
 };

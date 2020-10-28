@@ -31,7 +31,8 @@ ExperimentalFilterAudioProcessor::ExperimentalFilterAudioProcessor()
                                                                    5.0f,                                             // maximum value
                                                                    0.0f)                                             // default value
                   }),
-       mSpectrogramMaker(globalFFTSize, globalHopSize)
+       mSpectrogramMaker(globalFFTSize, globalHopSize),
+       mFFT(std::log2(globalFFTSize))                    // For testing purposes... Delete later
 #endif
 {
     initializeDSP();
@@ -46,16 +47,6 @@ ExperimentalFilterAudioProcessor::ExperimentalFilterAudioProcessor()
     mFormatManager->registerBasicFormats();
     mNoiseBuffer = std::make_unique<AudioSampleBuffer>(0, 0);
     mNoiseBuffer->clear();
-    
-//    for (int i = 0; i < 2; i++) {
-//        for (int j = 0; j < 2 * kFFTSize; j++) {
-//            if (j < kFFTSize) {
-//                mFileBufferFifo[i][j] = std::unique_ptr<float>(new float(0));
-//            }
-//            mFileBufferFFTData[i][j] = std::unique_ptr<float>(new float(0));
-//        }
-//    }
-//    mFileBufferFifoIndex = std::unique_ptr<int>(new int (0));
 }
 
 ExperimentalFilterAudioProcessor::~ExperimentalFilterAudioProcessor()
@@ -131,10 +122,6 @@ void ExperimentalFilterAudioProcessor::prepareToPlay (double sampleRate, int sam
     // initialisation that you need..
     
     initializeDSP();
-    
-//    mFilter.updateParameters((int) paramFftSize.getTargetValue(),
-//                             (int) paramHopSize.getTargetValue(),
-//                             (int) paramWindowType.getTargetValue());
 }
 
 void ExperimentalFilterAudioProcessor::releaseResources()
@@ -197,6 +184,36 @@ void ExperimentalFilterAudioProcessor::storeNoiseSpectrum(const AudioSampleBuffe
     Spectrogram spectrogram;
     mSpectrogramMaker.perform(noiseSignal, spectrogram);
     averageSpectrum(spectrogram, mNoiseSpectrum, globalFFTSize);
+}
+
+// Tests performFrequencyOnlyForwardTransform()
+/**void ExperimentalFilterAudioProcessor::testFFT(const AudioSampleBuffer& noiseSignal) {
+    const float* timeDomainBuffer = noiseSignal.getReadPointer(0);
+    ptrdiff_t fftSize = mFFT.getSize();
+    std::vector<float> frequencyDomainBuffer(fftSize * 2UL);
+    std::memcpy(frequencyDomainBuffer.data(), timeDomainBuffer, fftSize * sizeof(float));
+    mFFT.performFrequencyOnlyForwardTransform(frequencyDomainBuffer.data());
+}*/
+
+// Tests perform()
+void ExperimentalFilterAudioProcessor::testFFT(const AudioSampleBuffer& noiseSignal) {
+    ptrdiff_t fftSize = mFFT.getSize();
+    
+    HeapBlock<dsp::Complex<float>> timeDomainBuffer;
+    timeDomainBuffer.realloc (fftSize);
+    timeDomainBuffer.clear (fftSize);
+    
+    HeapBlock<dsp::Complex<float>> frequencyDomainBuffer;
+    frequencyDomainBuffer.realloc (fftSize);
+    frequencyDomainBuffer.clear (fftSize);
+    
+    for (int index = 0; index < fftSize; ++index)
+    {
+        timeDomainBuffer[index].real (noiseSignal.getSample (0, index));
+        timeDomainBuffer[index].imag (0.0f);
+    }
+    
+    mFFT.perform(timeDomainBuffer, frequencyDomainBuffer, false);
 }
 
 //==============================================================================
@@ -271,14 +288,6 @@ void ExperimentalFilterAudioProcessor::initializeDSP()
     
     mNoiseSpectrum.realloc(globalFFTSize);
     mNoiseSpectrum.clear(globalFFTSize);
-    
-    
-    
-    
-    
-//    for (int i = 0; i < 2; i++) {
-//        mFilters[i] = std::make_unique<Filter>();
-//    }
 }
 
 void ExperimentalFilterAudioProcessor::heapBlockToArray(HeapBlock<float>& heapBlock, Array<var>& array)

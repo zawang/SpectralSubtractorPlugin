@@ -183,6 +183,23 @@ private:
             if (++inputBufferIndex >= inputBufferLength)
                 inputBufferIndex = 0;
         }
+        
+        // For testing purposes... Delete later
+        /**
+        dsp::Complex<float> td0 = timeDomainBuffer[0];
+        dsp::Complex<float> td1 = timeDomainBuffer[1];
+        dsp::Complex<float> td2 = timeDomainBuffer[2];
+        dsp::Complex<float> td3tl = timeDomainBuffer[fftSize-3];
+        dsp::Complex<float> td2tl = timeDomainBuffer[fftSize-2];
+        dsp::Complex<float> td1tl = timeDomainBuffer[fftSize-1];
+        
+        dsp::Complex<float> fd0 = frequencyDomainBuffer[0];
+        dsp::Complex<float> fd1 = frequencyDomainBuffer[1];
+        dsp::Complex<float> fd2 = frequencyDomainBuffer[2];
+        dsp::Complex<float> fd3tl = frequencyDomainBuffer[fftSize-3];
+        dsp::Complex<float> fd2tl = frequencyDomainBuffer[fftSize-2];
+        dsp::Complex<float> fd1tl = frequencyDomainBuffer[fftSize-1];
+        */
     }
     
     // Where we do our time-frequency domain processing.

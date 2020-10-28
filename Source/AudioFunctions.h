@@ -23,7 +23,7 @@ enum windowTypeIndex        // Used in Filter.h
     kWindowTypeHamming,
 };
 
-const static int globalFFTSize = 2048;
+const static int globalFFTSize = 1024;
 const static int globalHopSize = 512;
 const static int globalWindow = kWindowTypeHann;
 
