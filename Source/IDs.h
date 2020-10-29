@@ -15,5 +15,3 @@ namespace IDs
     static const Identifier noiseSpectrumID {"NoiseSpectrum"};
     static const Identifier audioData {"AudioData"};
 }
-
-// blah
