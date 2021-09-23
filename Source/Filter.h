@@ -45,7 +45,7 @@ public:
     
     //======================================
     
-    void processBlock (AudioSampleBuffer& block, HeapBlock<float>& noiseSpectrum, float subtractionStrength)
+    void processBlock (juce::AudioBuffer<float>& block, HeapBlock<float>& noiseSpectrum, float subtractionStrength)
     {
         numSamples = block.getNumSamples();
         
@@ -241,10 +241,10 @@ protected:
     std::unique_ptr<dsp::FFT> fft;
     
     int inputBufferLength;
-    AudioSampleBuffer inputBuffer;
+    juce::AudioBuffer<float> inputBuffer;
     
     int outputBufferLength;
-    AudioSampleBuffer outputBuffer;
+    juce::AudioBuffer<float> outputBuffer;
     
     HeapBlock<float> fftWindow;
     HeapBlock<dsp::Complex<float>> timeDomainBuffer;

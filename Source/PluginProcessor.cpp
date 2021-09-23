@@ -44,8 +44,6 @@ ExperimentalFilterAudioProcessor::ExperimentalFilterAudioProcessor()
     
     mFormatManager = std::make_unique<AudioFormatManager>();
     mFormatManager->registerBasicFormats();
-    mNoiseBuffer = std::make_unique<AudioSampleBuffer>(0, 0);
-    mNoiseBuffer->clear();
 }
 
 ExperimentalFilterAudioProcessor::~ExperimentalFilterAudioProcessor()
@@ -127,8 +125,6 @@ void ExperimentalFilterAudioProcessor::releaseResources()
 {
     // When playback stops, you can use this as an opportunity to free up any
     // spare memory, etc.
-    mNoiseBuffer->clear();
-    mNoiseBuffer->setSize(0, 0);
 }
 
 #ifndef JucePlugin_PreferredChannelConfigurations
@@ -178,10 +174,19 @@ void ExperimentalFilterAudioProcessor::processBlock (AudioBuffer<float>& buffer,
 //    }
 }
 
-void ExperimentalFilterAudioProcessor::storeNoiseSpectrum(const AudioSampleBuffer& noiseSignal)
+// Given a noise signal, calculate its magnitude spectrogram, then calculate the average spectrum from the spectrogram and store it in mNoiseSpectrum
+void ExperimentalFilterAudioProcessor::calcAndStoreNoiseSpectrum(AudioFormatReader* noiseFileReader)
 {
+    auto noiseBuffer = std::make_unique<juce::AudioBuffer<float>> ((int) noiseFileReader->numChannels, (int) noiseFileReader->lengthInSamples);
+    noiseFileReader->read (noiseBuffer.get(),
+                           0,
+                           (int) noiseFileReader->lengthInSamples,
+                           0,
+                           true,
+                           true);
+    
     Spectrogram spectrogram;
-    mSpectrogramMaker.perform(noiseSignal, spectrogram);
+    mSpectrogramMaker.perform(noiseBuffer.get(), spectrogram);
     averageSpectrum(spectrogram, mNoiseSpectrum, globalFFTSize);
 }
 
@@ -217,8 +222,11 @@ void ExperimentalFilterAudioProcessor::getStateInformation (MemoryBlock& destDat
     std::unique_ptr<juce::XmlElement> xml (state.createXml());      // Creates an XmlElement with a tag name of "ExperimentalFilter" that holds a complete image of state and all its children
     copyXmlToBinary (*xml, destData);
     
-    if (xml->writeTo(file, XmlElement::TextFormat())) DBG("toDAW written");
-    else DBG("toDAW not written");
+    xml->writeTo(file, XmlElement::TextFormat());
+//    if (xml->writeTo(file, XmlElement::TextFormat()))
+//        DBG("toDAW written");
+//    else
+//        DBG("toDAW not written");
 }
 
 // Restore the plugin's state from an XML object
@@ -241,8 +249,11 @@ void ExperimentalFilterAudioProcessor::setStateInformation (const void* data, in
             Array<var> mNoiseSpectrumAsArray = delimitedStringToVarArray(parameters.state.getChild(0).getProperty(IDs::noiseSpectrumID).toString());
             arrayToHeapBlock(mNoiseSpectrumAsArray, mNoiseSpectrum);
     
-            if (xmlState->writeTo(file, XmlElement::TextFormat())) DBG("fromDAW written");
-            else DBG("fromDAW not written");
+            xmlState->writeTo(file, XmlElement::TextFormat());
+//            if (xmlState->writeTo(file, XmlElement::TextFormat()))
+//                DBG("fromDAW written");
+//            else
+//                DBG("fromDAW not written");
         }
     }
 }

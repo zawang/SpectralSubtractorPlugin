@@ -59,15 +59,10 @@ public:
     void getStateInformation (MemoryBlock& destData) override;
     void setStateInformation (const void* data, int sizeInBytes) override;
     
-    // Given a noise signal, calculate its magnitude spectrogram, then calculate the average spectrum from the spectrogram and store it in mNoiseSpectrum
-    void storeNoiseSpectrum(const AudioSampleBuffer& noiseSignal);
+    void calcAndStoreNoiseSpectrum(AudioFormatReader* noiseFileReader);
     
     AudioFormatManager* getFormatManager() {
         return mFormatManager.get();
-    }
-    
-    AudioSampleBuffer* getNoiseBuffer() {
-        return mNoiseBuffer.get();
     }
     
     // Contains a ValueTree that is used to manage the processor's entire state.
@@ -89,7 +84,6 @@ private:
     Filter mFilter;
     SpectrogramMaker mSpectrogramMaker;                                 // Used to produce a magnitude spectrogram of the noise signal
     std::unique_ptr<AudioFormatManager> mFormatManager;                 // Manages what audio formats are allowed
-    std::unique_ptr<AudioSampleBuffer> mNoiseBuffer;                    // Buffer that holds the noise signal
     HeapBlock<float> mNoiseSpectrum;                                    // Holds the average magnitude spectrum of the noise signal
     std::atomic<float>* mSubtractionStrengthParameter = nullptr;        // The amount of the noise spectrum to remove
 };

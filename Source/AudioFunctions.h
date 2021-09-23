@@ -32,17 +32,16 @@ inline void averageSpectrum(Spectrogram& spectrogram, HeapBlock<float>& magSpect
     magSpectrum.realloc(fftSize);
     magSpectrum.clear(fftSize);
     
-    auto numSamples = spectrogram.size();
+    auto numColumns = spectrogram.size();
     
-    for (int i = 0; i < numSamples; i++)
+    // Iterate through frequency bins. We only go up to (fftSize / 2 + 1) in order to ignore the negative frequency bins.
+    for (int freqBin = 0; freqBin < fftSize / 2 + 1; ++freqBin)
     {
-        float sum = 0.0;
+        float sum = 0.f;
         
-        // Iterate through frequency bins. We only go up to (fftSize / 2 + 1) in order to ignore the negative frequency bins.
-        for (int j = 0; j < fftSize / 2 + 1; j++)
-        {
-            sum += spectrogram[i][j];
-        }
-        magSpectrum[i] = sum / numSamples;
+        for (int freqColumn = 0; freqColumn < numColumns; ++freqColumn)
+            sum += spectrogram[freqColumn][freqBin];
+            
+        magSpectrum[freqBin] = sum / numColumns;
     }
 }

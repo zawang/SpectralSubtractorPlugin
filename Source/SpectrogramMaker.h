@@ -26,9 +26,9 @@ public:
     ~SpectrogramMaker() {}
     
     // This perform function makes a Spectrogram by averaging the Spectrograms made from each channel of signal.
-    void perform(const AudioSampleBuffer& signal, Spectrogram& spectrogram)
+    void perform(juce::AudioBuffer<float>* signal, Spectrogram& spectrogram)
     {
-        const size_t dataCount = signal.getNumSamples();
+        const size_t dataCount = signal->getNumSamples();
         
         // fftSize will be the number of bins we used to initialize the SpectrogramMaker.
         ptrdiff_t fftSize = fFft.getSize();
@@ -37,8 +37,8 @@ public:
         ptrdiff_t numHops = 1L + static_cast<long>((dataCount - fftSize) / hop);
         
         // Initialize spectrogram
-        spectrogram.resize(numHops+1);
-        for (auto i = 0; i <= numHops; i++)
+        spectrogram.resize(numHops+1);      // WHY NUMHOPS + 1????
+        for (auto i = 0; i < spectrogram.size(); ++i)
         {
             spectrogram[i].realloc(fftSize);
             spectrogram[i].clear(fftSize);
@@ -47,20 +47,25 @@ public:
         // We will discard the negative frequency bins, but leave the center bin.
         size_t numRows = 1UL + (fftSize / 2UL);
         
-        int numChannels = signal.getNumChannels();
+        int numChannels = signal->getNumChannels();
         
         for (int channel = 0; channel < numChannels; ++channel)
         {
-            const float* data = signal.getReadPointer(channel);
-            
             // fFft works on the data in place, and needs twice as much space as the input size.
             std::vector<float> fftBuffer(fftSize * 2UL);
         
+            int signalIndex = 0;
             // While data remains
-            for (int i = 0; i <= numHops; ++i)
+            for (int i = 0; i < numHops; ++i)
             {
+                jassert(signalIndex < signal->getNumSamples());
+                
                 // Prepare segment to perform FFT on.
-                std::memcpy(fftBuffer.data(), data, fftSize * sizeof(float));
+                for (int j = 0; j < fftSize; ++j)
+                {
+                    fftBuffer[j] = signal->getSample(channel, signalIndex + j);
+                }
+//                std::memcpy(fftBuffer.data(), data, fftSize * sizeof(float));
                 
                 // Apply the windowing to the chunk of samples before passing it to the FFT.
                 fWindow.multiplyWithWindowingTable(fftBuffer.data(), fftSize);
@@ -74,10 +79,8 @@ public:
                     spectrogram[i][j] += (fftBuffer[j] / numChannels);      // Divide by numChannels because we're calculating the average spectrogram
                 }
                 
-                // Unsure if I have to flip the data vertically??????????????????????????????????????????????????????????????????????????????????????????????????????
-                
                 // Next chunk
-                data += hop;
+                signalIndex += hop;
             }
         }
     }
