@@ -23,6 +23,8 @@ public:
 
 private:
     std::unique_ptr<TextButton> mLoadFileButton;
+    std::unique_ptr<juce::FileChooser> fileChooser;
+    std::unique_ptr<juce::AudioFormatReader> reader;
         
     void loadFile();
 };

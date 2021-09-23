@@ -92,11 +92,4 @@ private:
     std::unique_ptr<AudioSampleBuffer> mNoiseBuffer;                    // Buffer that holds the noise signal
     HeapBlock<float> mNoiseSpectrum;                                    // Holds the average magnitude spectrum of the noise signal
     std::atomic<float>* mSubtractionStrengthParameter = nullptr;        // The amount of the noise spectrum to remove
-    
-//    juce::dsp::FFT mFFT;
-//    std::unique_ptr<float> mFileBufferFifo[2][kFFTSize];
-//    std::unique_ptr<float> mFileBufferFFTData[2][2 * kFFTSize];
-//    std::unique_ptr<int> mFileBufferFifoIndex;
-    
-//    std::unique_ptr<Filter> mFilter[2];
 };

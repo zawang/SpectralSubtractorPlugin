@@ -36,44 +36,49 @@ void TopPanel::loadFile()
 {
     mProcessor->suspendProcessing(true);
     
-    // Choose a file
-    FileChooser chooser ("Choose a Wav or Aiff file",
-                         File::getSpecialLocation(File::userDesktopDirectory),
-                         "*.wav; *.aiff",
-                         true,
-                         false,
-                         nullptr);
+    if (fileChooser != nullptr)
+        return;
     
-    // If the user chooses a file
-    if (chooser.browseForFileToOpen())
-    {
-        // What did the user choose?
-        File file = chooser.getResult();
-        
-        // Read the file
-        std::unique_ptr<AudioFormatReader> reader (mProcessor->getFormatManager()->createReaderFor(file));
-        
-        if (reader != nullptr)
-        {
-            AudioSampleBuffer* noiseBuffer = mProcessor->getNoiseBuffer();
-            noiseBuffer->clear();
-            
-            noiseBuffer->setSize((int) reader->numChannels, (int) reader->lengthInSamples);
-            reader->read (noiseBuffer,
-                          0,
-                          (int) reader->lengthInSamples,
-                          0,
-                          true,
-                          true);
-            
-            // Calculate and store the average magnitude spectrum of mNoiseBuffer.
-            mProcessor->storeNoiseSpectrum(*noiseBuffer);
-        } else
-        {
-            // Error handling here...
-            DBG("reader error!!!");
-        }
-    }
+    fileChooser.reset (new juce::FileChooser ("Choose a Wav or Aiff file",
+                                              juce::File::getSpecialLocation(juce::File::userDesktopDirectory),
+                                              "*.wav; *.aiff",
+                                              true,
+                                              false,
+                                              nullptr));
+    
+    fileChooser->launchAsync (juce::FileBrowserComponent::openMode | juce::FileBrowserComponent::canSelectFiles,
+                              [this] (const juce::FileChooser& fc) mutable
+                              {
+                                  // What did the user choose?
+                                  juce::File file = fc.getResult();
+                                  
+                                  // Read the file
+                                  reader.reset (mProcessor->getFormatManager()->createReaderFor(file));
+                                  if (reader.get() != nullptr)
+                                  {
+                                      juce::AudioSampleBuffer* noiseBuffer = mProcessor->getNoiseBuffer();
+                                      noiseBuffer->clear();
+                                      noiseBuffer->setSize((int) reader->numChannels, (int) reader->lengthInSamples);
+                                      reader->read (noiseBuffer,
+                                                    0,
+                                                    (int) reader->lengthInSamples,
+                                                    0,
+                                                    true,
+                                                    true);
+                                      
+                                      // Calculate and store the average magnitude spectrum of mNoiseBuffer.
+                                      mProcessor->storeNoiseSpectrum(*noiseBuffer);
+                                  } else
+                                  {
+                                      juce::NativeMessageBox::showAsync (juce::MessageBoxOptions()
+                                                                         .withIconType (juce::MessageBoxIconType::WarningIcon)
+                                                                         .withTitle ("Error loading file")
+                                                                         .withMessage ("Unable to load audio file"),
+                                                                         nullptr);
+                                  }
+                                  
+                                  fileChooser = nullptr;
+                              }, nullptr);
     
     mProcessor->suspendProcessing(false);
 }

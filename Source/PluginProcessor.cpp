@@ -46,16 +46,6 @@ ExperimentalFilterAudioProcessor::ExperimentalFilterAudioProcessor()
     mFormatManager->registerBasicFormats();
     mNoiseBuffer = std::make_unique<AudioSampleBuffer>(0, 0);
     mNoiseBuffer->clear();
-    
-//    for (int i = 0; i < 2; i++) {
-//        for (int j = 0; j < 2 * kFFTSize; j++) {
-//            if (j < kFFTSize) {
-//                mFileBufferFifo[i][j] = std::unique_ptr<float>(new float(0));
-//            }
-//            mFileBufferFFTData[i][j] = std::unique_ptr<float>(new float(0));
-//        }
-//    }
-//    mFileBufferFifoIndex = std::unique_ptr<int>(new int (0));
 }
 
 ExperimentalFilterAudioProcessor::~ExperimentalFilterAudioProcessor()
@@ -131,10 +121,6 @@ void ExperimentalFilterAudioProcessor::prepareToPlay (double sampleRate, int sam
     // initialisation that you need..
     
     initializeDSP();
-    
-//    mFilter.updateParameters((int) paramFftSize.getTargetValue(),
-//                             (int) paramHopSize.getTargetValue(),
-//                             (int) paramWindowType.getTargetValue());
 }
 
 void ExperimentalFilterAudioProcessor::releaseResources()
@@ -271,14 +257,6 @@ void ExperimentalFilterAudioProcessor::initializeDSP()
     
     mNoiseSpectrum.realloc(globalFFTSize);
     mNoiseSpectrum.clear(globalFFTSize);
-    
-    
-    
-    
-    
-//    for (int i = 0; i < 2; i++) {
-//        mFilters[i] = std::make_unique<Filter>();
-//    }
 }
 
 void ExperimentalFilterAudioProcessor::heapBlockToArray(HeapBlock<float>& heapBlock, Array<var>& array)
