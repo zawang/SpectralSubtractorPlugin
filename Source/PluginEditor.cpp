@@ -17,10 +17,13 @@ ExperimentalFilterAudioProcessorEditor::ExperimentalFilterAudioProcessorEditor (
 {
     // Make sure that before the constructor has finished, you've set the
     // editor's size to whatever you need it to be.
-    setSize (MAIN_PANEL_WIDTH, MAIN_PANEL_HEIGHT);
-    
     mMainPanel = std::make_unique<MainPanel>(&processor);
     addAndMakeVisible(*mMainPanel);
+    
+    setResizable (true, true);
+    setResizeLimits(MAIN_PANEL_WIDTH, MAIN_PANEL_HEIGHT, 2 * MAIN_PANEL_WIDTH, 2 * MAIN_PANEL_HEIGHT);
+    getConstrainer()->setFixedAspectRatio (0.72);
+    setSize (MAIN_PANEL_WIDTH, MAIN_PANEL_HEIGHT);
 }
 
 ExperimentalFilterAudioProcessorEditor::~ExperimentalFilterAudioProcessorEditor()
@@ -36,6 +39,5 @@ void ExperimentalFilterAudioProcessorEditor::paint (Graphics& g)
 
 void ExperimentalFilterAudioProcessorEditor::resized()
 {
-    // This is generally where you'll want to lay out the positions of any
-    // subcomponents in your editor..
+    mMainPanel->setBounds (getBounds());
 }

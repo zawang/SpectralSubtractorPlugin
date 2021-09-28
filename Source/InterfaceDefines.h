@@ -14,14 +14,8 @@
 
 // This file defines panel sizes, colors, and fonts needed for the UI
 
-#define MAIN_PANEL_WIDTH                275
+#define MAIN_PANEL_WIDTH                270
 #define MAIN_PANEL_HEIGHT               375
-
-#define TOP_PANEL_WIDTH                 MAIN_PANEL_WIDTH
-#define TOP_PANEL_HEIGHT                (MAIN_PANEL_HEIGHT * 0.2)
-
-#define BOTTOM_PANEL_WIDTH              MAIN_PANEL_WIDTH
-#define BOTTOM_PANEL_HEIGHT             MAIN_PANEL_HEIGHT - TOP_PANEL_HEIGHT
 
 const Colour Colour_1 = Colour(105, 105, 105);
 const Colour Colour_2 = Colour(0, 0, 0).withAlpha(0.0f);

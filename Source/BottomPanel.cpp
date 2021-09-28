@@ -13,23 +13,22 @@
 BottomPanel::BottomPanel(ExperimentalFilterAudioProcessor* inProcessor)
 :   PanelBase(inProcessor)
 {
-    setSize(BOTTOM_PANEL_WIDTH, BOTTOM_PANEL_HEIGHT);
-    
     mSlider = std::make_unique<ParameterSlider>(mProcessor->parameters,
                                                 ParameterID[kParameter_SubtractionStrength],
                                                 ParameterLabel[kParameter_SubtractionStrength]);
-    
-    const int slider_size = 80;
-    
-    mSlider->setBounds((getWidth() * 0.5) - (slider_size * 0.5),
-                       (getHeight() * 0.5) - (slider_size) - 10,
-                       slider_size,
-                       slider_size);
-    
     addAndMakeVisible(*mSlider);
 }
 
 BottomPanel::~BottomPanel() {}
+
+void BottomPanel::resized()
+{
+    auto width = getWidth();
+    auto height = getHeight();
+    auto sliderSize = width / 3;
+    
+    mSlider->setBounds ((width * 0.5) - (sliderSize * 0.5), (height * 0.5) - sliderSize, sliderSize, sliderSize);
+}
 
 void BottomPanel::paint(Graphics& g)
 {

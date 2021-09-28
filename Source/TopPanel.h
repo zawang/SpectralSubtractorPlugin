@@ -19,6 +19,7 @@ public:
     TopPanel(ExperimentalFilterAudioProcessor* inProcessor);
     ~TopPanel();
     
+    void resized() override;
     void buttonClicked(Button* b) override;
 
 private:

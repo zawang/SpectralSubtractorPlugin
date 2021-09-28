@@ -20,6 +20,7 @@ public:
     BottomPanel(ExperimentalFilterAudioProcessor* inProcessor);
     ~BottomPanel();
     
+    void resized() override;
     void paint(Graphics& g) override;
     
 private:

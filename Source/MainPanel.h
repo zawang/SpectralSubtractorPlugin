@@ -21,6 +21,8 @@ class MainPanel
 public:
     MainPanel(ExperimentalFilterAudioProcessor* inProcessor);
     ~MainPanel();
+    
+    void resized() override;
 
 private:
     std::unique_ptr<TopPanel> mTopPanel;

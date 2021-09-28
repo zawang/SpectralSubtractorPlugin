@@ -13,16 +13,21 @@
 TopPanel::TopPanel(ExperimentalFilterAudioProcessor* inProcessor)
 :    PanelBase(inProcessor)
 {
-    setSize(TOP_PANEL_WIDTH, TOP_PANEL_HEIGHT);
-    
     mLoadFileButton = std::make_unique<TextButton>();
     mLoadFileButton->setButtonText("Load File...");
-    mLoadFileButton->setBounds(TOP_PANEL_WIDTH * 0.05, TOP_PANEL_HEIGHT * 0.125, TOP_PANEL_WIDTH * 0.4, TOP_PANEL_HEIGHT * 0.3);
     mLoadFileButton->addListener(this);
     addAndMakeVisible(*mLoadFileButton);
 }
 
 TopPanel::~TopPanel() {}
+
+void TopPanel::resized()
+{
+    auto width = getWidth();
+    auto height = getHeight();
+    
+    mLoadFileButton->setBounds(width * 0.025, height * 0.125, width * 0.4, height * 0.3);
+}
 
 void TopPanel::buttonClicked(Button* b)
 {

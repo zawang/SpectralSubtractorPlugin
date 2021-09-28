@@ -13,15 +13,20 @@
 MainPanel::MainPanel(ExperimentalFilterAudioProcessor* inProcessor)
 :   PanelBase(inProcessor)
 {
-    setSize(MAIN_PANEL_WIDTH, MAIN_PANEL_HEIGHT);
-    
     mTopPanel = std::make_unique<TopPanel>(inProcessor);
-    mTopPanel->setTopLeftPosition(0, 0);
     addAndMakeVisible(*mTopPanel);
     
     mBottomPanel = std::make_unique<BottomPanel>(inProcessor);
-    mBottomPanel->setTopLeftPosition(0, TOP_PANEL_HEIGHT);
     addAndMakeVisible(*mBottomPanel);
 }
 
 MainPanel::~MainPanel() {}
+
+void MainPanel::resized()
+{
+    auto width = getWidth();
+    auto height = getHeight();
+    
+    mTopPanel->setBounds (0, 0, width, 0.2 * height);
+    mBottomPanel->setBounds (0, mTopPanel->getHeight(), width, height - mTopPanel->getHeight());
+}
