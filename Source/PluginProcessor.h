@@ -19,12 +19,12 @@
 //==============================================================================
 /**
 */
-class ExperimentalFilterAudioProcessor  : public AudioProcessor
+class SpectralSubtractorAudioProcessor  : public AudioProcessor
 {
 public:
     //==============================================================================
-    ExperimentalFilterAudioProcessor();
-    ~ExperimentalFilterAudioProcessor();
+    SpectralSubtractorAudioProcessor();
+    ~SpectralSubtractorAudioProcessor();
 
     //==============================================================================
     void prepareToPlay (double sampleRate, int samplesPerBlock) override;
@@ -71,7 +71,7 @@ public:
 
 private:
     //==============================================================================
-    JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (ExperimentalFilterAudioProcessor)
+    JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (SpectralSubtractorAudioProcessor)
     
     void initializeDSP();
     void heapBlockToArray(HeapBlock<float>& heapBlock, Array<var>& array);

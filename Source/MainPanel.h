@@ -19,7 +19,7 @@ class MainPanel
 :   public PanelBase
 {
 public:
-    MainPanel(ExperimentalFilterAudioProcessor* inProcessor);
+    MainPanel(SpectralSubtractorAudioProcessor* inProcessor);
     ~MainPanel();
     
     void resized() override;

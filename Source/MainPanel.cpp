@@ -10,7 +10,7 @@
 
 #include "MainPanel.h"
 
-MainPanel::MainPanel(ExperimentalFilterAudioProcessor* inProcessor)
+MainPanel::MainPanel(SpectralSubtractorAudioProcessor* inProcessor)
 :   PanelBase(inProcessor)
 {
     mTopPanel = std::make_unique<TopPanel>(inProcessor);

@@ -10,7 +10,7 @@
 
 #include "TopPanel.h"
 
-TopPanel::TopPanel(ExperimentalFilterAudioProcessor* inProcessor)
+TopPanel::TopPanel(SpectralSubtractorAudioProcessor* inProcessor)
 :    PanelBase(inProcessor)
 {
     mLoadFileButton = std::make_unique<TextButton>();

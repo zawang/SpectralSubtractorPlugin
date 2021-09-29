@@ -17,11 +17,11 @@
 //==============================================================================
 /**
 */
-class ExperimentalFilterAudioProcessorEditor  : public AudioProcessorEditor
+class SpectralSubtractorAudioProcessorEditor  : public AudioProcessorEditor
 {
 public:
-    ExperimentalFilterAudioProcessorEditor (ExperimentalFilterAudioProcessor&);
-    ~ExperimentalFilterAudioProcessorEditor();
+    SpectralSubtractorAudioProcessorEditor (SpectralSubtractorAudioProcessor&);
+    ~SpectralSubtractorAudioProcessorEditor();
 
     //==============================================================================
     void paint (Graphics&) override;
@@ -30,9 +30,9 @@ public:
 private:
     // This reference is provided as a quick way for your editor to
     // access the processor object that created it.
-    ExperimentalFilterAudioProcessor& processor;
+    SpectralSubtractorAudioProcessor& processor;
     
     std::unique_ptr<MainPanel> mMainPanel;      // mMainPanel will contain all the other sub panels
 
-    JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (ExperimentalFilterAudioProcessorEditor)
+    JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (SpectralSubtractorAudioProcessorEditor)
 };

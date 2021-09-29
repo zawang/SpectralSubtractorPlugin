@@ -10,7 +10,7 @@
 
 #include "BottomPanel.h"
 
-BottomPanel::BottomPanel(ExperimentalFilterAudioProcessor* inProcessor)
+BottomPanel::BottomPanel(SpectralSubtractorAudioProcessor* inProcessor)
 :   PanelBase(inProcessor)
 {
     mSlider = std::make_unique<ParameterSlider>(mProcessor->parameters,

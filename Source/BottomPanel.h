@@ -17,7 +17,7 @@ class BottomPanel
 :   public PanelBase
 {
 public:
-    BottomPanel(ExperimentalFilterAudioProcessor* inProcessor);
+    BottomPanel(SpectralSubtractorAudioProcessor* inProcessor);
     ~BottomPanel();
     
     void resized() override;

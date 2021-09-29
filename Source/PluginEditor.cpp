@@ -12,7 +12,7 @@
 #include "PluginEditor.h"
 
 //==============================================================================
-ExperimentalFilterAudioProcessorEditor::ExperimentalFilterAudioProcessorEditor (ExperimentalFilterAudioProcessor& p)
+SpectralSubtractorAudioProcessorEditor::SpectralSubtractorAudioProcessorEditor (SpectralSubtractorAudioProcessor& p)
     : AudioProcessorEditor (&p), processor (p)
 {
     // Make sure that before the constructor has finished, you've set the
@@ -26,18 +26,18 @@ ExperimentalFilterAudioProcessorEditor::ExperimentalFilterAudioProcessorEditor (
     setSize (MAIN_PANEL_WIDTH, MAIN_PANEL_HEIGHT);
 }
 
-ExperimentalFilterAudioProcessorEditor::~ExperimentalFilterAudioProcessorEditor()
+SpectralSubtractorAudioProcessorEditor::~SpectralSubtractorAudioProcessorEditor()
 {
 }
 
 //==============================================================================
-void ExperimentalFilterAudioProcessorEditor::paint (Graphics& g)
+void SpectralSubtractorAudioProcessorEditor::paint (Graphics& g)
 {
     // (Our component is opaque, so we must completely fill the background with a solid colour)
     g.fillAll (getLookAndFeel().findColour (ResizableWindow::backgroundColourId));
 }
 
-void ExperimentalFilterAudioProcessorEditor::resized()
+void SpectralSubtractorAudioProcessorEditor::resized()
 {
     mMainPanel->setBounds (getBounds());
 }

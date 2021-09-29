@@ -16,7 +16,7 @@ class TopPanel
     public Button::Listener
 {
 public:
-    TopPanel(ExperimentalFilterAudioProcessor* inProcessor);
+    TopPanel(SpectralSubtractorAudioProcessor* inProcessor);
     ~TopPanel();
     
     void resized() override;

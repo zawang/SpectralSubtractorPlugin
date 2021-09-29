@@ -10,7 +10,7 @@
 
 #include "PanelBase.h"
 
-PanelBase::PanelBase(ExperimentalFilterAudioProcessor* inProcessor)
+PanelBase::PanelBase(SpectralSubtractorAudioProcessor* inProcessor)
 :   mProcessor(inProcessor) {}
 
 PanelBase::~PanelBase() {}

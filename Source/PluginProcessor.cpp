@@ -13,7 +13,7 @@
 #include "IDs.h"
 
 //==============================================================================
-ExperimentalFilterAudioProcessor::ExperimentalFilterAudioProcessor()
+SpectralSubtractorAudioProcessor::SpectralSubtractorAudioProcessor()
 #ifndef JucePlugin_PreferredChannelConfigurations
      : AudioProcessor (BusesProperties()
                      #if ! JucePlugin_IsMidiEffect
@@ -23,7 +23,7 @@ ExperimentalFilterAudioProcessor::ExperimentalFilterAudioProcessor()
                        .withOutput ("Output", AudioChannelSet::stereo(), true)
                      #endif
                        ),
-       parameters(*this, nullptr, juce::Identifier("ExperimentalFilter"),
+       parameters(*this, nullptr, juce::Identifier("SpectralSubtractor"),
                   {
                       std::make_unique<juce::AudioParameterFloat> (ParameterID[kParameter_SubtractionStrength],      // parameterID
                                                                    ParameterLabel[kParameter_SubtractionStrength],   // parameter name
@@ -46,17 +46,17 @@ ExperimentalFilterAudioProcessor::ExperimentalFilterAudioProcessor()
     mFormatManager->registerBasicFormats();
 }
 
-ExperimentalFilterAudioProcessor::~ExperimentalFilterAudioProcessor()
+SpectralSubtractorAudioProcessor::~SpectralSubtractorAudioProcessor()
 {
 }
 
 //==============================================================================
-const String ExperimentalFilterAudioProcessor::getName() const
+const String SpectralSubtractorAudioProcessor::getName() const
 {
     return JucePlugin_Name;
 }
 
-bool ExperimentalFilterAudioProcessor::acceptsMidi() const
+bool SpectralSubtractorAudioProcessor::acceptsMidi() const
 {
    #if JucePlugin_WantsMidiInput
     return true;
@@ -65,7 +65,7 @@ bool ExperimentalFilterAudioProcessor::acceptsMidi() const
    #endif
 }
 
-bool ExperimentalFilterAudioProcessor::producesMidi() const
+bool SpectralSubtractorAudioProcessor::producesMidi() const
 {
    #if JucePlugin_ProducesMidiOutput
     return true;
@@ -74,7 +74,7 @@ bool ExperimentalFilterAudioProcessor::producesMidi() const
    #endif
 }
 
-bool ExperimentalFilterAudioProcessor::isMidiEffect() const
+bool SpectralSubtractorAudioProcessor::isMidiEffect() const
 {
    #if JucePlugin_IsMidiEffect
     return true;
@@ -83,37 +83,37 @@ bool ExperimentalFilterAudioProcessor::isMidiEffect() const
    #endif
 }
 
-double ExperimentalFilterAudioProcessor::getTailLengthSeconds() const
+double SpectralSubtractorAudioProcessor::getTailLengthSeconds() const
 {
     return 0.0;
 }
 
-int ExperimentalFilterAudioProcessor::getNumPrograms()
+int SpectralSubtractorAudioProcessor::getNumPrograms()
 {
     return 1;   // NB: some hosts don't cope very well if you tell them there are 0 programs,
                 // so this should be at least 1, even if you're not really implementing programs.
 }
 
-int ExperimentalFilterAudioProcessor::getCurrentProgram()
+int SpectralSubtractorAudioProcessor::getCurrentProgram()
 {
     return 0;
 }
 
-void ExperimentalFilterAudioProcessor::setCurrentProgram (int index)
+void SpectralSubtractorAudioProcessor::setCurrentProgram (int index)
 {
 }
 
-const String ExperimentalFilterAudioProcessor::getProgramName (int index)
+const String SpectralSubtractorAudioProcessor::getProgramName (int index)
 {
     return {};
 }
 
-void ExperimentalFilterAudioProcessor::changeProgramName (int index, const String& newName)
+void SpectralSubtractorAudioProcessor::changeProgramName (int index, const String& newName)
 {
 }
 
 //==============================================================================
-void ExperimentalFilterAudioProcessor::prepareToPlay (double sampleRate, int samplesPerBlock)
+void SpectralSubtractorAudioProcessor::prepareToPlay (double sampleRate, int samplesPerBlock)
 {
     // Use this method as the place to do any pre-playback
     // initialisation that you need..
@@ -121,14 +121,14 @@ void ExperimentalFilterAudioProcessor::prepareToPlay (double sampleRate, int sam
     initializeDSP();
 }
 
-void ExperimentalFilterAudioProcessor::releaseResources()
+void SpectralSubtractorAudioProcessor::releaseResources()
 {
     // When playback stops, you can use this as an opportunity to free up any
     // spare memory, etc.
 }
 
 #ifndef JucePlugin_PreferredChannelConfigurations
-bool ExperimentalFilterAudioProcessor::isBusesLayoutSupported (const BusesLayout& layouts) const
+bool SpectralSubtractorAudioProcessor::isBusesLayoutSupported (const BusesLayout& layouts) const
 {
   #if JucePlugin_IsMidiEffect
     ignoreUnused (layouts);
@@ -151,7 +151,7 @@ bool ExperimentalFilterAudioProcessor::isBusesLayoutSupported (const BusesLayout
 }
 #endif
 
-void ExperimentalFilterAudioProcessor::processBlock (AudioBuffer<float>& buffer, MidiBuffer& midiMessages)
+void SpectralSubtractorAudioProcessor::processBlock (AudioBuffer<float>& buffer, MidiBuffer& midiMessages)
 {
     ScopedNoDenormals noDenormals;
     auto totalNumInputChannels  = getTotalNumInputChannels();
@@ -175,7 +175,7 @@ void ExperimentalFilterAudioProcessor::processBlock (AudioBuffer<float>& buffer,
 }
 
 // Given a noise signal, calculate its magnitude spectrogram, then calculate the average spectrum from the spectrogram and store it in mNoiseSpectrum
-void ExperimentalFilterAudioProcessor::calcAndStoreNoiseSpectrum(AudioFormatReader* noiseFileReader)
+void SpectralSubtractorAudioProcessor::calcAndStoreNoiseSpectrum(AudioFormatReader* noiseFileReader)
 {
     auto noiseBuffer = std::make_unique<juce::AudioBuffer<float>> ((int) noiseFileReader->numChannels, (int) noiseFileReader->lengthInSamples);
     noiseFileReader->read (noiseBuffer.get(),
@@ -191,19 +191,19 @@ void ExperimentalFilterAudioProcessor::calcAndStoreNoiseSpectrum(AudioFormatRead
 }
 
 //==============================================================================
-bool ExperimentalFilterAudioProcessor::hasEditor() const
+bool SpectralSubtractorAudioProcessor::hasEditor() const
 {
     return true; // (change this to false if you choose to not supply an editor)
 }
 
-AudioProcessorEditor* ExperimentalFilterAudioProcessor::createEditor()
+AudioProcessorEditor* SpectralSubtractorAudioProcessor::createEditor()
 {
-    return new ExperimentalFilterAudioProcessorEditor (*this);
+    return new SpectralSubtractorAudioProcessorEditor (*this);
 }
 
 //==============================================================================
 // Store the plugin's state in an XML object
-void ExperimentalFilterAudioProcessor::getStateInformation (MemoryBlock& destData)
+void SpectralSubtractorAudioProcessor::getStateInformation (MemoryBlock& destData)
 {
     // You should use this method to store your parameters in the memory block.
     // You could do that either as raw data, or use the XML or ValueTree classes
@@ -219,7 +219,7 @@ void ExperimentalFilterAudioProcessor::getStateInformation (MemoryBlock& destDat
     }
     
     ValueTree state = parameters.copyState();
-    std::unique_ptr<juce::XmlElement> xml (state.createXml());      // Creates an XmlElement with a tag name of "ExperimentalFilter" that holds a complete image of state and all its children
+    std::unique_ptr<juce::XmlElement> xml (state.createXml());      // Creates an XmlElement with a tag name of "SpectralSubtractor" that holds a complete image of state and all its children
     copyXmlToBinary (*xml, destData);
     
     xml->writeTo(file, XmlElement::TextFormat());
@@ -230,7 +230,7 @@ void ExperimentalFilterAudioProcessor::getStateInformation (MemoryBlock& destDat
 }
 
 // Restore the plugin's state from an XML object
-void ExperimentalFilterAudioProcessor::setStateInformation (const void* data, int sizeInBytes)
+void SpectralSubtractorAudioProcessor::setStateInformation (const void* data, int sizeInBytes)
 {
     // You should use this method to restore your parameters from this memory block,
     // whose contents will have been created by the getStateInformation() call.
@@ -258,7 +258,7 @@ void ExperimentalFilterAudioProcessor::setStateInformation (const void* data, in
     }
 }
 
-void ExperimentalFilterAudioProcessor::initializeDSP()
+void SpectralSubtractorAudioProcessor::initializeDSP()
 {
     // Initialize filter
     mFilter.setup(getTotalNumInputChannels());
@@ -270,7 +270,7 @@ void ExperimentalFilterAudioProcessor::initializeDSP()
     mNoiseSpectrum.clear(globalFFTSize);
 }
 
-void ExperimentalFilterAudioProcessor::heapBlockToArray(HeapBlock<float>& heapBlock, Array<var>& array)
+void SpectralSubtractorAudioProcessor::heapBlockToArray(HeapBlock<float>& heapBlock, Array<var>& array)
 {
     for (int i = 0; i < globalFFTSize; i++)
     {
@@ -278,7 +278,7 @@ void ExperimentalFilterAudioProcessor::heapBlockToArray(HeapBlock<float>& heapBl
     }
 }
 
-void ExperimentalFilterAudioProcessor::arrayToHeapBlock(Array<var>& array, HeapBlock<float>& heapBlock)
+void SpectralSubtractorAudioProcessor::arrayToHeapBlock(Array<var>& array, HeapBlock<float>& heapBlock)
 {
     for (int i = 0; i < globalFFTSize; i++)
     {
@@ -286,7 +286,7 @@ void ExperimentalFilterAudioProcessor::arrayToHeapBlock(Array<var>& array, HeapB
     }
 }
 
-String ExperimentalFilterAudioProcessor::varArrayToDelimitedString (const Array<var>& input)
+String SpectralSubtractorAudioProcessor::varArrayToDelimitedString (const Array<var>& input)
 {
     // if you are trying to control a var that is an array then you need to
     // set a delimiter string that will be used when writing to XML!
@@ -298,7 +298,7 @@ String ExperimentalFilterAudioProcessor::varArrayToDelimitedString (const Array<
     return elements.joinIntoString (",");
 }
 
-Array<var> ExperimentalFilterAudioProcessor::delimitedStringToVarArray (StringRef input)
+Array<var> SpectralSubtractorAudioProcessor::delimitedStringToVarArray (StringRef input)
 {
     Array<var> arr;
     
@@ -312,5 +312,5 @@ Array<var> ExperimentalFilterAudioProcessor::delimitedStringToVarArray (StringRe
 // This creates new instances of the plugin..
 AudioProcessor* JUCE_CALLTYPE createPluginFilter()
 {
-    return new ExperimentalFilterAudioProcessor();
+    return new SpectralSubtractorAudioProcessor();
 }
