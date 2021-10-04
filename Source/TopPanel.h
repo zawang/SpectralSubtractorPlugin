@@ -10,6 +10,7 @@
 
 #pragma once
 #include "PanelBase.h"
+#include "ProcessingNoiseSpectrumThread.h"
 
 class TopPanel
 :   public PanelBase,

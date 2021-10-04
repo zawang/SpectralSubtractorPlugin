@@ -14,7 +14,7 @@ TopPanel::TopPanel(SpectralSubtractorAudioProcessor* inProcessor)
 :    PanelBase(inProcessor)
 {
     mLoadFileButton = std::make_unique<TextButton>();
-    mLoadFileButton->setButtonText("Load File...");
+    mLoadFileButton->setButtonText("Import noise file...");
     mLoadFileButton->addListener(this);
     addAndMakeVisible(*mLoadFileButton);
 }
@@ -39,8 +39,6 @@ void TopPanel::buttonClicked(Button* b)
 
 void TopPanel::loadFile()
 {
-    DBG("loadFile start");
-    
     if (fileChooser != nullptr)
         return;
     
@@ -54,35 +52,7 @@ void TopPanel::loadFile()
     fileChooser->launchAsync (juce::FileBrowserComponent::openMode | juce::FileBrowserComponent::canSelectFiles,
                               [this] (const juce::FileChooser& fc) mutable
                               {
-                                  DBG("launchAsync start");
-                                  mProcessor->suspendProcessing(true);
-        
-                                  // What did the user choose?
-                                  juce::File file = fc.getResult();
-                                    
-                                  if (file != juce::File{})
-                                  {
-                                      // Read the file
-                                      reader.reset (mProcessor->getFormatManager()->createReaderFor(file));
-                                      if (reader.get() != nullptr)
-                                      {
-                                          mProcessor->calcAndStoreNoiseSpectrum(reader.get());
-                                      }
-                                      else
-                                      {
-                                          juce::NativeMessageBox::showAsync (juce::MessageBoxOptions()
-                                                                             .withIconType (juce::MessageBoxIconType::WarningIcon)
-                                                                             .withTitle ("Error loading file")
-                                                                             .withMessage ("Unable to load audio file"),
-                                                                             nullptr);
-                                      }
-                                  }
-                                  
+                                  (new ProcessingNoiseSpectrumThread (mProcessor, fc.getResult()))->launchThread();
                                   fileChooser = nullptr;
-        
-                                  mProcessor->suspendProcessing(false);
-                                  DBG("launchAsync end");
                               }, nullptr);
-    
-    DBG("loadFile end");
 }

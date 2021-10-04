@@ -11,6 +11,7 @@
 #pragma once
 
 #include <numeric>
+#include "JuceHeader.h"
 
 // One audio channel of FFT data over time, really 2-dimensional
 using Spectrogram = std::vector<HeapBlock<float>>;
@@ -33,6 +34,8 @@ inline void averageSpectrum(Spectrogram& spectrogram, HeapBlock<float>& magSpect
     magSpectrum.clear(fftSize);
     
     auto numColumns = spectrogram.size();
+    
+    DBG("numColumns: " << numColumns);
     
     // Iterate through frequency bins. We only go up to (fftSize / 2 + 1) in order to ignore the negative frequency bins.
     for (int freqBin = 0; freqBin < fftSize / 2 + 1; ++freqBin)

@@ -36,6 +36,8 @@ public:
         // Calculate number of hops
         ptrdiff_t numHops = 1L + static_cast<long>((dataCount - fftSize) / hop);
         
+        DBG("numHops: " << numHops);
+        
         // Initialize spectrogram
         spectrogram.resize(numHops+1);      // WHY NUMHOPS + 1????
         for (auto i = 0; i < spectrogram.size(); ++i)
