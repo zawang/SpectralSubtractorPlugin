@@ -27,24 +27,3 @@ enum windowTypeIndex        // Used in Filter.h
 const static int globalFFTSize = 2048;
 const static int globalHopSize = 512;
 const static int globalWindow = kWindowTypeHann;
-
-inline void averageSpectrum(Spectrogram& spectrogram, HeapBlock<float>& magSpectrum, int fftSize)
-{
-    magSpectrum.realloc(fftSize);
-    magSpectrum.clear(fftSize);
-    
-    auto numColumns = spectrogram.size();
-    
-    DBG("numColumns: " << numColumns);
-    
-    // Iterate through frequency bins. We only go up to (fftSize / 2 + 1) in order to ignore the negative frequency bins.
-    for (int freqBin = 0; freqBin < fftSize / 2 + 1; ++freqBin)
-    {
-        float sum = 0.f;
-        
-        for (int freqColumn = 0; freqColumn < numColumns; ++freqColumn)
-            sum += spectrogram[freqColumn][freqBin];
-            
-        magSpectrum[freqBin] = sum / numColumns;
-    }
-}

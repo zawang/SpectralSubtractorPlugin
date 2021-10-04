@@ -52,7 +52,7 @@ void TopPanel::loadFile()
     fileChooser->launchAsync (juce::FileBrowserComponent::openMode | juce::FileBrowserComponent::canSelectFiles,
                               [this] (const juce::FileChooser& fc) mutable
                               {
-                                  (new ProcessingNoiseSpectrumThread (mProcessor, fc.getResult()))->launchThread();
+                                  (new NoiseSpectrumProcessingThread (mProcessor, fc.getResult()))->launchThread (7);
                                   fileChooser = nullptr;
                               }, nullptr);
 }

@@ -13,7 +13,6 @@
 #include "../JuceLibraryCode/JuceHeader.h"
 #include "AudioFunctions.h"
 #include "Filter.h"
-#include "SpectrogramMaker.h"
 #include "Parameters.h"
 
 //==============================================================================
@@ -59,7 +58,7 @@ public:
     void getStateInformation (MemoryBlock& destData) override;
     void setStateInformation (const void* data, int sizeInBytes) override;
     
-    void calcAndStoreNoiseSpectrum(AudioFormatReader* noiseFileReader);
+    void loadNewNoiseSpectrum(HeapBlock<float>& tempNoiseSpectrum);
     
     // Contains a ValueTree that is used to manage the processor's entire state.
     // Adding parameters to an APVTS automatically adds them to the attached processor too.
@@ -78,7 +77,6 @@ private:
     Array<var> delimitedStringToVarArray (StringRef input);
     
     Filter mFilter;
-    SpectrogramMaker mSpectrogramMaker;                                 // Used to produce a magnitude spectrogram of the noise signal
     HeapBlock<float> mNoiseSpectrum;                                    // Holds the average magnitude spectrum of the noise signal
     std::atomic<float>* mSubtractionStrengthParameter = nullptr;        // The amount of the noise spectrum to remove
 };

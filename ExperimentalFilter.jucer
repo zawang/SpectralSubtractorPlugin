@@ -6,9 +6,9 @@
     <GROUP id="{931A4626-700B-5937-316D-6E7DB4E3EB60}" name="DSP">
       <FILE id="Pi4NhR" name="AudioFunctions.h" compile="0" resource="0"
             file="Source/AudioFunctions.h"/>
+      <FILE id="DzKZqz" name="NoiseSpectrumProcessingThread.h" compile="0"
+            resource="0" file="Source/NoiseSpectrumProcessingThread.h"/>
       <FILE id="i5Ccam" name="Filter.h" compile="0" resource="0" file="Source/Filter.h"/>
-      <FILE id="Hry6mT" name="SpectrogramMaker.h" compile="0" resource="0"
-            file="Source/SpectrogramMaker.h"/>
     </GROUP>
     <GROUP id="{18845E81-3843-C024-4B5D-3B6E9F421EB3}" name="Parameter Control">
       <FILE id="OTpWPT" name="ParameterSlider.cpp" compile="1" resource="0"
@@ -23,8 +23,6 @@
       <FILE id="FqwYnF" name="InterfaceDefines.h" compile="0" resource="0"
             file="Source/InterfaceDefines.h"/>
       <FILE id="w3rdqX" name="Parameters.h" compile="0" resource="0" file="Source/Parameters.h"/>
-      <FILE id="SaHGW2" name="ProcessingNoiseSpectrumThread.h" compile="0"
-            resource="0" file="Source/ProcessingNoiseSpectrumThread.h"/>
     </GROUP>
     <GROUP id="{4EC1A98D-35D8-CF99-71C9-FEFF3528710E}" name="Panels">
       <FILE id="r009w5" name="BottomPanel.cpp" compile="1" resource="0" file="Source/BottomPanel.cpp"/>

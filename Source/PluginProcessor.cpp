@@ -30,8 +30,7 @@ SpectralSubtractorAudioProcessor::SpectralSubtractorAudioProcessor()
                                                                    0.0f,                                             // minimum value
                                                                    5.0f,                                             // maximum value
                                                                    0.0f)                                             // default value
-                  }),
-       mSpectrogramMaker(globalFFTSize, globalHopSize)
+                  })
 #endif
 {
     initializeDSP();
@@ -171,20 +170,14 @@ void SpectralSubtractorAudioProcessor::processBlock (AudioBuffer<float>& buffer,
 //    }
 }
 
-// Given a noise signal, calculate its magnitude spectrogram, then calculate the average spectrum from the spectrogram and store it in mNoiseSpectrum
-void SpectralSubtractorAudioProcessor::calcAndStoreNoiseSpectrum(AudioFormatReader* noiseFileReader)
+// Replaces the old noise spectrum with a new noise spectrum.
+void SpectralSubtractorAudioProcessor::loadNewNoiseSpectrum(HeapBlock<float>& tempNoiseSpectrum)
 {
-    auto noiseBuffer = std::make_unique<juce::AudioBuffer<float>> ((int) noiseFileReader->numChannels, (int) noiseFileReader->lengthInSamples);
-    noiseFileReader->read (noiseBuffer.get(),
-                           0,
-                           (int) noiseFileReader->lengthInSamples,
-                           0,
-                           true,
-                           true);
+    jassert (isSuspended());    // playback must be suspended!
     
-    Spectrogram spectrogram;
-    mSpectrogramMaker.perform(noiseBuffer.get(), spectrogram);
-    averageSpectrum(spectrogram, mNoiseSpectrum, globalFFTSize);
+    // TODO: use memcpy instead?
+    for (int i = 0; i < globalFFTSize; ++i)
+        mNoiseSpectrum[i] = tempNoiseSpectrum[i];
 }
 
 //==============================================================================
