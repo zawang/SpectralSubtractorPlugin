@@ -12,67 +12,66 @@
 
 #include "PluginProcessor.h"
 
+// Thread that calculates a noise file's average spectrum and replace's the audio processor's old noise spectrum with the one it just calculated.
 class NoiseSpectrumProcessingThread : public juce::ThreadWithProgressWindow
 {
 public:
     NoiseSpectrumProcessingThread(SpectralSubtractorAudioProcessor* inProcessor, juce::File inFile)
-        : juce::ThreadWithProgressWindow ("Loading noise spectrum...", true, true, 10000),
+        : juce::ThreadWithProgressWindow ("Preparing noise spectrum...", true, true, 10000),
           mProcessor (inProcessor),
           mNoiseFile (inFile)
     {
+        jassert (mNoiseFile != juce::File{});
+        
         setStatusMessage ("Getting ready...");
-        mFormatManager.registerBasicFormats();
     }
 
     void run() override
     {
         mProcessor->suspendProcessing (true);
           
-        if (mNoiseFile != juce::File{})
+        setProgress (-1.0); // setting a value beyond the range 0 -> 1 will show a spinning bar...
+        setStatusMessage ("Reading noise file...");
+        
+        // Read the file
+        mReader.reset (mProcessor->getFormatManager()->createReaderFor (mNoiseFile));
+        if (mReader.get() != nullptr)
         {
-            setProgress (-1.0); // setting a value beyond the range 0 -> 1 will show a spinning bar...
-            setStatusMessage ("Reading noise file...");
+            auto noiseBuffer = std::make_unique<juce::AudioBuffer<float>> ((int) mReader->numChannels, (int) mReader->lengthInSamples);
             
-            // Read the file
-            mReader.reset (mFormatManager.createReaderFor (mNoiseFile));
-            if (mReader.get() != nullptr)
-            {
-                auto noiseBuffer = std::make_unique<juce::AudioBuffer<float>> ((int) mReader->numChannels, (int) mReader->lengthInSamples);
-                
-                if (threadShouldExit()) return; // must check this as often as possible, because this is how we know if the user's pressed 'cancel'
-                
-                mReader->read (noiseBuffer.get(),
-                               0,
-                               (int) mReader->lengthInSamples,
-                               0,
-                               true,
-                               true);
-                
-                if (threadShouldExit()) return;
-                
-                setStatusMessage ("Calculating noise spectrogram...");
-                
-                Spectrogram noiseSpectrogram;
-                makeSpectrogram (noiseSpectrogram, noiseBuffer.get());
-                
-                if (threadShouldExit()) return;
-                
-                setProgress (-1.0);
-                setStatusMessage ("Calculating noise spectrum...");
-                
-                computeAverageSpectrum (mTempNoiseSpectrum, noiseSpectrogram, globalFFTSize);
-                
-                if (threadShouldExit()) return;
-                
-                setStatusMessage ("Almost finished...");
-                
-                mProcessor->loadNewNoiseSpectrum (mTempNoiseSpectrum);
-            }
-            else
-            {
-                mErrorLoadingFile = true;
-                return;
-            }
+            if (threadShouldExit()) return; // must check this as often as possible, because this is how we know if the user's pressed 'cancel'
+            
+            mReader->read (noiseBuffer.get(),
+                           0,
+                           (int) mReader->lengthInSamples,
+                           0,
+                           true,
+                           true);
+            
+            if (threadShouldExit()) return;
+            
+            setStatusMessage ("Calculating noise spectrogram...");
+            
+            Spectrogram noiseSpectrogram;
+            makeSpectrogram (noiseSpectrogram, noiseBuffer.get());
+            
+            if (threadShouldExit()) return;
+            
+            setProgress (-1.0);
+            setStatusMessage ("Calculating noise spectrum...");
+            
+            computeAverageSpectrum (mTempNoiseSpectrum, noiseSpectrogram, globalFFTSize);
+            
+            if (threadShouldExit()) return;
+            
+            setStatusMessage ("Almost finished...");
+            
+            mProcessor->loadNewNoiseSpectrum (mTempNoiseSpectrum);
+        }
+        else
+        {
+            mErrorLoadingFile = true;
+            return;
         }
         
         mProcessor->suspendProcessing (false);
@@ -85,7 +84,7 @@ public:
         
         juce::String messageString;
         if (userPressedCancel)
-            messageString = "You pressed cancel!";
+            messageString = "Operation canceled!";
         else if (mErrorLoadingFile)
             messageString = juce::String("Unable to load ") + mNoiseFile.getFileName();
         else
@@ -199,7 +198,6 @@ private:
     SpectralSubtractorAudioProcessor* mProcessor;
     HeapBlock<float> mTempNoiseSpectrum;
     juce::File mNoiseFile;
-    juce::AudioFormatManager mFormatManager;
     std::unique_ptr<juce::AudioFormatReader> mReader;
     bool mErrorLoadingFile { false };
     

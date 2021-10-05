@@ -42,9 +42,9 @@ void TopPanel::loadFile()
     if (fileChooser != nullptr)
         return;
     
-    fileChooser.reset (new juce::FileChooser ("Choose a Wav or Aiff file",
-                                              juce::File::getSpecialLocation(juce::File::userDesktopDirectory),
-                                              "*.wav; *.aiff",
+    fileChooser.reset (new juce::FileChooser ("Select an audio file",
+                                              juce::File::getSpecialLocation (juce::File::userDesktopDirectory),
+                                              mProcessor->getFormatManager()->getWildcardForAllFormats(),
                                               true,
                                               false,
                                               nullptr));
@@ -52,7 +52,12 @@ void TopPanel::loadFile()
     fileChooser->launchAsync (juce::FileBrowserComponent::openMode | juce::FileBrowserComponent::canSelectFiles,
                               [this] (const juce::FileChooser& fc) mutable
                               {
-                                  (new NoiseSpectrumProcessingThread (mProcessor, fc.getResult()))->launchThread (7);
+                                  juce::File file = fc.getResult();
+                                  if (file != juce::File{})
+                                  {
+                                      (new NoiseSpectrumProcessingThread (mProcessor, file))->launchThread (7);
+                                  }
+                                  
                                   fileChooser = nullptr;
                               }, nullptr);
 }

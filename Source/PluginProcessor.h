@@ -63,6 +63,10 @@ public:
     // Contains a ValueTree that is used to manage the processor's entire state.
     // Adding parameters to an APVTS automatically adds them to the attached processor too.
     AudioProcessorValueTreeState parameters;
+    
+    juce::AudioFormatManager* getFormatManager() {
+        return mFormatManager.get();
+    }
 
 private:
     //==============================================================================
@@ -79,4 +83,5 @@ private:
     Filter mFilter;
     HeapBlock<float> mNoiseSpectrum;                                    // Holds the average magnitude spectrum of the noise signal
     std::atomic<float>* mSubtractionStrengthParameter = nullptr;        // The amount of the noise spectrum to remove
+    std::unique_ptr<juce::AudioFormatManager> mFormatManager;
 };

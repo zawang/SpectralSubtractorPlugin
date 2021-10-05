@@ -31,7 +31,7 @@ inline void paintComponentLabel(Graphics& g, Component* inComponent)
     Font temp_font_1 ("Helvetica Neue", 12.00f, Font::bold);
     g.setFont(temp_font_1);
     
-    // TODO: FIGURE OUT WHY THE LINE BELOW RESULTS IN A LEAK ERROR WHEN THE HOST QUITS!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+    // TODO: THE LINE BELOW RESULTS IN A LEAK ERROR WHEN THE HOST QUITS!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 //    g.setFont(font_1);
     
     g.drawFittedText(label, x, y, w, h, Justification::centred, 1);

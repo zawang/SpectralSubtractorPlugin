@@ -40,6 +40,9 @@ SpectralSubtractorAudioProcessor::SpectralSubtractorAudioProcessor()
     parameters.state.addChild(child, 0, nullptr);                                           // Add node to root ValueTree
     
     mSubtractionStrengthParameter = parameters.getRawParameterValue(ParameterID[kParameter_SubtractionStrength]);
+    
+    mFormatManager = std::make_unique<AudioFormatManager>();
+    mFormatManager->registerBasicFormats();
 }
 
 SpectralSubtractorAudioProcessor::~SpectralSubtractorAudioProcessor()
