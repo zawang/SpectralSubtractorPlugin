@@ -13,20 +13,17 @@
 #include "NoiseSpectrumProcessingThread.h"
 
 class TopPanel
-:   public PanelBase,
-    public Button::Listener
+:   public PanelBase
 {
 public:
     TopPanel(SpectralSubtractorAudioProcessor* inProcessor);
     ~TopPanel();
     
     void resized() override;
-    void buttonClicked(Button* b) override;
 
 private:
     std::unique_ptr<TextButton> mLoadFileButton;
-    std::unique_ptr<juce::FileChooser> fileChooser;
-    std::unique_ptr<juce::AudioFormatReader> reader;
+    std::unique_ptr<juce::FileChooser> mFileChooser;
         
     void loadFile();
 };

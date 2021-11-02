@@ -11,12 +11,12 @@
 #include "ParameterSlider.h"
 
 ParameterSlider::ParameterSlider(AudioProcessorValueTreeState& state,
-                                       const String& parameterID,
-                                       const String& parameterLabel)
-:   juce::Slider(parameterLabel)
+                                 const String& parameterID,
+                                 const String& parameterLabel)
+    : juce::Slider (parameterLabel)
 {
-    setSliderStyle(SliderStyle::RotaryHorizontalVerticalDrag);
-    setTextBoxStyle(Slider::TextEntryBoxPosition::TextBoxBelow, false, 0, 0);
+    setSliderStyle (SliderStyle::RotaryHorizontalVerticalDrag);
+    setTextBoxStyle (Slider::TextEntryBoxPosition::TextBoxBelow, false, 0, 0);
     
     
     // We don't even need to set up the slider's value range. This is done automatically by the SliderAttachment class.

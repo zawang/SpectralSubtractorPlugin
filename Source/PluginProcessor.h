@@ -55,6 +55,8 @@ public:
     void changeProgramName (int index, const String& newName) override;
 
     //==============================================================================
+    juce::AudioProcessorValueTreeState::ParameterLayout createParameterLayout();
+    void setParams();
     void getStateInformation (MemoryBlock& destData) override;
     void setStateInformation (const void* data, int sizeInBytes) override;
     
@@ -72,6 +74,11 @@ private:
     //==============================================================================
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (SpectralSubtractorAudioProcessor)
     
+    Filter mFilter;
+    HeapBlock<float> mNoiseSpectrum;                                    // Holds the average magnitude spectrum of the noise signal
+    juce::AudioParameterFloat* mSubtractionStrengthParam = nullptr;
+    std::unique_ptr<juce::AudioFormatManager> mFormatManager;
+    
     void initializeDSP();
     void heapBlockToArray(HeapBlock<float>& heapBlock, Array<var>& array);
     void arrayToHeapBlock(Array<var>& array, HeapBlock<float>& heapBlock);
@@ -79,9 +86,4 @@ private:
     // varArrayToDelimitedString and delimitedStringToVarArray are taken from juce_ValueWithDefault.h
     String varArrayToDelimitedString(const Array<var>& input);
     Array<var> delimitedStringToVarArray (StringRef input);
-    
-    Filter mFilter;
-    HeapBlock<float> mNoiseSpectrum;                                    // Holds the average magnitude spectrum of the noise signal
-    std::atomic<float>* mSubtractionStrengthParameter = nullptr;        // The amount of the noise spectrum to remove
-    std::unique_ptr<juce::AudioFormatManager> mFormatManager;
 };

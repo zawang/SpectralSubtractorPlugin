@@ -50,15 +50,15 @@ public:
             
             if (threadShouldExit()) return;
             
-            setStatusMessage ("Calculating noise spectrogram...");
+            setStatusMessage ("Computing STFT of noise signal...");
             
             Spectrogram noiseSpectrogram;
-            makeSpectrogram (noiseSpectrogram, noiseBuffer.get());
+            stft (noiseSpectrogram, noiseBuffer.get());
             
             if (threadShouldExit()) return;
             
             setProgress (-1.0);
-            setStatusMessage ("Calculating noise spectrum...");
+            setStatusMessage ("Computing noise spectrum...");
             
             computeAverageSpectrum (mTempNoiseSpectrum, noiseSpectrogram, globalFFTSize);
             
@@ -100,8 +100,8 @@ public:
         delete this;
     }
     
-    // Makes a Spectrogram by averaging the Spectrograms made from each channel of signal.
-    void makeSpectrogram(Spectrogram& spectrogram, juce::AudioBuffer<float>* signal)
+    // Compute the stft on each channel of signal and average the results to produce one spectrogram.
+    void stft(Spectrogram& spectrogram, juce::AudioBuffer<float>* signal)
     {
         const size_t dataCount = signal->getNumSamples();
         
@@ -112,7 +112,7 @@ public:
         ptrdiff_t numHops = 1L + static_cast<long>((dataCount - fftSize) / mHop);
         
         // Initialize spectrogram
-        spectrogram.resize(numHops+1);      // WHY NUMHOPS + 1????
+        spectrogram.resize (numHops + 1);
         for (auto i = 0; i < spectrogram.size(); ++i)
         {
             if (threadShouldExit()) return;

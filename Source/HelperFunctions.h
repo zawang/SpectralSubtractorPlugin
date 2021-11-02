@@ -12,7 +12,7 @@
 #include "JuceHeader.h"
 #include "InterfaceDefines.h"
 
-inline void paintComponentLabel(Graphics& g, Component* inComponent)
+inline void paintComponentLabel(juce::Graphics& g, juce::Component* inComponent)
 {
     const int x = inComponent->getX() - (inComponent->getWidth() * 0.25f);
     const int y = inComponent->getY() + inComponent->getHeight();
@@ -21,18 +21,18 @@ inline void paintComponentLabel(Graphics& g, Component* inComponent)
     
     const float cornerSize = 3.0f;
     
-    const String label = inComponent->getName();
+    const juce::String label = inComponent->getName();
     
-    g.setColour(Colour_3);
-    g.fillRoundedRectangle(x, y, w, h, cornerSize);
+    g.setColour (Colour_3);
+    g.fillRoundedRectangle (x, y, w, h, cornerSize);
     
-    g.setColour(Colour_6);
+    g.setColour (Colour_6);
     
-    Font temp_font_1 ("Helvetica Neue", 12.00f, Font::bold);
+    juce::Font temp_font_1 ("Helvetica Neue", 12.00f, juce::Font::bold);
     g.setFont(temp_font_1);
     
     // TODO: THE LINE BELOW RESULTS IN A LEAK ERROR WHEN THE HOST QUITS!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 //    g.setFont(font_1);
     
-    g.drawFittedText(label, x, y, w, h, Justification::centred, 1);
+    g.drawFittedText (label, x, y, w, h, juce::Justification::centred, 1);
 }

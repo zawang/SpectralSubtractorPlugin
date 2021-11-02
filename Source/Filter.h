@@ -8,6 +8,8 @@
   ==============================================================================
 */
 
+// https://github.com/juandagilc/Audio-Effects
+
 #pragma once
 
 #include "JuceHeader.h"
@@ -20,7 +22,7 @@ class Filter
 public:
     //======================================
     
-    Filter() : numChannels (1) {}
+    Filter() : mNumChannels (1) {}
     
     virtual ~Filter() {}
     
@@ -28,7 +30,7 @@ public:
     
     void setup (const int numInputChannels)
     {
-        numChannels = (numInputChannels > 0) ? numInputChannels : 1;
+        mNumChannels = (numInputChannels > 0) ? numInputChannels : 1;
     }
     
     void updateParameters (const int newFftSize, const int newOverlap, const int newWindowType)
@@ -38,41 +40,36 @@ public:
         updateWindow (newWindowType);
     }
     
-//    HeapBlock<float>& getNoiseSpectrum()
-//    {
-//        return mNoiseSpectrum;
-//    }
-    
     //======================================
     
     void processBlock (juce::AudioBuffer<float>& block, HeapBlock<float>& noiseSpectrum, float subtractionStrength)
     {
-        numSamples = block.getNumSamples();
+        mNumSamples = block.getNumSamples();
         
-        for (int channel = 0; channel < numChannels; ++channel)
+        for (int channel = 0; channel < mNumChannels; ++channel)
         {
             float* channelData = block.getWritePointer (channel);
             
-            currentInputBufferWritePosition = inputBufferWritePosition;
-            currentOutputBufferWritePosition = outputBufferWritePosition;
-            currentOutputBufferReadPosition = outputBufferReadPosition;
-            currentSamplesSinceLastFFT = samplesSinceLastFFT;
+            mCurrentInputBufferWritePosition = mInputBufferWritePosition;
+            mCurrentOutputBufferWritePosition = mOutputBufferWritePosition;
+            mCurrentOutputBufferReadPosition = mOutputBufferReadPosition;
+            mCurrentSamplesSinceLastFFT = mSamplesSinceLastFFT;
             
-            for (int sample = 0; sample < numSamples; ++sample)
+            for (int sample = 0; sample < mNumSamples; ++sample)
             {
                 const float inputSample = channelData[sample];
-                inputBuffer.setSample (channel, currentInputBufferWritePosition, inputSample);
-                if (++currentInputBufferWritePosition >= inputBufferLength)
-                    currentInputBufferWritePosition = 0;
+                mInputBuffer.setSample (channel, mCurrentInputBufferWritePosition, inputSample);
+                if (++mCurrentInputBufferWritePosition >= mInputBufferLength)
+                    mCurrentInputBufferWritePosition = 0;
                 
-                channelData[sample] = outputBuffer.getSample (channel, currentOutputBufferReadPosition);
-                outputBuffer.setSample (channel, currentOutputBufferReadPosition, 0.0f);
-                if (++currentOutputBufferReadPosition >= outputBufferLength)
-                    currentOutputBufferReadPosition = 0;
+                channelData[sample] = mOutputBuffer.getSample (channel, mCurrentOutputBufferReadPosition);
+                mOutputBuffer.setSample (channel, mCurrentOutputBufferReadPosition, 0.0f);
+                if (++mCurrentOutputBufferReadPosition >= mOutputBufferLength)
+                    mCurrentOutputBufferReadPosition = 0;
                 
-                if (++currentSamplesSinceLastFFT >= hopSize)
+                if (++mCurrentSamplesSinceLastFFT >= mHopSize)
                 {
-                    currentSamplesSinceLastFFT = 0;
+                    mCurrentSamplesSinceLastFFT = 0;
                     
                     analysis (channel);
                     modification(noiseSpectrum, subtractionStrength);
@@ -81,10 +78,10 @@ public:
             }
         }
         
-        inputBufferWritePosition = currentInputBufferWritePosition;
-        outputBufferWritePosition = currentOutputBufferWritePosition;
-        outputBufferReadPosition = currentOutputBufferReadPosition;
-        samplesSinceLastFFT = currentSamplesSinceLastFFT;
+        mInputBufferWritePosition = mCurrentInputBufferWritePosition;
+        mOutputBufferWritePosition = mCurrentOutputBufferWritePosition;
+        mOutputBufferReadPosition = mCurrentOutputBufferReadPosition;
+        mSamplesSinceLastFFT = mCurrentSamplesSinceLastFFT;
     }
     
 private:
@@ -92,42 +89,39 @@ private:
     
     void updateFftSize (const int newFftSize)
     {
-        fftSize = newFftSize;
-        fft = std::make_unique<dsp::FFT>(log2 (fftSize));
+        mFftSize = newFftSize;
+        mFft = std::make_unique<dsp::FFT>(log2 (mFftSize));
         
-        inputBufferLength = fftSize;
-        inputBuffer.clear();
-        inputBuffer.setSize (numChannels, inputBufferLength);
+        mInputBufferLength = mFftSize;
+        mInputBuffer.clear();
+        mInputBuffer.setSize (mNumChannels, mInputBufferLength);
         
-        outputBufferLength = fftSize;
-        outputBuffer.clear();
-        outputBuffer.setSize (numChannels, outputBufferLength);
+        mOutputBufferLength = mFftSize;
+        mOutputBuffer.clear();
+        mOutputBuffer.setSize (mNumChannels, mOutputBufferLength);
         
-        fftWindow.realloc (fftSize);
-        fftWindow.clear (fftSize);
+        mFftWindow.realloc (mFftSize);
+        mFftWindow.clear (mFftSize);
         
-        timeDomainBuffer.realloc (fftSize);
-        timeDomainBuffer.clear (fftSize);
+        mTimeDomainBuffer.realloc (mFftSize);
+        mTimeDomainBuffer.clear (mFftSize);
         
-        frequencyDomainBuffer.realloc (fftSize);
-        frequencyDomainBuffer.clear (fftSize);
+        mFrequencyDomainBuffer.realloc (mFftSize);
+        mFrequencyDomainBuffer.clear (mFftSize);
         
-//        mNoiseSpectrum.realloc (fftSize);
-//        mNoiseSpectrum.clear (fftSize);
-        
-        inputBufferWritePosition = 0;
-        outputBufferWritePosition = 0;
-        outputBufferReadPosition = 0;
-        samplesSinceLastFFT = 0;
+        mInputBufferWritePosition = 0;
+        mOutputBufferWritePosition = 0;
+        mOutputBufferReadPosition = 0;
+        mSamplesSinceLastFFT = 0;
     }
     
     void updateHopSize (const int newOverlap)
     {
-        overlap = newOverlap;
-        if (overlap != 0)
+        mOverlap = newOverlap;
+        if (mOverlap != 0)
         {
-            hopSize = fftSize / overlap;
-            outputBufferWritePosition = hopSize % outputBufferLength;
+            mHopSize = mFftSize / mOverlap;
+            mOutputBufferWritePosition = mHopSize % mOutputBufferLength;
         }
     }
     
@@ -137,50 +131,50 @@ private:
         {
             case kWindowTypeRectangular:
             {
-                for (int sample = 0; sample < fftSize; ++sample)
-                    fftWindow[sample] = 1.0f;
+                for (int sample = 0; sample < mFftSize; ++sample)
+                    mFftWindow[sample] = 1.0f;
                 break;
             }
             case kWindowTypeBartlett:
             {
-                for (int sample = 0; sample < fftSize; ++sample)
-                    fftWindow[sample] = 1.0f - fabs (2.0f * (float)sample / (float)(fftSize - 1) - 1.0f);
+                for (int sample = 0; sample < mFftSize; ++sample)
+                    mFftWindow[sample] = 1.0f - fabs (2.0f * (float) sample / (float) (mFftSize - 1) - 1.0f);
                 break;
             }
             case kWindowTypeHann:
             {
-                for (int sample = 0; sample < fftSize; ++sample)
-                    fftWindow[sample] = 0.5f - 0.5f * cosf (2.0f * M_PI * (float)sample / (float)(fftSize - 1));
+                for (int sample = 0; sample < mFftSize; ++sample)
+                    mFftWindow[sample] = 0.5f - 0.5f * cosf (2.0f * M_PI * (float) sample / (float) (mFftSize - 1));
                 break;
             }
             case kWindowTypeHamming:
             {
-                for (int sample = 0; sample < fftSize; ++sample)
-                    fftWindow[sample] = 0.54f - 0.46f * cosf (2.0f * M_PI * (float)sample / (float)(fftSize - 1));
+                for (int sample = 0; sample < mFftSize; ++sample)
+                    mFftWindow[sample] = 0.54f - 0.46f * cosf (2.0f * M_PI * (float) sample / (float) (mFftSize - 1));
                 break;
             }
         }
         
         float windowSum = 0.0f;
-        for (int sample = 0; sample < fftSize; ++sample)
-            windowSum += fftWindow[sample];
+        for (int sample = 0; sample < mFftSize; ++sample)
+            windowSum += mFftWindow[sample];
         
-        windowScaleFactor = 0.0f;
-        if (overlap != 0 && windowSum != 0.0f)
-            windowScaleFactor = 1.0f / (float)overlap / windowSum * (float)fftSize;
+        mWindowScaleFactor = 0.0f;
+        if (mOverlap != 0 && windowSum != 0.0f)
+            mWindowScaleFactor = 1.0f / (float) mOverlap / windowSum * (float) mFftSize;
     }
     
     //======================================
     
     void analysis (const int channel)
     {
-        int inputBufferIndex = currentInputBufferWritePosition;
-        for (int index = 0; index < fftSize; ++index)
+        int inputBufferIndex = mCurrentInputBufferWritePosition;
+        for (int index = 0; index < mFftSize; ++index)
         {
-            timeDomainBuffer[index].real (fftWindow[index] * inputBuffer.getSample (channel, inputBufferIndex));
-            timeDomainBuffer[index].imag (0.0f);
+            mTimeDomainBuffer[index].real (mFftWindow[index] * mInputBuffer.getSample (channel, inputBufferIndex));
+            mTimeDomainBuffer[index].imag (0.0f);
             
-            if (++inputBufferIndex >= inputBufferLength)
+            if (++inputBufferIndex >= mInputBufferLength)
                 inputBufferIndex = 0;
         }
     }
@@ -189,81 +183,78 @@ private:
     void modification(HeapBlock<float>& noiseSpectrum, float subtractionStrength)
     {
         // Forward FFT
-        fft->perform (timeDomainBuffer, frequencyDomainBuffer, false);
+        mFft->perform (mTimeDomainBuffer, mFrequencyDomainBuffer, false);
         
         // Iterate through frequency bins. We only go up to (fftSize / 2 + 1) in order to ignore the negative frequency bins.
-        for (int index = 0; index < fftSize / 2 + 1; ++index)
+        for (int index = 0; index < mFftSize / 2 + 1; ++index)
         {
             // Separate magnitude and phase
-            float magnitude = abs (frequencyDomainBuffer[index]);
-            float phase = arg (frequencyDomainBuffer[index]);
+            float magnitude = abs (mFrequencyDomainBuffer[index]);
+            float phase = arg (mFrequencyDomainBuffer[index]);
             
-            float newMagnitude = magnitude - subtractionStrength*noiseSpectrum[index];
+            float newMagnitude = magnitude - subtractionStrength * noiseSpectrum[index];
             newMagnitude = (newMagnitude < 0.0) ? 0.0 : newMagnitude;
             
-            frequencyDomainBuffer[index].real (newMagnitude * cosf (phase));
-            frequencyDomainBuffer[index].imag (newMagnitude * sinf (phase));
-            if (index > 0 && index < fftSize / 2)
+            mFrequencyDomainBuffer[index].real (newMagnitude * cosf (phase));
+            mFrequencyDomainBuffer[index].imag (newMagnitude * sinf (phase));
+            if (index > 0 && index < mFftSize / 2)
             {
-                frequencyDomainBuffer[fftSize - index].real (newMagnitude * cosf (phase));
-                frequencyDomainBuffer[fftSize - index].imag (newMagnitude * sinf (-phase));
+                mFrequencyDomainBuffer[mFftSize - index].real (newMagnitude * cosf (phase));
+                mFrequencyDomainBuffer[mFftSize - index].imag (newMagnitude * sinf (-phase));
             }
         }
         
         // Inverse FFT
-        fft->perform (frequencyDomainBuffer, timeDomainBuffer, true);
+        mFft->perform (mFrequencyDomainBuffer, mTimeDomainBuffer, true);
     }
     
     void synthesis (const int channel)
     {
-        int outputBufferIndex = currentOutputBufferWritePosition;
-        for (int index = 0; index < fftSize; ++index)
+        int outputBufferIndex = mCurrentOutputBufferWritePosition;
+        for (int index = 0; index < mFftSize; ++index)
         {
-            float outputSample = outputBuffer.getSample (channel, outputBufferIndex);
-            outputSample += timeDomainBuffer[index].real() * windowScaleFactor;
-            outputBuffer.setSample (channel, outputBufferIndex, outputSample);
+            float outputSample = mOutputBuffer.getSample (channel, outputBufferIndex);
+            outputSample += mTimeDomainBuffer[index].real() * mWindowScaleFactor;
+            mOutputBuffer.setSample (channel, outputBufferIndex, outputSample);
             
-            if (++outputBufferIndex >= outputBufferLength)
+            if (++outputBufferIndex >= mOutputBufferLength)
                 outputBufferIndex = 0;
         }
         
-        currentOutputBufferWritePosition += hopSize;
-        if (currentOutputBufferWritePosition >= outputBufferLength)
-            currentOutputBufferWritePosition = 0;
+        mCurrentOutputBufferWritePosition += mHopSize;
+        if (mCurrentOutputBufferWritePosition >= mOutputBufferLength)
+            mCurrentOutputBufferWritePosition = 0;
     }
     
 protected:
     //======================================
-    int numChannels;
-    int numSamples;
+    int mNumChannels;
+    int mNumSamples;
     
-    int fftSize;
-    std::unique_ptr<dsp::FFT> fft;
+    int mFftSize;
+    std::unique_ptr<dsp::FFT> mFft;
     
-    int inputBufferLength;
-    juce::AudioBuffer<float> inputBuffer;
+    int mInputBufferLength;
+    juce::AudioBuffer<float> mInputBuffer;
     
-    int outputBufferLength;
-    juce::AudioBuffer<float> outputBuffer;
+    int mOutputBufferLength;
+    juce::AudioBuffer<float> mOutputBuffer;
     
-    HeapBlock<float> fftWindow;
-    HeapBlock<dsp::Complex<float>> timeDomainBuffer;
-    HeapBlock<dsp::Complex<float>> frequencyDomainBuffer;
-//    HeapBlock<float> mNoiseSpectrum;
+    HeapBlock<float> mFftWindow;
+    HeapBlock<dsp::Complex<float>> mTimeDomainBuffer;
+    HeapBlock<dsp::Complex<float>> mFrequencyDomainBuffer;
     
-    int overlap;
-    int hopSize;
-    float windowScaleFactor;
+    int mOverlap;
+    int mHopSize;
+    float mWindowScaleFactor;
     
-    int inputBufferWritePosition;
-    int outputBufferWritePosition;
-    int outputBufferReadPosition;
-    int samplesSinceLastFFT;
+    int mInputBufferWritePosition;
+    int mOutputBufferWritePosition;
+    int mOutputBufferReadPosition;
+    int mSamplesSinceLastFFT;
     
-    int currentInputBufferWritePosition;
-    int currentOutputBufferWritePosition;
-    int currentOutputBufferReadPosition;
-    int currentSamplesSinceLastFFT;
+    int mCurrentInputBufferWritePosition;
+    int mCurrentOutputBufferWritePosition;
+    int mCurrentOutputBufferReadPosition;
+    int mCurrentSamplesSinceLastFFT;
 };
-
-//==============================================================================

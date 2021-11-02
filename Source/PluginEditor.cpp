@@ -13,15 +13,16 @@
 
 //==============================================================================
 SpectralSubtractorAudioProcessorEditor::SpectralSubtractorAudioProcessorEditor (SpectralSubtractorAudioProcessor& p)
-    : AudioProcessorEditor (&p), processor (p)
+    : AudioProcessorEditor (&p),
+      processor (p)
 {
     // Make sure that before the constructor has finished, you've set the
     // editor's size to whatever you need it to be.
     mMainPanel = std::make_unique<MainPanel>(&processor);
-    addAndMakeVisible(*mMainPanel);
+    addAndMakeVisible (*mMainPanel);
     
     setResizable (true, true);
-    setResizeLimits(MAIN_PANEL_WIDTH, MAIN_PANEL_HEIGHT, 2 * MAIN_PANEL_WIDTH, 2 * MAIN_PANEL_HEIGHT);
+    setResizeLimits (MAIN_PANEL_WIDTH, MAIN_PANEL_HEIGHT, 3 * MAIN_PANEL_WIDTH, 3 * MAIN_PANEL_HEIGHT);
     getConstrainer()->setFixedAspectRatio (0.72);
     setSize (MAIN_PANEL_WIDTH, MAIN_PANEL_HEIGHT);
 }

@@ -11,13 +11,13 @@
 #include "MainPanel.h"
 
 MainPanel::MainPanel(SpectralSubtractorAudioProcessor* inProcessor)
-:   PanelBase(inProcessor)
+    : PanelBase(inProcessor)
 {
     mTopPanel = std::make_unique<TopPanel>(inProcessor);
-    addAndMakeVisible(*mTopPanel);
+    addAndMakeVisible (*mTopPanel);
     
     mBottomPanel = std::make_unique<BottomPanel>(inProcessor);
-    addAndMakeVisible(*mBottomPanel);
+    addAndMakeVisible (*mBottomPanel);
 }
 
 MainPanel::~MainPanel() {}

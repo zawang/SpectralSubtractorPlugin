@@ -23,23 +23,16 @@ SpectralSubtractorAudioProcessor::SpectralSubtractorAudioProcessor()
                        .withOutput ("Output", AudioChannelSet::stereo(), true)
                      #endif
                        ),
-       parameters(*this, nullptr, juce::Identifier("SpectralSubtractor"),
-                  {
-                      std::make_unique<juce::AudioParameterFloat> (ParameterID[kParameter_SubtractionStrength],      // parameterID
-                                                                   ParameterLabel[kParameter_SubtractionStrength],   // parameter name
-                                                                   0.0f,                                             // minimum value
-                                                                   5.0f,                                             // maximum value
-                                                                   0.0f)                                             // default value
-                  })
+       parameters (*this, nullptr, juce::Identifier("SpectralSubtractor"), createParameterLayout())
 #endif
 {
+    setParams();
+    
     initializeDSP();
     
     // Set up the ValueTree that holds mNoiseSpectrum
-    ValueTree child{IDs::audioData};                                                        // Create a node
-    parameters.state.addChild(child, 0, nullptr);                                           // Add node to root ValueTree
-    
-    mSubtractionStrengthParameter = parameters.getRawParameterValue(ParameterID[kParameter_SubtractionStrength]);
+    ValueTree child {IDs::audioData};                                                        // Create a node
+    parameters.state.addChild (child, 0, nullptr);                                           // Add node to root ValueTree
     
     mFormatManager = std::make_unique<AudioFormatManager>();
     mFormatManager->registerBasicFormats();
@@ -47,6 +40,27 @@ SpectralSubtractorAudioProcessor::SpectralSubtractorAudioProcessor()
 
 SpectralSubtractorAudioProcessor::~SpectralSubtractorAudioProcessor()
 {
+}
+
+juce::AudioProcessorValueTreeState::ParameterLayout SpectralSubtractorAudioProcessor::createParameterLayout()
+{
+    std::vector <std::unique_ptr<juce::RangedAudioParameter>> params;
+    
+    juce::NormalisableRange<float> subtractionStrengthRange {0.0f, 5.0f};
+    float subtractionStrengthDefault = 0.0f;
+    
+    params.push_back (std::make_unique<juce::AudioParameterFloat>(ParameterID[kParameter_SubtractionStrength],
+                                                                  ParameterLabel[kParameter_SubtractionStrength],
+                                                                  subtractionStrengthRange,
+                                                                  subtractionStrengthDefault));
+    
+    return { params.begin(), params.end() };
+}
+
+void SpectralSubtractorAudioProcessor::setParams()
+{
+    mSubtractionStrengthParam = dynamic_cast<juce::AudioParameterFloat*>(parameters.getParameter (ParameterID[kParameter_SubtractionStrength]));
+    jassert (mSubtractionStrengthParam);
 }
 
 //==============================================================================
@@ -156,7 +170,7 @@ void SpectralSubtractorAudioProcessor::processBlock (AudioBuffer<float>& buffer,
     auto totalNumInputChannels  = getTotalNumInputChannels();
     auto totalNumOutputChannels = getTotalNumOutputChannels();
     
-    mFilter.processBlock(buffer, mNoiseSpectrum, *mSubtractionStrengthParameter);
+    mFilter.processBlock(buffer, mNoiseSpectrum, mSubtractionStrengthParam->get());
     
     // In case we have more outputs than inputs, this code clears any output
     // channels that didn't contain input data, (because these aren't
@@ -166,11 +180,6 @@ void SpectralSubtractorAudioProcessor::processBlock (AudioBuffer<float>& buffer,
     // this code if your algorithm always overwrites all the output channels.
     for (auto i = totalNumInputChannels; i < totalNumOutputChannels; ++i)
         buffer.clear (i, 0, buffer.getNumSamples());
-    
-//    for (int channel = 0; channel < totalNumInputChannels; ++channel) {
-//        float* channelData = buffer.getWritePointer(channel);
-//        mFilters[channel]->processBlock(channelData, channelData, buffer.getNumSamples());
-//    }
 }
 
 // Replaces the old noise spectrum with a new noise spectrum.
@@ -207,8 +216,8 @@ void SpectralSubtractorAudioProcessor::getStateInformation (MemoryBlock& destDat
     {
         Array<var> temp;
         heapBlockToArray(mNoiseSpectrum, temp);
-        var mNoiseSpectrumAsString = var(varArrayToDelimitedString(temp));
-        parameters.state.getChild(0).setProperty(IDs::noiseSpectrumID, mNoiseSpectrumAsString, nullptr);
+        var mNoiseSpectrumAsString = var(varArrayToDelimitedString (temp));
+        parameters.state.getChild (0).setProperty (IDs::noiseSpectrumID, mNoiseSpectrumAsString, nullptr);
     }
     
     ValueTree state = parameters.copyState();
@@ -237,12 +246,12 @@ void SpectralSubtractorAudioProcessor::setStateInformation (const void* data, in
         {
             parameters.replaceState (juce::ValueTree::fromXml (*xmlState));
     
-            mNoiseSpectrum.realloc(globalFFTSize);
-            mNoiseSpectrum.clear(globalFFTSize);
-            Array<var> mNoiseSpectrumAsArray = delimitedStringToVarArray(parameters.state.getChild(0).getProperty(IDs::noiseSpectrumID).toString());
-            arrayToHeapBlock(mNoiseSpectrumAsArray, mNoiseSpectrum);
+            mNoiseSpectrum.realloc (globalFFTSize);
+            mNoiseSpectrum.clear (globalFFTSize);
+            Array<var> mNoiseSpectrumAsArray = delimitedStringToVarArray (parameters.state.getChild(0).getProperty (IDs::noiseSpectrumID).toString());
+            arrayToHeapBlock (mNoiseSpectrumAsArray, mNoiseSpectrum);
     
-            xmlState->writeTo(file, XmlElement::TextFormat());
+            xmlState->writeTo (file, XmlElement::TextFormat());
 //            if (xmlState->writeTo(file, XmlElement::TextFormat()))
 //                DBG("fromDAW written");
 //            else
@@ -254,13 +263,13 @@ void SpectralSubtractorAudioProcessor::setStateInformation (const void* data, in
 void SpectralSubtractorAudioProcessor::initializeDSP()
 {
     // Initialize filter
-    mFilter.setup(getTotalNumInputChannels());
-    mFilter.updateParameters(globalFFTSize,
-                             globalFFTSize / globalHopSize,
-                             globalWindow);
+    mFilter.setup (getTotalNumInputChannels());
+    mFilter.updateParameters (globalFFTSize,
+                              globalFFTSize / globalHopSize,
+                              globalWindow);
     
-    mNoiseSpectrum.realloc(globalFFTSize);
-    mNoiseSpectrum.clear(globalFFTSize);
+    mNoiseSpectrum.realloc (globalFFTSize);
+    mNoiseSpectrum.clear (globalFFTSize);
 }
 
 void SpectralSubtractorAudioProcessor::heapBlockToArray(HeapBlock<float>& heapBlock, Array<var>& array)
