@@ -10,12 +10,12 @@
 
 #include "PanelBase.h"
 
-PanelBase::PanelBase(SpectralSubtractorAudioProcessor* inProcessor)
+PanelBase::PanelBase (SpectralSubtractorAudioProcessor* inProcessor)
     : mProcessor (inProcessor) {}
 
 PanelBase::~PanelBase() {}
 
-void PanelBase::paint(Graphics& g)
+void PanelBase::paint (Graphics& g)
 {
     g.setColour (Colours::whitesmoke);
     g.fillAll();

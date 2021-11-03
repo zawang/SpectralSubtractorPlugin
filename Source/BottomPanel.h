@@ -17,12 +17,12 @@ class BottomPanel
 :   public PanelBase
 {
 public:
-    BottomPanel(SpectralSubtractorAudioProcessor* inProcessor);
+    BottomPanel (SpectralSubtractorAudioProcessor* inProcessor);
     ~BottomPanel();
     
     void resized() override;
-    void paint(Graphics& g) override;
+    void paint (Graphics& g) override;
     
 private:
-    std::unique_ptr<ParameterSlider> mSlider;
+    ParameterSlider mSlider { mProcessor->parameters, ParameterID[kParameter_SubtractionStrength], ParameterLabel[kParameter_SubtractionStrength] };
 };

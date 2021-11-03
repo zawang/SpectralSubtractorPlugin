@@ -17,7 +17,7 @@
 //==============================================================================
 /**
 */
-class SpectralSubtractorAudioProcessorEditor  : public AudioProcessorEditor
+class SpectralSubtractorAudioProcessorEditor : public AudioProcessorEditor
 {
 public:
     SpectralSubtractorAudioProcessorEditor (SpectralSubtractorAudioProcessor&);
@@ -32,7 +32,7 @@ private:
     // access the processor object that created it.
     SpectralSubtractorAudioProcessor& processor;
     
-    std::unique_ptr<MainPanel> mMainPanel;      // mMainPanel will contain all the other sub panels
+    MainPanel mMainPanel;      // mMainPanel will contain all the other sub panels
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (SpectralSubtractorAudioProcessorEditor)
 };

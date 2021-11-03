@@ -19,10 +19,10 @@ class PanelBase :
     public Component
 {
 public:
-    PanelBase(SpectralSubtractorAudioProcessor* inProcessor);
+    PanelBase (SpectralSubtractorAudioProcessor* inProcessor);
     ~PanelBase();
         
-    void paint(Graphics& g) override;
+    void paint (Graphics& g) override;
         
 protected:
     SpectralSubtractorAudioProcessor* mProcessor;

@@ -16,13 +16,13 @@ class TopPanel
 :   public PanelBase
 {
 public:
-    TopPanel(SpectralSubtractorAudioProcessor* inProcessor);
+    TopPanel (SpectralSubtractorAudioProcessor* inProcessor);
     ~TopPanel();
     
     void resized() override;
 
 private:
-    std::unique_ptr<TextButton> mLoadFileButton;
+    TextButton mLoadFileButton;
     std::unique_ptr<juce::FileChooser> mFileChooser;
         
     void loadFile();

@@ -19,9 +19,9 @@ class ParameterSlider
 :   public Slider
 {
 public:
-    ParameterSlider(AudioProcessorValueTreeState& state,
-                       const String& parameterID,
-                       const String& parameterLabel);
+    ParameterSlider (AudioProcessorValueTreeState& state,
+                     const String& parameterID,
+                     const String& parameterLabel);
     ~ParameterSlider();
     
     typedef juce::AudioProcessorValueTreeState::SliderAttachment SliderAttachment;

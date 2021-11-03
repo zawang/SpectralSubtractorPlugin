@@ -10,9 +10,9 @@
 
 #include "ParameterSlider.h"
 
-ParameterSlider::ParameterSlider(AudioProcessorValueTreeState& state,
-                                 const String& parameterID,
-                                 const String& parameterLabel)
+ParameterSlider::ParameterSlider (AudioProcessorValueTreeState& state,
+                                  const String& parameterID,
+                                  const String& parameterLabel)
     : juce::Slider (parameterLabel)
 {
     setSliderStyle (SliderStyle::RotaryHorizontalVerticalDrag);

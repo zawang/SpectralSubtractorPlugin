@@ -10,23 +10,22 @@
 
 #include "MainPanel.h"
 
-MainPanel::MainPanel(SpectralSubtractorAudioProcessor* inProcessor)
-    : PanelBase(inProcessor)
+MainPanel::MainPanel (SpectralSubtractorAudioProcessor* inProcessor)
+    : PanelBase (inProcessor),
+      mTopPanel (inProcessor),
+      mBottomPanel (inProcessor)
 {
-    mTopPanel = std::make_unique<TopPanel>(inProcessor);
-    addAndMakeVisible (*mTopPanel);
-    
-    mBottomPanel = std::make_unique<BottomPanel>(inProcessor);
-    addAndMakeVisible (*mBottomPanel);
+    addAndMakeVisible (mTopPanel);
+    addAndMakeVisible (mBottomPanel);
 }
 
 MainPanel::~MainPanel() {}
 
 void MainPanel::resized()
 {
-    auto width = getWidth();
-    auto height = getHeight();
+    int width = getWidth();
+    int height = getHeight();
     
-    mTopPanel->setBounds (0, 0, width, 0.2 * height);
-    mBottomPanel->setBounds (0, mTopPanel->getHeight(), width, height - mTopPanel->getHeight());
+    mTopPanel.setBounds (0, 0, width, 0.2f * height);
+    mBottomPanel.setBounds (0, mTopPanel.getHeight(), width, height - mTopPanel.getHeight());
 }

@@ -19,12 +19,12 @@ class MainPanel
 :   public PanelBase
 {
 public:
-    MainPanel(SpectralSubtractorAudioProcessor* inProcessor);
+    MainPanel (SpectralSubtractorAudioProcessor* inProcessor);
     ~MainPanel();
     
     void resized() override;
 
 private:
-    std::unique_ptr<TopPanel> mTopPanel;
-    std::unique_ptr<BottomPanel> mBottomPanel;
+    TopPanel mTopPanel;
+    BottomPanel mBottomPanel;
 };

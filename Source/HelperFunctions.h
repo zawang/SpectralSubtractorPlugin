@@ -12,7 +12,7 @@
 #include "JuceHeader.h"
 #include "InterfaceDefines.h"
 
-inline void paintComponentLabel(juce::Graphics& g, juce::Component* inComponent)
+inline void paintComponentLabel (juce::Graphics& g, juce::Component* inComponent)
 {
     const int x = inComponent->getX() - (inComponent->getWidth() * 0.25f);
     const int y = inComponent->getY() + inComponent->getHeight();

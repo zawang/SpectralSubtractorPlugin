@@ -14,12 +14,10 @@
 //==============================================================================
 SpectralSubtractorAudioProcessorEditor::SpectralSubtractorAudioProcessorEditor (SpectralSubtractorAudioProcessor& p)
     : AudioProcessorEditor (&p),
-      processor (p)
+      processor (p),
+      mMainPanel (&p)
 {
-    // Make sure that before the constructor has finished, you've set the
-    // editor's size to whatever you need it to be.
-    mMainPanel = std::make_unique<MainPanel>(&processor);
-    addAndMakeVisible (*mMainPanel);
+    addAndMakeVisible (mMainPanel);
     
     setResizable (true, true);
     setResizeLimits (MAIN_PANEL_WIDTH, MAIN_PANEL_HEIGHT, 3 * MAIN_PANEL_WIDTH, 3 * MAIN_PANEL_HEIGHT);
@@ -40,5 +38,5 @@ void SpectralSubtractorAudioProcessorEditor::paint (Graphics& g)
 
 void SpectralSubtractorAudioProcessorEditor::resized()
 {
-    mMainPanel->setBounds (getBounds());
+    mMainPanel.setBounds (getBounds());
 }

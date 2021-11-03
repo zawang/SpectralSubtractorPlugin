@@ -10,24 +10,23 @@
 
 #include "TopPanel.h"
 
-TopPanel::TopPanel(SpectralSubtractorAudioProcessor* inProcessor)
+TopPanel::TopPanel (SpectralSubtractorAudioProcessor* inProcessor)
     : PanelBase (inProcessor)
 {
-    mLoadFileButton = std::make_unique<TextButton>();
-    mLoadFileButton->setButtonText ("Import noise file...");
-    addAndMakeVisible (*mLoadFileButton);
-    mLoadFileButton->onClick = [this] { loadFile(); };
+    mLoadFileButton.setButtonText ("Import noise file...");
+    addAndMakeVisible (mLoadFileButton);
+    mLoadFileButton.onClick = [this] { loadFile(); };
 }
 
 TopPanel::~TopPanel() {}
 
 void TopPanel::resized()
 {
-    auto width = getWidth();
-    auto height = getHeight();
-    auto borderGap = width * 0.025;
+    int width = getWidth();
+    int height = getHeight();
+    float borderGap = width * 0.025f;
     
-    mLoadFileButton->setBounds (borderGap, borderGap, width * 0.4, height * 0.3);
+    mLoadFileButton.setBounds (borderGap, borderGap, width * 0.4f, height * 0.3f);
 }
 
 void TopPanel::loadFile()

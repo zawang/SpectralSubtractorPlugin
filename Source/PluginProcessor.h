@@ -60,7 +60,7 @@ public:
     void getStateInformation (MemoryBlock& destData) override;
     void setStateInformation (const void* data, int sizeInBytes) override;
     
-    void loadNewNoiseSpectrum(HeapBlock<float>& tempNoiseSpectrum);
+    void loadNewNoiseSpectrum (HeapBlock<float>& tempNoiseSpectrum);
     
     // Contains a ValueTree that is used to manage the processor's entire state.
     // Adding parameters to an APVTS automatically adds them to the attached processor too.
@@ -80,10 +80,10 @@ private:
     std::unique_ptr<juce::AudioFormatManager> mFormatManager;
     
     void initializeDSP();
-    void heapBlockToArray(HeapBlock<float>& heapBlock, Array<var>& array);
-    void arrayToHeapBlock(Array<var>& array, HeapBlock<float>& heapBlock);
+    void heapBlockToArray (HeapBlock<float>& heapBlock, Array<var>& array);
+    void arrayToHeapBlock (Array<var>& array, HeapBlock<float>& heapBlock);
     
     // varArrayToDelimitedString and delimitedStringToVarArray are taken from juce_ValueWithDefault.h
-    String varArrayToDelimitedString(const Array<var>& input);
+    String varArrayToDelimitedString (const Array<var>& input);
     Array<var> delimitedStringToVarArray (StringRef input);
 };

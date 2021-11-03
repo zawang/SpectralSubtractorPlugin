@@ -183,7 +183,7 @@ void SpectralSubtractorAudioProcessor::processBlock (AudioBuffer<float>& buffer,
 }
 
 // Replaces the old noise spectrum with a new noise spectrum.
-void SpectralSubtractorAudioProcessor::loadNewNoiseSpectrum(HeapBlock<float>& tempNoiseSpectrum)
+void SpectralSubtractorAudioProcessor::loadNewNoiseSpectrum (HeapBlock<float>& tempNoiseSpectrum)
 {
     jassert (isSuspended());    // playback must be suspended!
     
@@ -272,13 +272,13 @@ void SpectralSubtractorAudioProcessor::initializeDSP()
     mNoiseSpectrum.clear (globalFFTSize);
 }
 
-void SpectralSubtractorAudioProcessor::heapBlockToArray(HeapBlock<float>& heapBlock, Array<var>& array)
+void SpectralSubtractorAudioProcessor::heapBlockToArray (HeapBlock<float>& heapBlock, Array<var>& array)
 {
     for (int i = 0; i < globalFFTSize; i++)
         array.add (heapBlock[i]);
 }
 
-void SpectralSubtractorAudioProcessor::arrayToHeapBlock(Array<var>& array, HeapBlock<float>& heapBlock)
+void SpectralSubtractorAudioProcessor::arrayToHeapBlock (Array<var>& array, HeapBlock<float>& heapBlock)
 {
     for (int i = 0; i < globalFFTSize; i++)
         heapBlock[i] = array[i];

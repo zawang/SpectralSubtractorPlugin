@@ -180,7 +180,7 @@ private:
     }
     
     // Where we do our time-frequency domain processing.
-    void modification(HeapBlock<float>& noiseSpectrum, float subtractionStrength)
+    void modification (HeapBlock<float>& noiseSpectrum, float subtractionStrength)
     {
         // Forward FFT
         mFft->perform (mTimeDomainBuffer, mFrequencyDomainBuffer, false);
