@@ -42,7 +42,7 @@ void TopPanel::loadFile()
                                               nullptr));
     
     mFileChooser->launchAsync (juce::FileBrowserComponent::openMode | juce::FileBrowserComponent::canSelectFiles,
-                              [this] (const juce::FileChooser& fc) mutable
+                              [this] (const juce::FileChooser& fc)
                               {
                                   juce::File file = fc.getResult();
                                   if (file != juce::File{})
