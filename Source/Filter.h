@@ -22,7 +22,7 @@ class Filter
 public:
     //======================================
     
-    Filter() : mNumChannels (1) {}
+    Filter() {}
     
     virtual ~Filter() {}
     
@@ -228,7 +228,7 @@ private:
     
 protected:
     //======================================
-    int mNumChannels;
+    int mNumChannels {1};
     int mNumSamples;
     
     int mFftSize;

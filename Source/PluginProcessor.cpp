@@ -22,17 +22,15 @@ SpectralSubtractorAudioProcessor::SpectralSubtractorAudioProcessor()
                       #endif
                        .withOutput ("Output", AudioChannelSet::stereo(), true)
                      #endif
-                       ),
-       parameters (*this, nullptr, juce::Identifier("SpectralSubtractor"), createParameterLayout())
+                       )
 #endif
 {
     setParams();
     
     initializeDSP();
     
-    // Set up the ValueTree that holds mNoiseSpectrum
-    ValueTree child {IDs::audioData};                                                        // Create a node
-    parameters.state.addChild (child, 0, nullptr);                                           // Add node to root ValueTree
+    juce::ValueTree audioDataNode {IDs::AudioData};             // Create a node
+    parameters.state.appendChild (audioDataNode, nullptr);      // Add node to root ValueTree
     
     mFormatManager = std::make_unique<AudioFormatManager>();
     mFormatManager->registerBasicFormats();
@@ -170,14 +168,8 @@ void SpectralSubtractorAudioProcessor::processBlock (AudioBuffer<float>& buffer,
     auto totalNumInputChannels  = getTotalNumInputChannels();
     auto totalNumOutputChannels = getTotalNumOutputChannels();
     
-    mFilter.processBlock(buffer, mNoiseSpectrum, mSubtractionStrengthParam->get());
+    mFilter.processBlock (buffer, mNoiseSpectrum.get(), mSubtractionStrengthParam->get());
     
-    // In case we have more outputs than inputs, this code clears any output
-    // channels that didn't contain input data, (because these aren't
-    // guaranteed to be empty - they may contain garbage).
-    // This is here to avoid people getting screaming feedback
-    // when they first compile a plugin, but obviously you don't need to keep
-    // this code if your algorithm always overwrites all the output channels.
     for (auto i = totalNumInputChannels; i < totalNumOutputChannels; ++i)
         buffer.clear (i, 0, buffer.getNumSamples());
 }
@@ -207,37 +199,23 @@ AudioProcessorEditor* SpectralSubtractorAudioProcessor::createEditor()
 // Store the plugin's state in an XML object
 void SpectralSubtractorAudioProcessor::getStateInformation (MemoryBlock& destData)
 {
-    // You should use this method to store your parameters in the memory block.
-    // You could do that either as raw data, or use the XML or ValueTree classes
-    // as intermediaries to make it easy to save and load complex data.
-    File file("/Users/zach/Desktop/toDAW.xml");
+    DBG("getStateInformation()");
+    juce::File xmlFile = juce::File::getSpecialLocation (juce::File::SpecialLocationType::userDesktopDirectory).getChildFile ("SpectralSubtractor.xml");
     
-    if (mNoiseSpectrum != nullptr)
-    {
-        Array<var> temp;
-        heapBlockToArray(mNoiseSpectrum, temp);
-        var mNoiseSpectrumAsString = var(varArrayToDelimitedString (temp));
-        parameters.state.getChild (0).setProperty (IDs::noiseSpectrumID, mNoiseSpectrumAsString, nullptr);
-    }
+    if (mNoiseSpectrum.get().get() != nullptr)
+        parameters.state.getChildWithName (IDs::AudioData).setProperty (IDs::NoiseSpectrum, mNoiseSpectrum.toString(), nullptr);
     
-    ValueTree state = parameters.copyState();
-    std::unique_ptr<juce::XmlElement> xml (state.createXml());      // Creates an XmlElement with a tag name of "SpectralSubtractor" that holds a complete image of state and all its children
+    juce::ValueTree state = parameters.copyState();
+    std::unique_ptr<juce::XmlElement> xml (state.createXml());
     copyXmlToBinary (*xml, destData);
     
-    xml->writeTo(file, XmlElement::TextFormat());
-//    if (xml->writeTo(file, XmlElement::TextFormat()))
-//        DBG("toDAW written");
-//    else
-//        DBG("toDAW not written");
+    xml->writeTo (xmlFile, XmlElement::TextFormat());
 }
 
 // Restore the plugin's state from an XML object
 void SpectralSubtractorAudioProcessor::setStateInformation (const void* data, int sizeInBytes)
 {
-    // You should use this method to restore your parameters from this memory block,
-    // whose contents will have been created by the getStateInformation() call.
-    File file("/Users/zach/Desktop/fromDAW.xml");
-    
+    DBG("setStateInformation()");
     std::unique_ptr<juce::XmlElement> xmlState (getXmlFromBinary (data, sizeInBytes));
     
     if (xmlState.get() != nullptr)
@@ -246,16 +224,7 @@ void SpectralSubtractorAudioProcessor::setStateInformation (const void* data, in
         {
             parameters.replaceState (juce::ValueTree::fromXml (*xmlState));
     
-            mNoiseSpectrum.realloc (globalFFTSize);
-            mNoiseSpectrum.clear (globalFFTSize);
-            Array<var> mNoiseSpectrumAsArray = delimitedStringToVarArray (parameters.state.getChild(0).getProperty (IDs::noiseSpectrumID).toString());
-            arrayToHeapBlock (mNoiseSpectrumAsArray, mNoiseSpectrum);
-    
-            xmlState->writeTo (file, XmlElement::TextFormat());
-//            if (xmlState->writeTo(file, XmlElement::TextFormat()))
-//                DBG("fromDAW written");
-//            else
-//                DBG("fromDAW not written");
+            mNoiseSpectrum.allocateFromString (parameters.state.getChildWithName (IDs::AudioData).getProperty (IDs::NoiseSpectrum).toString());
         }
     }
 }
@@ -270,40 +239,6 @@ void SpectralSubtractorAudioProcessor::initializeDSP()
     
     mNoiseSpectrum.realloc (globalFFTSize);
     mNoiseSpectrum.clear (globalFFTSize);
-}
-
-void SpectralSubtractorAudioProcessor::heapBlockToArray (HeapBlock<float>& heapBlock, Array<var>& array)
-{
-    for (int i = 0; i < globalFFTSize; i++)
-        array.add (heapBlock[i]);
-}
-
-void SpectralSubtractorAudioProcessor::arrayToHeapBlock (Array<var>& array, HeapBlock<float>& heapBlock)
-{
-    for (int i = 0; i < globalFFTSize; i++)
-        heapBlock[i] = array[i];
-}
-
-String SpectralSubtractorAudioProcessor::varArrayToDelimitedString (const Array<var>& input)
-{
-    // if you are trying to control a var that is an array then you need to
-    // set a delimiter string that will be used when writing to XML!
-    StringArray elements;
-
-    for (auto& v : input)
-        elements.add (v.toString());
-
-    return elements.joinIntoString (",");
-}
-
-Array<var> SpectralSubtractorAudioProcessor::delimitedStringToVarArray (StringRef input)
-{
-    Array<var> arr;
-    
-    for (auto t : StringArray::fromTokens (input, ",", {}))
-        arr.add (t);
-    
-    return arr;
 }
 
 //==============================================================================
