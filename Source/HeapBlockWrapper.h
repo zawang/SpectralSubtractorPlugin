@@ -15,25 +15,27 @@
 
 /** Simple wrapper of juce::HeapBlock that can convert to/from a juce::String and has a variable to keep track of the number of elements allocated.  */
 template <class ElementType, bool throwOnFailure = false>
-class SerializableHeapBlock
+class HeapBlockWrapper
 {
 public:
-    SerializableHeapBlock ()
+    HeapBlockWrapper ()
     {}
     
     template <typename SizeType>
-    SerializableHeapBlock (SizeType numElements)
+    HeapBlockWrapper (SizeType numElements)
         : mHeapBlock (numElements),
           mNumElements (numElements)
     {}
     
     template <typename SizeType>
-    SerializableHeapBlock (SizeType numElements, bool initialiseToZero)
+    HeapBlockWrapper (SizeType numElements, bool initialiseToZero)
         : mHeapBlock (numElements, initialiseToZero),
           mNumElements (numElements)
     {}
     
     juce::HeapBlock<ElementType, throwOnFailure>& get() noexcept { return mHeapBlock; }
+    
+    size_t size() const noexcept { return mNumElements; }
     
     template <typename IndexType>
     ElementType& operator[] (IndexType index) const noexcept { return mHeapBlock[index]; }
@@ -52,8 +54,6 @@ public:
     template <typename SizeType>
     void malloc (SizeType newNumElements, size_t elementSize = sizeof (ElementType))
     {
-        DBG("SerializableHeapBlock::malloc()");
-        
         mHeapBlock.malloc (newNumElements, elementSize);
         mNumElements = newNumElements;
     }
@@ -61,8 +61,6 @@ public:
     template <typename SizeType>
     void calloc (SizeType newNumElements, size_t elementSize = sizeof (ElementType))
     {
-        DBG("SerializableHeapBlock::calloc()");
-        
         mHeapBlock.calloc (newNumElements, elementSize);
         mNumElements = newNumElements;
     }
@@ -70,8 +68,6 @@ public:
     template <typename SizeType>
     void realloc (SizeType newNumElements, size_t elementSize = sizeof (ElementType))
     {
-        DBG("SerializableHeapBlock::realloc()");
-        
         mHeapBlock.realloc (newNumElements, elementSize);
         mNumElements = newNumElements;
     }

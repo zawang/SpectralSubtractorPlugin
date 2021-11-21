@@ -34,6 +34,11 @@ SpectralSubtractorAudioProcessor::SpectralSubtractorAudioProcessor()
     
     mFormatManager = std::make_unique<AudioFormatManager>();
     mFormatManager->registerBasicFormats();
+    
+#if RUN_UNIT_TESTS == 1
+    std::cout << "Running unit tests..." << std::endl;
+    mUnitTestRunner.runAllTests();
+#endif
 }
 
 SpectralSubtractorAudioProcessor::~SpectralSubtractorAudioProcessor()
@@ -179,9 +184,9 @@ void SpectralSubtractorAudioProcessor::loadNewNoiseSpectrum (HeapBlock<float>& t
 {
     jassert (isSuspended());    // playback must be suspended!
     
-    // TODO: use memcpy instead?
-    for (int i = 0; i < globalFFTSize; ++i)
-        mNoiseSpectrum[i] = tempNoiseSpectrum[i];
+    // TODO: add a saftey check to ensure mNoiseSpectrum and tempNoiseSpectrum have the same element type?
+    
+    std::memcpy (mNoiseSpectrum.get(), tempNoiseSpectrum, mNoiseSpectrum.size() * sizeof (float));
 }
 
 //==============================================================================
@@ -224,7 +229,9 @@ void SpectralSubtractorAudioProcessor::setStateInformation (const void* data, in
         {
             parameters.replaceState (juce::ValueTree::fromXml (*xmlState));
     
-            mNoiseSpectrum.allocateFromString (parameters.state.getChildWithName (IDs::AudioData).getProperty (IDs::NoiseSpectrum).toString());
+            if (auto noiseSpectrumAsString = parameters.state.getChildWithName (IDs::AudioData).getProperty (IDs::NoiseSpectrum).toString();
+                !noiseSpectrumAsString.isEmpty())
+                mNoiseSpectrum.allocateFromString (noiseSpectrumAsString);
         }
     }
 }

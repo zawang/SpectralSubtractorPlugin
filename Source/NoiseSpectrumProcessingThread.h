@@ -10,8 +10,6 @@
 
 #pragma once
 
-#include "PluginProcessor.h"
-
 // Thread that calculates a noise file's average spectrum and replace's the audio processor's old noise spectrum with the one it just calculated.
 class NoiseSpectrumProcessingThread : public juce::ThreadWithProgressWindow
 {
@@ -135,22 +133,16 @@ public:
             // fFft works on the data in place, and needs twice as much space as the input size.
             std::vector<float> fftBuffer (fftSize * 2UL);
         
-            int signalIndex = 0;
             // While data remains
+            const float* signalData = signal->getReadPointer (channel);
             for (int i = 0; i < numHops; ++i)
             {
                 if (threadShouldExit()) return;
                 
                 setProgress (progress / thingsToDo);
                 
-                jassert(signalIndex < signal->getNumSamples());
-                
                 // Prepare segment to perform FFT on.
-                for (int j = 0; j < fftSize; ++j)
-                {
-                    fftBuffer[j] = signal->getSample (channel, signalIndex + j);
-                }
-//                std::memcpy(fftBuffer.data(), data, fftSize * sizeof(float));
+                std::memcpy (fftBuffer.data(), signalData, fftSize * sizeof (float));
                 
                 // Apply the windowing to the chunk of samples before passing it to the FFT.
                 mWindow.multiplyWithWindowingTable (fftBuffer.data(), fftSize);
@@ -165,7 +157,7 @@ public:
                 }
                 
                 // Next chunk
-                signalIndex += mHop;
+                signalData += mHop;
                 
                 ++progress;
             }
@@ -199,12 +191,33 @@ private:
     HeapBlock<float> mTempNoiseSpectrum;
     juce::File mNoiseFile;
     std::unique_ptr<juce::AudioFormatReader> mReader;
-    bool mErrorLoadingFile { false };
+    bool mErrorLoadingFile {false};
     
     // For creating spectrogram
     size_t mHop { globalHopSize };
-    juce::dsp::FFT mFft { static_cast<int>(std::log2 (globalFFTSize)) };
-    juce::dsp::WindowingFunction<float> mWindow { static_cast<size_t>(mFft.getSize() + 1),
-                                                  juce::dsp::WindowingFunction<float>::hann,
-                                                  false };
+    juce::dsp::FFT mFft {static_cast<int> (std::log2 (globalFFTSize))};
+    juce::dsp::WindowingFunction<float> mWindow {static_cast<size_t> (mFft.getSize() + 1),
+                                                 juce::dsp::WindowingFunction<float>::hann,
+                                                 false };
 };
+
+#if RUN_UNIT_TESTS == 1
+
+// TODO: COMPARE STFT WITH scipy.signal.stft
+/*struct NoiseSpectrumProcessingThreadTests : public juce::UnitTest
+{
+    NoiseSpectrumProcessingThreadTests()
+        : juce::UnitTest ("NoiseSpectrumProcessingThread")
+    {}
+    
+    void runTest() override
+    {
+        beginTest ("");
+        {
+        }
+    }
+    
+};
+static NoiseSpectrumProcessingThreadTests noiseSpectrumProcessingThreadTests;*/
+
+#endif

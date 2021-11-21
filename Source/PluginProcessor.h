@@ -14,7 +14,7 @@
 #include "AudioFunctions.h"
 #include "Filter.h"
 #include "Parameters.h"
-#include "SerializableHeapBlock.h"
+#include "HeapBlockWrapper.h"
 
 //==============================================================================
 /**
@@ -76,9 +76,11 @@ private:
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (SpectralSubtractorAudioProcessor)
     
     Filter mFilter;
-    SerializableHeapBlock<float> mNoiseSpectrum;                                    // Holds the average magnitude spectrum of the noise signal
+    HeapBlockWrapper<float> mNoiseSpectrum;                                    // Holds the average magnitude spectrum of the noise signal
     juce::AudioParameterFloat* mSubtractionStrengthParam = nullptr;
     std::unique_ptr<juce::AudioFormatManager> mFormatManager;
+    
+    juce::UnitTestRunner mUnitTestRunner;
     
     void initializeDSP();
     void heapBlockToArray (HeapBlock<float>& heapBlock, Array<var>& array);
