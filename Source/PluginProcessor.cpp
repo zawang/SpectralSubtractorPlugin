@@ -10,7 +10,6 @@
 
 #include "PluginProcessor.h"
 #include "PluginEditor.h"
-#include "IDs.h"
 
 //==============================================================================
 SpectralSubtractorAudioProcessor::SpectralSubtractorAudioProcessor()

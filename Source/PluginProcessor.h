@@ -13,6 +13,7 @@
 #include "../JuceLibraryCode/JuceHeader.h"
 #include "SpectralSubtractor.h"
 #include "Parameters.h"
+#include "IDs.h"
 #include "HeapBlockWrapper.h"
 
 //==============================================================================
