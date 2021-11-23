@@ -63,17 +63,31 @@ public:
             mCurrentOutputBufferReadPosition = mOutputBufferReadPosition;
             mCurrentSamplesSinceLastFFT = mSamplesSinceLastFFT;
             
+            int relativeCurrentOutputBufferReadPosition = 0;
+            int relativeCurrentInputBufferWritePosition = 0;
+            FloatType* inputBufferData = mInputBuffer.getWritePointer (channel, mCurrentInputBufferWritePosition);
+            FloatType* outputBufferData = mOutputBuffer.getWritePointer (channel, mCurrentOutputBufferReadPosition);
             for (int sample = 0; sample < mNumSamples; ++sample)
             {
                 const FloatType inputSample = channelData[sample];
-                mInputBuffer.setSample (channel, mCurrentInputBufferWritePosition, inputSample);
+                inputBufferData[relativeCurrentInputBufferWritePosition] = inputSample;
+                ++relativeCurrentInputBufferWritePosition;
                 if (++mCurrentInputBufferWritePosition >= mInputBufferLength)
+                {
                     mCurrentInputBufferWritePosition = 0;
+                    inputBufferData = mInputBuffer.getWritePointer (channel, mCurrentInputBufferWritePosition);
+                    relativeCurrentInputBufferWritePosition = 0;
+                }
                 
-                channelData[sample] = mOutputBuffer.getSample (channel, mCurrentOutputBufferReadPosition);
-                mOutputBuffer.setSample (channel, mCurrentOutputBufferReadPosition, 0.0f);
+                channelData[sample] = outputBufferData[relativeCurrentOutputBufferReadPosition];
+                outputBufferData[relativeCurrentOutputBufferReadPosition] = static_cast<FloatType> (0);
+                ++relativeCurrentOutputBufferReadPosition;
                 if (++mCurrentOutputBufferReadPosition >= mOutputBufferLength)
+                {
                     mCurrentOutputBufferReadPosition = 0;
+                    outputBufferData = mOutputBuffer.getWritePointer (channel, mCurrentOutputBufferReadPosition);
+                    relativeCurrentOutputBufferReadPosition = 0;
+                }
                 
                 if (++mCurrentSamplesSinceLastFFT >= mHopSize)
                 {
@@ -163,12 +177,12 @@ private:
             }
         }
         
-        FloatType windowSum = 0.0f;
+        FloatType windowSum = static_cast<FloatType> (0);
         for (int sample = 0; sample < mFFTSize; ++sample)
             windowSum += mFFTWindow[sample];
         
-        mWindowScaleFactor = 0.0f;
-        if (mOverlap != 0 && windowSum != 0.0f)
+        mWindowScaleFactor = static_cast<FloatType> (0);
+        if (mOverlap != 0 && windowSum != static_cast<FloatType> (0))
             mWindowScaleFactor = 1.0f / (FloatType) mOverlap / windowSum * (FloatType) mFFTSize;
     }
     
@@ -177,13 +191,20 @@ private:
     void analysis (const int channel)
     {
         int inputBufferIndex = mCurrentInputBufferWritePosition;
+        int relativeInputBufferIndex = 0;
+        const FloatType* inputBufferData = mInputBuffer.getReadPointer (channel, inputBufferIndex);
         for (int index = 0; index < mFFTSize; ++index)
         {
-            mTimeDomainBuffer[index].real (mFFTWindow[index] * mInputBuffer.getSample (channel, inputBufferIndex));
-            mTimeDomainBuffer[index].imag (0.0f);
+            mTimeDomainBuffer[index].real (mFFTWindow[index] * inputBufferData[relativeInputBufferIndex]);
+            mTimeDomainBuffer[index].imag (static_cast<FloatType> (0));
             
+            ++relativeInputBufferIndex;
             if (++inputBufferIndex >= mInputBufferLength)
+            {
                 inputBufferIndex = 0;
+                inputBufferData = mInputBuffer.getReadPointer (channel, inputBufferIndex);
+                relativeInputBufferIndex = 0;
+            }
         }
     }
     
@@ -218,14 +239,19 @@ private:
     void synthesis (const int channel)
     {
         int outputBufferIndex = mCurrentOutputBufferWritePosition;
+        int relativeOutputBufferIndex = 0;
+        FloatType* outputBufferData = mOutputBuffer.getWritePointer (channel, outputBufferIndex);
         for (int index = 0; index < mFFTSize; ++index)
         {
-            FloatType outputSample = mOutputBuffer.getSample (channel, outputBufferIndex);
-            outputSample += mTimeDomainBuffer[index].real() * mWindowScaleFactor;
-            mOutputBuffer.setSample (channel, outputBufferIndex, outputSample);
+            outputBufferData[relativeOutputBufferIndex] = outputBufferData[relativeOutputBufferIndex] + (mTimeDomainBuffer[index].real() * mWindowScaleFactor);
             
+            ++relativeOutputBufferIndex;
             if (++outputBufferIndex >= mOutputBufferLength)
+            {
                 outputBufferIndex = 0;
+                outputBufferData = mOutputBuffer.getWritePointer (channel, outputBufferIndex);
+                relativeOutputBufferIndex = 0;
+            }
         }
         
         mCurrentOutputBufferWritePosition += mHopSize;
