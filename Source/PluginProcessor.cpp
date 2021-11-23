@@ -239,12 +239,12 @@ void SpectralSubtractorAudioProcessor::initializeDSP()
 {
     // Initialize filter
     mSpectralSubtractor.setup (getTotalNumInputChannels());
-    mSpectralSubtractor.updateParameters (globalFFTSize,
-                                          globalFFTSize / globalHopSize,
-                                          globalWindow);
+    mSpectralSubtractor.updateParameters (mFFTSize,
+                                          mFFTSize / mHopSize,
+                                          mWindow);
     
-    mNoiseSpectrum.realloc (globalFFTSize);
-    mNoiseSpectrum.clear (globalFFTSize);
+    mNoiseSpectrum.realloc (mFFTSize);
+    mNoiseSpectrum.clear (mFFTSize);
 }
 
 //==============================================================================

@@ -5,8 +5,6 @@
               defines="RUN_UNIT_TESTS=1" cppLanguageStandard="17">
   <MAINGROUP id="aFs5Dz" name="Spectral Subtractor">
     <GROUP id="{931A4626-700B-5937-316D-6E7DB4E3EB60}" name="DSP">
-      <FILE id="Pi4NhR" name="AudioFunctions.h" compile="0" resource="0"
-            file="Source/AudioFunctions.h"/>
       <FILE id="DzKZqz" name="NoiseSpectrumProcessingThread.h" compile="0"
             resource="0" file="Source/NoiseSpectrumProcessingThread.h"/>
       <FILE id="VaXtGC" name="SpectralSubtractor.h" compile="0" resource="0"

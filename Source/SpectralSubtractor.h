@@ -28,7 +28,7 @@ public:
     
     ~SpectralSubtractor() {}
     
-    void setSubtractionStrength (std::atomic<FloatType>* subtractionStrength)
+    void setSubtractionStrength (std::atomic<float>* subtractionStrength)
     {
         mSubtractionStrength = subtractionStrength;
         jassert (mSubtractionStrength);
@@ -36,7 +36,7 @@ public:
     
 private:
     juce::HeapBlock<FloatType>& mNoiseSpectrum;
-    std::atomic<FloatType>* mSubtractionStrength = nullptr;
+    std::atomic<float>* mSubtractionStrength = nullptr;
     
     void processMagAndPhase (int index, FloatType& magnitude, FloatType& phase) override
     {

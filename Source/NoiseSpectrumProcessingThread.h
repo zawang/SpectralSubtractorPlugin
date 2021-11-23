@@ -18,12 +18,16 @@ public:
     // One audio channel of FFT data over time, really 2-dimensional
     using Spectrogram = std::vector<HeapBlock<FloatType>>;
     
-    NoiseSpectrumProcessingThread (SpectralSubtractorAudioProcessor* inProcessor, juce::File inFile)
+    NoiseSpectrumProcessingThread (SpectralSubtractorAudioProcessor* inProcessor, juce::File inFile, int fftSize, int hopSize)
         : juce::ThreadWithProgressWindow ("Preparing noise spectrum...", true, true, 10000),
           mProcessor (inProcessor),
-          mNoiseFile (inFile)
+          mNoiseFile (inFile),
+          mFFT (static_cast<int> (std::log2 (fftSize))),
+          mHop (hopSize),
+          mWindow (static_cast<size_t> (fftSize + 1), juce::dsp::WindowingFunction<FloatType>::hann, false)
     {
         jassert (mNoiseFile != juce::File{});
+        jassert (hopSize <= fftSize);
         
         setStatusMessage ("Getting ready...");
     }
@@ -62,7 +66,7 @@ public:
             setProgress (-1.0);
             setStatusMessage ("Computing noise spectrum...");
             
-            computeAverageSpectrum (mTempNoiseSpectrum, noiseSpectrogram, globalFFTSize);
+            computeAverageSpectrum (mTempNoiseSpectrum, noiseSpectrogram, mFFT.getSize());
             
             if (threadShouldExit()) return;
             
@@ -108,7 +112,7 @@ public:
         const size_t dataCount = signal->getNumSamples();
         
         // fftSize will be the number of bins we used to initialize the SpectrogramMaker.
-        ptrdiff_t fftSize = mFft.getSize();
+        ptrdiff_t fftSize = mFFT.getSize();
         
         // Calculate number of hops
         ptrdiff_t numHops = 1L + static_cast<long>((dataCount - fftSize) / mHop);
@@ -152,7 +156,7 @@ public:
                 mWindow.multiplyWithWindowingTable (fftBuffer.data(), fftSize);
                 
                 // performFrequencyOnlyForwardTransform produces a magnitude frequency response spectrum.
-                mFft.performFrequencyOnlyForwardTransform (fftBuffer.data());
+                mFFT.performFrequencyOnlyForwardTransform (fftBuffer.data());
                 
                 // Add the positive frequency bins (including the center bin) from fftBuffer to the spectrogram.
                 for (int j = 0; j < numRows; ++j)
@@ -198,11 +202,9 @@ private:
     bool mErrorLoadingFile {false};
     
     // For creating spectrogram
-    size_t mHop { globalHopSize };
-    juce::dsp::FFT mFft {static_cast<int> (std::log2 (globalFFTSize))};
-    juce::dsp::WindowingFunction<FloatType> mWindow {static_cast<size_t> (mFft.getSize() + 1),
-                                                 juce::dsp::WindowingFunction<FloatType>::hann,
-                                                 false};
+    juce::dsp::FFT mFFT;
+    size_t mHop;
+    juce::dsp::WindowingFunction<FloatType> mWindow;
 };
 
 #if RUN_UNIT_TESTS == 1

@@ -11,7 +11,6 @@
 #pragma once
 
 #include "../JuceLibraryCode/JuceHeader.h"
-#include "AudioFunctions.h"
 #include "SpectralSubtractor.h"
 #include "Parameters.h"
 #include "HeapBlockWrapper.h"
@@ -70,13 +69,19 @@ public:
     juce::AudioFormatManager* getFormatManager() {
         return mFormatManager.get();
     }
+    
+    // TODO: turn these into actual parameters!!!
+    const int mFFTSize = 2048;
+    const int mHopSize = 512;
+    const int mWindow = STFT<float>::kWindowTypeHann;
 
 private:
     //==============================================================================
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (SpectralSubtractorAudioProcessor)
     
-    HeapBlockWrapper<float> mNoiseSpectrum;                                    // Holds the average magnitude spectrum of the noise signal
     std::atomic<float>* mSubtractionStrengthParam = nullptr;
+    
+    HeapBlockWrapper<float> mNoiseSpectrum;                                    // Holds the average magnitude spectrum of the noise signal
     SpectralSubtractor<float> mSpectralSubtractor {mNoiseSpectrum.get()};
     std::unique_ptr<juce::AudioFormatManager> mFormatManager;
     
