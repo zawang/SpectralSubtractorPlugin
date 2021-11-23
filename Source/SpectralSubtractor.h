@@ -16,28 +16,29 @@
 
 //==============================================================================
 
-class SpectralSubtractor : public STFT
+template <typename FloatType>
+class SpectralSubtractor : public STFT<FloatType>
 {
 public:
     //======================================
     
-    SpectralSubtractor (juce::HeapBlock<float>& noiseSpectrum)
+    SpectralSubtractor (juce::HeapBlock<FloatType>& noiseSpectrum)
         : mNoiseSpectrum (noiseSpectrum)
     {}
     
     ~SpectralSubtractor() {}
     
-    void setSubtractionStrength (std::atomic<float>* subtractionStrength)
+    void setSubtractionStrength (std::atomic<FloatType>* subtractionStrength)
     {
         mSubtractionStrength = subtractionStrength;
         jassert (mSubtractionStrength);
     }
     
 private:
-    juce::HeapBlock<float>& mNoiseSpectrum;
-    std::atomic<float>* mSubtractionStrength = nullptr;
+    juce::HeapBlock<FloatType>& mNoiseSpectrum;
+    std::atomic<FloatType>* mSubtractionStrength = nullptr;
     
-    void processMagAndPhase (int index, float& magnitude, float& phase) override
+    void processMagAndPhase (int index, FloatType& magnitude, FloatType& phase) override
     {
         magnitude -= (*mSubtractionStrength) * mNoiseSpectrum[index];
         magnitude = (magnitude < 0.0f) ? 0.0f : magnitude;

@@ -19,6 +19,7 @@
 
 //==============================================================================
 
+template <typename FloatType>
 class STFT
 {
 public:
@@ -52,13 +53,13 @@ public:
     
     //======================================
     
-    void processBlock (juce::AudioBuffer<float>& block)
+    void processBlock (juce::AudioBuffer<FloatType>& block)
     {
         mNumSamples = block.getNumSamples();
         
         for (int channel = 0; channel < mNumChannels; ++channel)
         {
-            float* channelData = block.getWritePointer (channel);
+            FloatType* channelData = block.getWritePointer (channel);
             
             mCurrentInputBufferWritePosition = mInputBufferWritePosition;
             mCurrentOutputBufferWritePosition = mOutputBufferWritePosition;
@@ -67,7 +68,7 @@ public:
             
             for (int sample = 0; sample < mNumSamples; ++sample)
             {
-                const float inputSample = channelData[sample];
+                const FloatType inputSample = channelData[sample];
                 mInputBuffer.setSample (channel, mCurrentInputBufferWritePosition, inputSample);
                 if (++mCurrentInputBufferWritePosition >= mInputBufferLength)
                     mCurrentInputBufferWritePosition = 0;
@@ -148,30 +149,30 @@ private:
             case kWindowTypeBartlett:
             {
                 for (int sample = 0; sample < mFFTSize; ++sample)
-                    mFFTWindow[sample] = 1.0f - fabs (2.0f * (float) sample / (float) (mFFTSize - 1) - 1.0f);
+                    mFFTWindow[sample] = 1.0f - fabs (2.0f * (FloatType) sample / (FloatType) (mFFTSize - 1) - 1.0f);
                 break;
             }
             case kWindowTypeHann:
             {
                 for (int sample = 0; sample < mFFTSize; ++sample)
-                    mFFTWindow[sample] = 0.5f - 0.5f * cosf (2.0f * M_PI * (float) sample / (float) (mFFTSize - 1));
+                    mFFTWindow[sample] = 0.5f - 0.5f * cosf (2.0f * M_PI * (FloatType) sample / (FloatType) (mFFTSize - 1));
                 break;
             }
             case kWindowTypeHamming:
             {
                 for (int sample = 0; sample < mFFTSize; ++sample)
-                    mFFTWindow[sample] = 0.54f - 0.46f * cosf (2.0f * M_PI * (float) sample / (float) (mFFTSize - 1));
+                    mFFTWindow[sample] = 0.54f - 0.46f * cosf (2.0f * M_PI * (FloatType) sample / (FloatType) (mFFTSize - 1));
                 break;
             }
         }
         
-        float windowSum = 0.0f;
+        FloatType windowSum = 0.0f;
         for (int sample = 0; sample < mFFTSize; ++sample)
             windowSum += mFFTWindow[sample];
         
         mWindowScaleFactor = 0.0f;
         if (mOverlap != 0 && windowSum != 0.0f)
-            mWindowScaleFactor = 1.0f / (float) mOverlap / windowSum * (float) mFFTSize;
+            mWindowScaleFactor = 1.0f / (FloatType) mOverlap / windowSum * (FloatType) mFFTSize;
     }
     
     //======================================
@@ -199,8 +200,8 @@ private:
         for (int index = 0; index < mFFTSize / 2 + 1; ++index)
         {
             // Separate magnitude and phase
-            float magnitude = abs (mFrequencyDomainBuffer[index]);
-            float phase = arg (mFrequencyDomainBuffer[index]);
+            FloatType magnitude = abs (mFrequencyDomainBuffer[index]);
+            FloatType phase = arg (mFrequencyDomainBuffer[index]);
             
             processMagAndPhase (index, magnitude, phase);
             
@@ -222,7 +223,7 @@ private:
         int outputBufferIndex = mCurrentOutputBufferWritePosition;
         for (int index = 0; index < mFFTSize; ++index)
         {
-            float outputSample = mOutputBuffer.getSample (channel, outputBufferIndex);
+            FloatType outputSample = mOutputBuffer.getSample (channel, outputBufferIndex);
             outputSample += mTimeDomainBuffer[index].real() * mWindowScaleFactor;
             mOutputBuffer.setSample (channel, outputBufferIndex, outputSample);
             
@@ -236,7 +237,7 @@ private:
     }
     
     // Override this function to do something interesting!
-    virtual void processMagAndPhase (int index, float& magnitude, float& phase) {}
+    virtual void processMagAndPhase (int index, FloatType& magnitude, FloatType& phase) {}
     
 protected:
     //======================================
@@ -247,18 +248,18 @@ protected:
     std::unique_ptr<dsp::FFT> mFFT;
     
     int mInputBufferLength;
-    juce::AudioBuffer<float> mInputBuffer;
+    juce::AudioBuffer<FloatType> mInputBuffer;
     
     int mOutputBufferLength;
-    juce::AudioBuffer<float> mOutputBuffer;
+    juce::AudioBuffer<FloatType> mOutputBuffer;
     
-    HeapBlock<float> mFFTWindow;
-    HeapBlock<dsp::Complex<float>> mTimeDomainBuffer;
-    HeapBlock<dsp::Complex<float>> mFrequencyDomainBuffer;
+    HeapBlock<FloatType> mFFTWindow;
+    HeapBlock<dsp::Complex<FloatType>> mTimeDomainBuffer;
+    HeapBlock<dsp::Complex<FloatType>> mFrequencyDomainBuffer;
     
     int mOverlap;
     int mHopSize;
-    float mWindowScaleFactor;
+    FloatType mWindowScaleFactor;
     
     int mInputBufferWritePosition;
     int mOutputBufferWritePosition;

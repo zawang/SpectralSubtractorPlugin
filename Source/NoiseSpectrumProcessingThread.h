@@ -11,11 +11,12 @@
 #pragma once
 
 // Thread that calculates a noise file's average spectrum and replace's the audio processor's old noise spectrum with the one it just calculated.
+template <typename FloatType>
 class NoiseSpectrumProcessingThread : public juce::ThreadWithProgressWindow
 {
 public:
     // One audio channel of FFT data over time, really 2-dimensional
-    using Spectrogram = std::vector<HeapBlock<float>>;
+    using Spectrogram = std::vector<HeapBlock<FloatType>>;
     
     NoiseSpectrumProcessingThread (SpectralSubtractorAudioProcessor* inProcessor, juce::File inFile)
         : juce::ThreadWithProgressWindow ("Preparing noise spectrum...", true, true, 10000),
@@ -38,7 +39,7 @@ public:
         mReader.reset (mProcessor->getFormatManager()->createReaderFor (mNoiseFile));
         if (mReader.get() != nullptr)
         {
-            auto noiseBuffer = std::make_unique<juce::AudioBuffer<float>> ((int) mReader->numChannels, (int) mReader->lengthInSamples);
+            auto noiseBuffer = std::make_unique<juce::AudioBuffer<FloatType>> ((int) mReader->numChannels, (int) mReader->lengthInSamples);
             
             if (threadShouldExit()) return; // must check this as often as possible, because this is how we know if the user's pressed 'cancel'
             
@@ -102,7 +103,7 @@ public:
     }
     
     // Compute the stft on each channel of signal and average the results to produce one spectrogram.
-    void stft (Spectrogram& spectrogram, juce::AudioBuffer<float>* signal)
+    void stft (Spectrogram& spectrogram, juce::AudioBuffer<FloatType>* signal)
     {
         const size_t dataCount = signal->getNumSamples();
         
@@ -134,10 +135,10 @@ public:
             if (threadShouldExit()) return;
             
             // fFft works on the data in place, and needs twice as much space as the input size.
-            std::vector<float> fftBuffer (fftSize * 2UL);
+            std::vector<FloatType> fftBuffer (fftSize * 2UL);
         
             // While data remains
-            const float* signalData = signal->getReadPointer (channel, 0);
+            const FloatType* signalData = signal->getReadPointer (channel, 0);
             for (int i = 0; i < numHops; ++i)
             {
                 if (threadShouldExit()) return;
@@ -145,7 +146,7 @@ public:
                 setProgress (progress / thingsToDo);
                 
                 // Prepare segment to perform FFT on.
-                std::memcpy (fftBuffer.data(), signalData, fftSize * sizeof (float));
+                std::memcpy (fftBuffer.data(), signalData, fftSize * sizeof (FloatType));
                 
                 // Apply the windowing to the chunk of samples before passing it to the FFT.
                 mWindow.multiplyWithWindowingTable (fftBuffer.data(), fftSize);
@@ -168,7 +169,7 @@ public:
     }
     
     // Calculates the average spectrum from a given spectrogram
-    void computeAverageSpectrum (HeapBlock<float>& magSpectrum, Spectrogram& spectrogram, int fftSize)
+    void computeAverageSpectrum (HeapBlock<FloatType>& magSpectrum, Spectrogram& spectrogram, int fftSize)
     {
         magSpectrum.realloc (fftSize);
         magSpectrum.clear (fftSize);
@@ -180,7 +181,7 @@ public:
         {
             if (threadShouldExit()) return;
             
-            float sum = 0.f;
+            FloatType sum = 0.f;
             
             for (int freqColumn = 0; freqColumn < numColumns; ++freqColumn)
                 sum += spectrogram[freqColumn][freqBin];
@@ -191,7 +192,7 @@ public:
 
 private:
     SpectralSubtractorAudioProcessor* mProcessor;
-    HeapBlock<float> mTempNoiseSpectrum;
+    HeapBlock<FloatType> mTempNoiseSpectrum;
     juce::File mNoiseFile;
     std::unique_ptr<juce::AudioFormatReader> mReader;
     bool mErrorLoadingFile {false};
@@ -199,9 +200,9 @@ private:
     // For creating spectrogram
     size_t mHop { globalHopSize };
     juce::dsp::FFT mFft {static_cast<int> (std::log2 (globalFFTSize))};
-    juce::dsp::WindowingFunction<float> mWindow {static_cast<size_t> (mFft.getSize() + 1),
-                                                 juce::dsp::WindowingFunction<float>::hann,
-                                                 false };
+    juce::dsp::WindowingFunction<FloatType> mWindow {static_cast<size_t> (mFft.getSize() + 1),
+                                                 juce::dsp::WindowingFunction<FloatType>::hann,
+                                                 false};
 };
 
 #if RUN_UNIT_TESTS == 1

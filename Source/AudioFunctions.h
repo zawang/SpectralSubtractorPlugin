@@ -14,4 +14,4 @@
 
 const static int globalFFTSize = 2048;
 const static int globalHopSize = 512;
-const static int globalWindow = STFT::kWindowTypeHann;
+const static int globalWindow = STFT<float>::kWindowTypeHann;

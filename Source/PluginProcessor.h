@@ -77,7 +77,7 @@ private:
     
     HeapBlockWrapper<float> mNoiseSpectrum;                                    // Holds the average magnitude spectrum of the noise signal
     std::atomic<float>* mSubtractionStrengthParam = nullptr;
-    SpectralSubtractor mSpectralSubtractor {mNoiseSpectrum.get()};
+    SpectralSubtractor<float> mSpectralSubtractor {mNoiseSpectrum.get()};
     std::unique_ptr<juce::AudioFormatManager> mFormatManager;
     
     juce::UnitTestRunner mUnitTestRunner;
