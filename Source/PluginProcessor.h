@@ -12,7 +12,7 @@
 
 #include "../JuceLibraryCode/JuceHeader.h"
 #include "AudioFunctions.h"
-#include "Filter.h"
+#include "SpectralSubtractor.h"
 #include "Parameters.h"
 #include "HeapBlockWrapper.h"
 
@@ -75,9 +75,9 @@ private:
     //==============================================================================
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (SpectralSubtractorAudioProcessor)
     
-    Filter mFilter;
     HeapBlockWrapper<float> mNoiseSpectrum;                                    // Holds the average magnitude spectrum of the noise signal
-    juce::AudioParameterFloat* mSubtractionStrengthParam = nullptr;
+    std::atomic<float>* mSubtractionStrengthParam = nullptr;
+    SpectralSubtractor mSpectralSubtractor {mNoiseSpectrum.get()};
     std::unique_ptr<juce::AudioFormatManager> mFormatManager;
     
     juce::UnitTestRunner mUnitTestRunner;

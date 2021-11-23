@@ -1,12 +1,14 @@
 /*
   ==============================================================================
 
-    Filter.h
-    Created: 13 May 2020 9:32:59am
+    STFT.h
+    Created: 22 Nov 2021 2:21:32pm
     Author:  Zachary Wang
 
   ==============================================================================
 */
+
+#pragma once
 
 // https://github.com/juandagilc/Audio-Effects
 
@@ -17,14 +19,22 @@
 
 //==============================================================================
 
-class Filter
+class STFT
 {
 public:
+    enum windowTypeIndex
+    {
+        kWindowTypeRectangular = 0,
+        kWindowTypeBartlett,
+        kWindowTypeHann,
+        kWindowTypeHamming,
+    };
+    
     //======================================
     
-    Filter() {}
+    STFT() {}
     
-    virtual ~Filter() {}
+    virtual ~STFT() {}
     
     //======================================
     
@@ -33,16 +43,16 @@ public:
         mNumChannels = (numInputChannels > 0) ? numInputChannels : 1;
     }
     
-    void updateParameters (const int newFftSize, const int newOverlap, const int newWindowType)
+    void updateParameters (const int newFFTSize, const int newOverlap, const int newWindowType)
     {
-        updateFftSize (newFftSize);
+        updateFFTSize (newFFTSize);
         updateHopSize (newOverlap);
         updateWindow (newWindowType);
     }
     
     //======================================
     
-    void processBlock (juce::AudioBuffer<float>& block, HeapBlock<float>& noiseSpectrum, float subtractionStrength)
+    void processBlock (juce::AudioBuffer<float>& block)
     {
         mNumSamples = block.getNumSamples();
         
@@ -72,7 +82,7 @@ public:
                     mCurrentSamplesSinceLastFFT = 0;
                     
                     analysis (channel);
-                    modification(noiseSpectrum, subtractionStrength);
+                    modification();
                     synthesis (channel);
                 }
             }
@@ -87,27 +97,27 @@ public:
 private:
     //======================================
     
-    void updateFftSize (const int newFftSize)
+    void updateFFTSize (const int newFFTSize)
     {
-        mFftSize = newFftSize;
-        mFft = std::make_unique<dsp::FFT>(log2 (mFftSize));
+        mFFTSize = newFFTSize;
+        mFFT = std::make_unique<dsp::FFT>(log2 (mFFTSize));
         
-        mInputBufferLength = mFftSize;
+        mInputBufferLength = mFFTSize;
         mInputBuffer.clear();
         mInputBuffer.setSize (mNumChannels, mInputBufferLength);
         
-        mOutputBufferLength = mFftSize;
+        mOutputBufferLength = mFFTSize;
         mOutputBuffer.clear();
         mOutputBuffer.setSize (mNumChannels, mOutputBufferLength);
         
-        mFftWindow.realloc (mFftSize);
-        mFftWindow.clear (mFftSize);
+        mFFTWindow.realloc (mFFTSize);
+        mFFTWindow.clear (mFFTSize);
         
-        mTimeDomainBuffer.realloc (mFftSize);
-        mTimeDomainBuffer.clear (mFftSize);
+        mTimeDomainBuffer.realloc (mFFTSize);
+        mTimeDomainBuffer.clear (mFFTSize);
         
-        mFrequencyDomainBuffer.realloc (mFftSize);
-        mFrequencyDomainBuffer.clear (mFftSize);
+        mFrequencyDomainBuffer.realloc (mFFTSize);
+        mFrequencyDomainBuffer.clear (mFFTSize);
         
         mInputBufferWritePosition = 0;
         mOutputBufferWritePosition = 0;
@@ -120,7 +130,7 @@ private:
         mOverlap = newOverlap;
         if (mOverlap != 0)
         {
-            mHopSize = mFftSize / mOverlap;
+            mHopSize = mFFTSize / mOverlap;
             mOutputBufferWritePosition = mHopSize % mOutputBufferLength;
         }
     }
@@ -131,37 +141,37 @@ private:
         {
             case kWindowTypeRectangular:
             {
-                for (int sample = 0; sample < mFftSize; ++sample)
-                    mFftWindow[sample] = 1.0f;
+                for (int sample = 0; sample < mFFTSize; ++sample)
+                    mFFTWindow[sample] = 1.0f;
                 break;
             }
             case kWindowTypeBartlett:
             {
-                for (int sample = 0; sample < mFftSize; ++sample)
-                    mFftWindow[sample] = 1.0f - fabs (2.0f * (float) sample / (float) (mFftSize - 1) - 1.0f);
+                for (int sample = 0; sample < mFFTSize; ++sample)
+                    mFFTWindow[sample] = 1.0f - fabs (2.0f * (float) sample / (float) (mFFTSize - 1) - 1.0f);
                 break;
             }
             case kWindowTypeHann:
             {
-                for (int sample = 0; sample < mFftSize; ++sample)
-                    mFftWindow[sample] = 0.5f - 0.5f * cosf (2.0f * M_PI * (float) sample / (float) (mFftSize - 1));
+                for (int sample = 0; sample < mFFTSize; ++sample)
+                    mFFTWindow[sample] = 0.5f - 0.5f * cosf (2.0f * M_PI * (float) sample / (float) (mFFTSize - 1));
                 break;
             }
             case kWindowTypeHamming:
             {
-                for (int sample = 0; sample < mFftSize; ++sample)
-                    mFftWindow[sample] = 0.54f - 0.46f * cosf (2.0f * M_PI * (float) sample / (float) (mFftSize - 1));
+                for (int sample = 0; sample < mFFTSize; ++sample)
+                    mFFTWindow[sample] = 0.54f - 0.46f * cosf (2.0f * M_PI * (float) sample / (float) (mFFTSize - 1));
                 break;
             }
         }
         
         float windowSum = 0.0f;
-        for (int sample = 0; sample < mFftSize; ++sample)
-            windowSum += mFftWindow[sample];
+        for (int sample = 0; sample < mFFTSize; ++sample)
+            windowSum += mFFTWindow[sample];
         
         mWindowScaleFactor = 0.0f;
         if (mOverlap != 0 && windowSum != 0.0f)
-            mWindowScaleFactor = 1.0f / (float) mOverlap / windowSum * (float) mFftSize;
+            mWindowScaleFactor = 1.0f / (float) mOverlap / windowSum * (float) mFFTSize;
     }
     
     //======================================
@@ -169,9 +179,9 @@ private:
     void analysis (const int channel)
     {
         int inputBufferIndex = mCurrentInputBufferWritePosition;
-        for (int index = 0; index < mFftSize; ++index)
+        for (int index = 0; index < mFFTSize; ++index)
         {
-            mTimeDomainBuffer[index].real (mFftWindow[index] * mInputBuffer.getSample (channel, inputBufferIndex));
+            mTimeDomainBuffer[index].real (mFFTWindow[index] * mInputBuffer.getSample (channel, inputBufferIndex));
             mTimeDomainBuffer[index].imag (0.0f);
             
             if (++inputBufferIndex >= mInputBufferLength)
@@ -180,38 +190,37 @@ private:
     }
     
     // Where we do our time-frequency domain processing.
-    void modification (HeapBlock<float>& noiseSpectrum, float subtractionStrength)
+    void modification ()
     {
         // Forward FFT
-        mFft->perform (mTimeDomainBuffer, mFrequencyDomainBuffer, false);
+        mFFT->perform (mTimeDomainBuffer, mFrequencyDomainBuffer, false);
         
         // Iterate through frequency bins. We only go up to (fftSize / 2 + 1) in order to ignore the negative frequency bins.
-        for (int index = 0; index < mFftSize / 2 + 1; ++index)
+        for (int index = 0; index < mFFTSize / 2 + 1; ++index)
         {
             // Separate magnitude and phase
             float magnitude = abs (mFrequencyDomainBuffer[index]);
             float phase = arg (mFrequencyDomainBuffer[index]);
             
-            float newMagnitude = magnitude - subtractionStrength * noiseSpectrum[index];
-            newMagnitude = (newMagnitude < 0.0) ? 0.0 : newMagnitude;
+            processMagAndPhase (index, magnitude, phase);
             
-            mFrequencyDomainBuffer[index].real (newMagnitude * cosf (phase));
-            mFrequencyDomainBuffer[index].imag (newMagnitude * sinf (phase));
-            if (index > 0 && index < mFftSize / 2)
+            mFrequencyDomainBuffer[index].real (magnitude * cosf (phase));
+            mFrequencyDomainBuffer[index].imag (magnitude * sinf (phase));
+            if (index > 0 && index < mFFTSize / 2)
             {
-                mFrequencyDomainBuffer[mFftSize - index].real (newMagnitude * cosf (phase));
-                mFrequencyDomainBuffer[mFftSize - index].imag (newMagnitude * sinf (-phase));
+                mFrequencyDomainBuffer[mFFTSize - index].real (magnitude * cosf (phase));
+                mFrequencyDomainBuffer[mFFTSize - index].imag (magnitude * sinf (-phase));
             }
         }
         
         // Inverse FFT
-        mFft->perform (mFrequencyDomainBuffer, mTimeDomainBuffer, true);
+        mFFT->perform (mFrequencyDomainBuffer, mTimeDomainBuffer, true);
     }
     
     void synthesis (const int channel)
     {
         int outputBufferIndex = mCurrentOutputBufferWritePosition;
-        for (int index = 0; index < mFftSize; ++index)
+        for (int index = 0; index < mFFTSize; ++index)
         {
             float outputSample = mOutputBuffer.getSample (channel, outputBufferIndex);
             outputSample += mTimeDomainBuffer[index].real() * mWindowScaleFactor;
@@ -226,13 +235,16 @@ private:
             mCurrentOutputBufferWritePosition = 0;
     }
     
+    // Override this function to do something interesting!
+    virtual void processMagAndPhase (int index, float& magnitude, float& phase) {}
+    
 protected:
     //======================================
     int mNumChannels {1};
     int mNumSamples;
     
-    int mFftSize;
-    std::unique_ptr<dsp::FFT> mFft;
+    int mFFTSize;
+    std::unique_ptr<dsp::FFT> mFFT;
     
     int mInputBufferLength;
     juce::AudioBuffer<float> mInputBuffer;
@@ -240,7 +252,7 @@ protected:
     int mOutputBufferLength;
     juce::AudioBuffer<float> mOutputBuffer;
     
-    HeapBlock<float> mFftWindow;
+    HeapBlock<float> mFFTWindow;
     HeapBlock<dsp::Complex<float>> mTimeDomainBuffer;
     HeapBlock<dsp::Complex<float>> mFrequencyDomainBuffer;
     

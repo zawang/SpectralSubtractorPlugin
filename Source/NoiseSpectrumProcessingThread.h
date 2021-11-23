@@ -14,6 +14,9 @@
 class NoiseSpectrumProcessingThread : public juce::ThreadWithProgressWindow
 {
 public:
+    // One audio channel of FFT data over time, really 2-dimensional
+    using Spectrogram = std::vector<HeapBlock<float>>;
+    
     NoiseSpectrumProcessingThread (SpectralSubtractorAudioProcessor* inProcessor, juce::File inFile)
         : juce::ThreadWithProgressWindow ("Preparing noise spectrum...", true, true, 10000),
           mProcessor (inProcessor),
@@ -134,7 +137,7 @@ public:
             std::vector<float> fftBuffer (fftSize * 2UL);
         
             // While data remains
-            const float* signalData = signal->getReadPointer (channel);
+            const float* signalData = signal->getReadPointer (channel, 0);
             for (int i = 0; i < numHops; ++i)
             {
                 if (threadShouldExit()) return;

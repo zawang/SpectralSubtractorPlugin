@@ -29,8 +29,8 @@ SpectralSubtractorAudioProcessor::SpectralSubtractorAudioProcessor()
     
     initializeDSP();
     
-    juce::ValueTree audioDataNode {IDs::AudioData};             // Create a node
-    parameters.state.appendChild (audioDataNode, nullptr);      // Add node to root ValueTree
+    juce::ValueTree audioDataNode {IDs::AudioData};
+    parameters.state.appendChild (audioDataNode, nullptr);
     
     mFormatManager = std::make_unique<AudioFormatManager>();
     mFormatManager->registerBasicFormats();
@@ -62,8 +62,9 @@ juce::AudioProcessorValueTreeState::ParameterLayout SpectralSubtractorAudioProce
 
 void SpectralSubtractorAudioProcessor::setParams()
 {
-    mSubtractionStrengthParam = dynamic_cast<juce::AudioParameterFloat*>(parameters.getParameter (ParameterID[kParameter_SubtractionStrength]));
+    mSubtractionStrengthParam = parameters.getRawParameterValue (ParameterID[kParameter_SubtractionStrength]);
     jassert (mSubtractionStrengthParam);
+    mSpectralSubtractor.setSubtractionStrength (mSubtractionStrengthParam);
 }
 
 //==============================================================================
@@ -173,7 +174,7 @@ void SpectralSubtractorAudioProcessor::processBlock (AudioBuffer<float>& buffer,
     auto totalNumInputChannels  = getTotalNumInputChannels();
     auto totalNumOutputChannels = getTotalNumOutputChannels();
     
-    mFilter.processBlock (buffer, mNoiseSpectrum.get(), mSubtractionStrengthParam->get());
+    mSpectralSubtractor.processBlock (buffer);
     
     for (auto i = totalNumInputChannels; i < totalNumOutputChannels; ++i)
         buffer.clear (i, 0, buffer.getNumSamples());
@@ -204,7 +205,6 @@ AudioProcessorEditor* SpectralSubtractorAudioProcessor::createEditor()
 // Store the plugin's state in an XML object
 void SpectralSubtractorAudioProcessor::getStateInformation (MemoryBlock& destData)
 {
-    DBG("getStateInformation()");
     juce::File xmlFile = juce::File::getSpecialLocation (juce::File::SpecialLocationType::userDesktopDirectory).getChildFile ("SpectralSubtractor.xml");
     
     if (mNoiseSpectrum.get().get() != nullptr)
@@ -220,7 +220,6 @@ void SpectralSubtractorAudioProcessor::getStateInformation (MemoryBlock& destDat
 // Restore the plugin's state from an XML object
 void SpectralSubtractorAudioProcessor::setStateInformation (const void* data, int sizeInBytes)
 {
-    DBG("setStateInformation()");
     std::unique_ptr<juce::XmlElement> xmlState (getXmlFromBinary (data, sizeInBytes));
     
     if (xmlState.get() != nullptr)
@@ -239,10 +238,10 @@ void SpectralSubtractorAudioProcessor::setStateInformation (const void* data, in
 void SpectralSubtractorAudioProcessor::initializeDSP()
 {
     // Initialize filter
-    mFilter.setup (getTotalNumInputChannels());
-    mFilter.updateParameters (globalFFTSize,
-                              globalFFTSize / globalHopSize,
-                              globalWindow);
+    mSpectralSubtractor.setup (getTotalNumInputChannels());
+    mSpectralSubtractor.updateParameters (globalFFTSize,
+                                          globalFFTSize / globalHopSize,
+                                          globalWindow);
     
     mNoiseSpectrum.realloc (globalFFTSize);
     mNoiseSpectrum.clear (globalFFTSize);

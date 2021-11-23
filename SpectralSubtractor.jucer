@@ -9,7 +9,9 @@
             file="Source/AudioFunctions.h"/>
       <FILE id="DzKZqz" name="NoiseSpectrumProcessingThread.h" compile="0"
             resource="0" file="Source/NoiseSpectrumProcessingThread.h"/>
-      <FILE id="i5Ccam" name="Filter.h" compile="0" resource="0" file="Source/Filter.h"/>
+      <FILE id="VaXtGC" name="SpectralSubtractor.h" compile="0" resource="0"
+            file="Source/SpectralSubtractor.h"/>
+      <FILE id="ZkxSyO" name="STFT.h" compile="0" resource="0" file="Source/STFT.h"/>
     </GROUP>
     <GROUP id="{18845E81-3843-C024-4B5D-3B6E9F421EB3}" name="Parameter Control">
       <FILE id="OTpWPT" name="ParameterSlider.cpp" compile="1" resource="0"
@@ -50,8 +52,7 @@
   <EXPORTFORMATS>
     <XCODE_MAC targetFolder="Builds/MacOSX">
       <CONFIGURATIONS>
-        <CONFIGURATION isDebug="1" name="Debug" auBinaryLocation="/Library/Audio/Plug-Ins/Components"
-                       targetName="Spectral Subtractor"/>
+        <CONFIGURATION isDebug="1" name="Debug" targetName="Spectral Subtractor"/>
         <CONFIGURATION isDebug="0" name="Release" targetName="Spectral Subtractor"/>
       </CONFIGURATIONS>
       <MODULEPATHS>
