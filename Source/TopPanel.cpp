@@ -18,6 +18,7 @@ TopPanel::TopPanel (SpectralSubtractorAudioProcessor* inProcessor)
     mLoadFileButton.onClick = [this] { loadFile(); };
     
     addAndMakeVisible (mFFTSizeComboBox);
+    mFFTSizeComboBox.onChange = [this] { DBG ("FFT size: " << FFTSize[mFFTSizeComboBox.getSelectedItemIndex()]); mProcessor->initializeDSP(); };
 }
 
 TopPanel::~TopPanel() {}

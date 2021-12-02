@@ -56,18 +56,10 @@ juce::AudioProcessorValueTreeState::ParameterLayout SpectralSubtractorAudioProce
                                                                    subtractionStrengthRange,
                                                                    subtractionStrengthDefault));
     
-    params.push_back (std::make_unique<PluginParameterChoice> (ParameterID[kParameter_FFTSize],
-                                                               ParameterLabel[kParameter_FFTSize],
-                                                               FFTSizeItems,
-                                                               kFFTSize2048,
-                                                               juce::String(),
-                                                               nullptr,
-                                                               nullptr,
-                                                               [this] (int newValue)
-                                                               {
-                                                                    DBG ("FFT size: " << FFTSize[newValue]);
-                                                                    initializeDSP();
-                                                               }));
+    params.push_back (std::make_unique<juce::AudioParameterChoice> (ParameterID[kParameter_FFTSize],
+                                                                    ParameterLabel[kParameter_FFTSize],
+                                                                    FFTSizeItems,
+                                                                    kFFTSize2048));
     
     return { params.begin(), params.end() };
 }

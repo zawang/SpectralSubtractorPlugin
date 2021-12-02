@@ -12,7 +12,6 @@
 
 #include "../JuceLibraryCode/JuceHeader.h"
 #include "SpectralSubtractor.h"
-#include "PluginParameter.h"
 #include "Parameters.h"
 #include "IDs.h"
 #include "HeapBlockWrapper.h"
@@ -62,6 +61,7 @@ public:
     void getStateInformation (MemoryBlock& destData) override;
     void setStateInformation (const void* data, int sizeInBytes) override;
     
+    void initializeDSP();
     void loadNewNoiseSpectrum (HeapBlock<float>& tempNoiseSpectrum);
     
     // Contains a ValueTree that is used to manage the processor's entire state.
@@ -85,8 +85,7 @@ private:
     std::unique_ptr<juce::AudioFormatManager> mFormatManager;
     
     juce::UnitTestRunner mUnitTestRunner;
-    
-    void initializeDSP();
+
     void heapBlockToArray (HeapBlock<float>& heapBlock, Array<var>& array);
     void arrayToHeapBlock (Array<var>& array, HeapBlock<float>& heapBlock);
     
