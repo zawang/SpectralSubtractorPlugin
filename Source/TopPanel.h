@@ -11,6 +11,7 @@
 #pragma once
 #include "PanelBase.h"
 #include "NoiseSpectrumProcessingThread.h"
+#include "ParameterComponent.h"
 
 class TopPanel
 :   public PanelBase
@@ -23,6 +24,7 @@ public:
 
 private:
     TextButton mLoadFileButton;
+    ParameterComboBox mFFTSizeComboBox {mProcessor->apvts, ParameterID[kParameter_FFTSize], ParameterLabel[kParameter_FFTSize]};
     std::unique_ptr<juce::FileChooser> mFileChooser;
         
     void loadFile();

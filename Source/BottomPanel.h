@@ -10,7 +10,7 @@
 
 #pragma once
 #include "PanelBase.h"
-#include "ParameterSlider.h"
+#include "ParameterComponent.h"
 #include "HelperFunctions.h"
 
 class BottomPanel
@@ -24,5 +24,5 @@ public:
     void paint (Graphics& g) override;
     
 private:
-    ParameterSlider mSlider { mProcessor->parameters, ParameterID[kParameter_SubtractionStrength], ParameterLabel[kParameter_SubtractionStrength] };
+    ParameterSlider mSlider {mProcessor->apvts, ParameterID[kParameter_SubtractionStrength], ParameterLabel[kParameter_SubtractionStrength]};
 };

@@ -12,6 +12,7 @@
 
 #include "../JuceLibraryCode/JuceHeader.h"
 #include "SpectralSubtractor.h"
+#include "PluginParameter.h"
 #include "Parameters.h"
 #include "IDs.h"
 #include "HeapBlockWrapper.h"
@@ -65,22 +66,19 @@ public:
     
     // Contains a ValueTree that is used to manage the processor's entire state.
     // Adding parameters to an APVTS automatically adds them to the attached processor too.
-    juce::AudioProcessorValueTreeState parameters {*this, nullptr, juce::Identifier("SpectralSubtractor"), createParameterLayout()};
+    juce::AudioProcessorValueTreeState apvts {*this, nullptr, juce::Identifier("SpectralSubtractor"), createParameterLayout()};
     
-    juce::AudioFormatManager* getFormatManager() {
-        return mFormatManager.get();
-    }
+    juce::AudioFormatManager* getFormatManager() { return mFormatManager.get(); }
+    
+    int getFFTSize() { return FFTSize[mFFTSizeParam->getIndex()]; }
     
     // TODO: turn these into actual parameters!!!
-    const int mFFTSize = 2048;
     const int mHopSize = 512;
     const int mWindow = STFT<float>::kWindowTypeHann;
 
 private:
-    //==============================================================================
-    JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (SpectralSubtractorAudioProcessor)
-    
     std::atomic<float>* mSubtractionStrengthParam = nullptr;
+    juce::AudioParameterChoice* mFFTSizeParam = nullptr;
     
     HeapBlockWrapper<float> mNoiseSpectrum;                                    // Holds the average magnitude spectrum of the noise signal
     SpectralSubtractor<float> mSpectralSubtractor {mNoiseSpectrum.get()};
@@ -91,4 +89,6 @@ private:
     void initializeDSP();
     void heapBlockToArray (HeapBlock<float>& heapBlock, Array<var>& array);
     void arrayToHeapBlock (Array<var>& array, HeapBlock<float>& heapBlock);
+    
+    JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (SpectralSubtractorAudioProcessor)
 };

@@ -29,7 +29,7 @@ SpectralSubtractorAudioProcessor::SpectralSubtractorAudioProcessor()
     initializeDSP();
     
     juce::ValueTree audioDataNode {IDs::AudioData};
-    parameters.state.appendChild (audioDataNode, nullptr);
+    apvts.state.appendChild (audioDataNode, nullptr);
     
     mFormatManager = std::make_unique<AudioFormatManager>();
     mFormatManager->registerBasicFormats();
@@ -51,19 +51,35 @@ juce::AudioProcessorValueTreeState::ParameterLayout SpectralSubtractorAudioProce
     juce::NormalisableRange<float> subtractionStrengthRange {0.0f, 5.0f};
     float subtractionStrengthDefault = 0.0f;
     
-    params.push_back (std::make_unique<juce::AudioParameterFloat>(ParameterID[kParameter_SubtractionStrength],
-                                                                  ParameterLabel[kParameter_SubtractionStrength],
-                                                                  subtractionStrengthRange,
-                                                                  subtractionStrengthDefault));
+    params.push_back (std::make_unique<juce::AudioParameterFloat> (ParameterID[kParameter_SubtractionStrength],
+                                                                   ParameterLabel[kParameter_SubtractionStrength],
+                                                                   subtractionStrengthRange,
+                                                                   subtractionStrengthDefault));
+    
+    params.push_back (std::make_unique<PluginParameterChoice> (ParameterID[kParameter_FFTSize],
+                                                               ParameterLabel[kParameter_FFTSize],
+                                                               FFTSizeItems,
+                                                               kFFTSize2048,
+                                                               juce::String(),
+                                                               nullptr,
+                                                               nullptr,
+                                                               [this] (int newValue)
+                                                               {
+                                                                    DBG ("FFT size: " << FFTSize[newValue]);
+                                                                    initializeDSP();
+                                                               }));
     
     return { params.begin(), params.end() };
 }
 
 void SpectralSubtractorAudioProcessor::setParams()
 {
-    mSubtractionStrengthParam = parameters.getRawParameterValue (ParameterID[kParameter_SubtractionStrength]);
+    mSubtractionStrengthParam = apvts.getRawParameterValue (ParameterID[kParameter_SubtractionStrength]);
     jassert (mSubtractionStrengthParam);
     mSpectralSubtractor.setSubtractionStrength (mSubtractionStrengthParam);
+    
+    mFFTSizeParam = dynamic_cast<juce::AudioParameterChoice*> (apvts.getParameter (ParameterID[kParameter_FFTSize]));
+    jassert (mFFTSizeParam);
 }
 
 //==============================================================================
@@ -207,9 +223,9 @@ void SpectralSubtractorAudioProcessor::getStateInformation (MemoryBlock& destDat
     juce::File xmlFile = juce::File::getSpecialLocation (juce::File::SpecialLocationType::userDesktopDirectory).getChildFile ("SpectralSubtractor.xml");
     
     if (mNoiseSpectrum.get().get() != nullptr)
-        parameters.state.getChildWithName (IDs::AudioData).setProperty (IDs::NoiseSpectrum, mNoiseSpectrum.toString(), nullptr);
+        apvts.state.getChildWithName (IDs::AudioData).setProperty (IDs::NoiseSpectrum, mNoiseSpectrum.toString(), nullptr);
     
-    juce::ValueTree state = parameters.copyState();
+    juce::ValueTree state = apvts.copyState();
     std::unique_ptr<juce::XmlElement> xml (state.createXml());
     copyXmlToBinary (*xml, destData);
     
@@ -223,11 +239,11 @@ void SpectralSubtractorAudioProcessor::setStateInformation (const void* data, in
     
     if (xmlState.get() != nullptr)
     {
-        if (xmlState->hasTagName (parameters.state.getType()))
+        if (xmlState->hasTagName (apvts.state.getType()))
         {
-            parameters.replaceState (juce::ValueTree::fromXml (*xmlState));
+            apvts.replaceState (juce::ValueTree::fromXml (*xmlState));
     
-            if (auto noiseSpectrumAsString = parameters.state.getChildWithName (IDs::AudioData).getProperty (IDs::NoiseSpectrum).toString();
+            if (auto noiseSpectrumAsString = apvts.state.getChildWithName (IDs::AudioData).getProperty (IDs::NoiseSpectrum).toString();
                 !noiseSpectrumAsString.isEmpty())
                 mNoiseSpectrum.allocateFromString (noiseSpectrumAsString);
         }
@@ -238,12 +254,12 @@ void SpectralSubtractorAudioProcessor::initializeDSP()
 {
     // Initialize filter
     mSpectralSubtractor.setup (getTotalNumInputChannels());
-    mSpectralSubtractor.updateParameters (mFFTSize,
-                                          mFFTSize / mHopSize,
+    mSpectralSubtractor.updateParameters (FFTSize[mFFTSizeParam->getIndex()],
+                                          FFTSize[mFFTSizeParam->getIndex()] / mHopSize,
                                           mWindow);
     
-    mNoiseSpectrum.realloc (mFFTSize);
-    mNoiseSpectrum.clear (mFFTSize);
+    mNoiseSpectrum.realloc (FFTSize[mFFTSizeParam->getIndex()]);
+    mNoiseSpectrum.clear (FFTSize[mFFTSizeParam->getIndex()]);
 }
 
 //==============================================================================

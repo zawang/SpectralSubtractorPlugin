@@ -16,6 +16,8 @@ TopPanel::TopPanel (SpectralSubtractorAudioProcessor* inProcessor)
     mLoadFileButton.setButtonText ("Import noise file...");
     addAndMakeVisible (mLoadFileButton);
     mLoadFileButton.onClick = [this] { loadFile(); };
+    
+    addAndMakeVisible (mFFTSizeComboBox);
 }
 
 TopPanel::~TopPanel() {}
@@ -27,6 +29,8 @@ void TopPanel::resized()
     float borderGap = width * 0.025f;
     
     mLoadFileButton.setBounds (borderGap, borderGap, width * 0.4f, height * 0.3f);
+    
+    mFFTSizeComboBox.setBounds (mLoadFileButton.getRight() + 2 * borderGap, borderGap, width * 0.5f, height * 0.4f);
 }
 
 void TopPanel::loadFile()
@@ -47,7 +51,7 @@ void TopPanel::loadFile()
                                   juce::File file = fc.getResult();
                                   if (file != juce::File{})
                                   {
-                                      (new NoiseSpectrumProcessingThread<float> (mProcessor, file, mProcessor->mFFTSize, mProcessor->mHopSize))->launchThread (7);
+                                      (new NoiseSpectrumProcessingThread<float> (mProcessor, file, mProcessor->getFFTSize(), mProcessor->mHopSize))->launchThread (juce::Thread::realtimeAudioPriority);
                                   }
                                   
                                   mFileChooser = nullptr;

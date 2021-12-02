@@ -12,10 +12,8 @@
       <FILE id="ZkxSyO" name="STFT.h" compile="0" resource="0" file="Source/STFT.h"/>
     </GROUP>
     <GROUP id="{18845E81-3843-C024-4B5D-3B6E9F421EB3}" name="Parameter Control">
-      <FILE id="OTpWPT" name="ParameterSlider.cpp" compile="1" resource="0"
-            file="Source/ParameterSlider.cpp"/>
-      <FILE id="kBFviw" name="ParameterSlider.h" compile="0" resource="0"
-            file="Source/ParameterSlider.h"/>
+      <FILE id="kBFviw" name="ParameterComponent.h" compile="0" resource="0"
+            file="Source/ParameterComponent.h"/>
     </GROUP>
     <GROUP id="{54216890-1957-CFAB-FB42-AAC584995484}" name="Helper">
       <FILE id="DwvFkW" name="HeapBlockWrapper.h" compile="0" resource="0"
@@ -26,6 +24,8 @@
       <FILE id="FqwYnF" name="InterfaceDefines.h" compile="0" resource="0"
             file="Source/InterfaceDefines.h"/>
       <FILE id="w3rdqX" name="Parameters.h" compile="0" resource="0" file="Source/Parameters.h"/>
+      <FILE id="QKJmbB" name="PluginParameter.h" compile="0" resource="0"
+            file="Source/PluginParameter.h"/>
     </GROUP>
     <GROUP id="{4EC1A98D-35D8-CF99-71C9-FEFF3528710E}" name="Panels">
       <FILE id="r009w5" name="BottomPanel.cpp" compile="1" resource="0" file="Source/BottomPanel.cpp"/>
