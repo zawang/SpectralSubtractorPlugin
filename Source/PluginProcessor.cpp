@@ -187,14 +187,10 @@ void SpectralSubtractorAudioProcessor::processBlock (AudioBuffer<float>& buffer,
         buffer.clear (i, 0, buffer.getNumSamples());
 }
 
-// Replaces the old noise spectrum with a new noise spectrum.
-void SpectralSubtractorAudioProcessor::loadNewNoiseSpectrum (HeapBlock<float>& tempNoiseSpectrum)
+void SpectralSubtractorAudioProcessor::loadNoiseSpectrum (HeapBlock<float>& tempNoiseSpectrum)
 {
-    jassert (isSuspended());    // playback must be suspended!
-    
-    // TODO: add a saftey check to ensure mNoiseSpectrum and tempNoiseSpectrum have the same element type?
-    
-    std::memcpy (mNoiseSpectrum.get(), tempNoiseSpectrum, mNoiseSpectrum.size() * sizeof (float));
+    jassert (isSuspended());
+    mSpectralSubtractor.loadNoiseSpectrum (tempNoiseSpectrum);
 }
 
 //==============================================================================
@@ -214,8 +210,9 @@ void SpectralSubtractorAudioProcessor::getStateInformation (MemoryBlock& destDat
 {
     juce::File xmlFile = juce::File::getSpecialLocation (juce::File::SpecialLocationType::userDesktopDirectory).getChildFile ("SpectralSubtractor.xml");
     
-    if (mNoiseSpectrum.get().get() != nullptr)
-        apvts.state.getChildWithName (IDs::AudioData).setProperty (IDs::NoiseSpectrum, mNoiseSpectrum.toString(), nullptr);
+    auto& noiseSpectrum = mSpectralSubtractor.mNoiseSpectrum;
+    if (noiseSpectrum.get().get() != nullptr)
+        apvts.state.getChildWithName (IDs::AudioData).setProperty (IDs::NoiseSpectrum, noiseSpectrum.toString(), nullptr);
     
     juce::ValueTree state = apvts.copyState();
     std::unique_ptr<juce::XmlElement> xml (state.createXml());
@@ -237,7 +234,7 @@ void SpectralSubtractorAudioProcessor::setStateInformation (const void* data, in
     
             if (auto noiseSpectrumAsString = apvts.state.getChildWithName (IDs::AudioData).getProperty (IDs::NoiseSpectrum).toString();
                 !noiseSpectrumAsString.isEmpty())
-                mNoiseSpectrum.allocateFromString (noiseSpectrumAsString);
+                mSpectralSubtractor.mNoiseSpectrum.allocateFromString (noiseSpectrumAsString);
         }
     }
 }
@@ -250,8 +247,8 @@ void SpectralSubtractorAudioProcessor::initializeDSP()
                                           FFTSize[mFFTSizeParam->getIndex()] / mHopSize,
                                           mWindow);
     
-    mNoiseSpectrum.realloc (FFTSize[mFFTSizeParam->getIndex()]);
-    mNoiseSpectrum.clear (FFTSize[mFFTSizeParam->getIndex()]);
+    mSpectralSubtractor.mNoiseSpectrum.realloc (FFTSize[mFFTSizeParam->getIndex()]);
+    mSpectralSubtractor.mNoiseSpectrum.clear (FFTSize[mFFTSizeParam->getIndex()]);
 }
 
 //==============================================================================

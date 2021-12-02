@@ -13,6 +13,7 @@
 #pragma once
 
 #include "STFT.h"
+#include "HeapBlockWrapper.h"
 
 //==============================================================================
 
@@ -22,8 +23,7 @@ class SpectralSubtractor : public STFT<FloatType>
 public:
     //======================================
     
-    SpectralSubtractor (juce::HeapBlock<FloatType>& noiseSpectrum)
-        : mNoiseSpectrum (noiseSpectrum)
+    SpectralSubtractor ()
     {}
     
     ~SpectralSubtractor() {}
@@ -34,13 +34,22 @@ public:
         jassert (mSubtractionStrength);
     }
     
+    // Replaces the old noise spectrum with a new noise spectrum.
+    void loadNoiseSpectrum (HeapBlock<float>& tempNoiseSpectrum)
+    {
+        // TODO: add a saftey check to ensure mNoiseSpectrum and tempNoiseSpectrum have the same element type?
+        
+        std::memcpy (mNoiseSpectrum.get(), tempNoiseSpectrum, mNoiseSpectrum.size() * sizeof (float));
+    }
+
+    HeapBlockWrapper<FloatType> mNoiseSpectrum;             // Holds the average magnitude spectrum of the noise signal
+    
 private:
-    juce::HeapBlock<FloatType>& mNoiseSpectrum;
     std::atomic<float>* mSubtractionStrength = nullptr;
     
     void processMagAndPhase (int index, FloatType& magnitude, FloatType& phase) override
     {
-        magnitude -= (*mSubtractionStrength) * mNoiseSpectrum[index];
+        magnitude -= (*mSubtractionStrength) * (mNoiseSpectrum.get())[index];
         magnitude = (magnitude < 0.0f) ? 0.0f : magnitude;
     }
 };

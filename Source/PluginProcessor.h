@@ -14,7 +14,6 @@
 #include "SpectralSubtractor.h"
 #include "Parameters.h"
 #include "IDs.h"
-#include "HeapBlockWrapper.h"
 
 //==============================================================================
 /**
@@ -62,7 +61,7 @@ public:
     void setStateInformation (const void* data, int sizeInBytes) override;
     
     void initializeDSP();
-    void loadNewNoiseSpectrum (HeapBlock<float>& tempNoiseSpectrum);
+    void loadNoiseSpectrum (HeapBlock<float>& tempNoiseSpectrum);
     
     // Contains a ValueTree that is used to manage the processor's entire state.
     // Adding parameters to an APVTS automatically adds them to the attached processor too.
@@ -80,8 +79,7 @@ private:
     std::atomic<float>* mSubtractionStrengthParam = nullptr;
     juce::AudioParameterChoice* mFFTSizeParam = nullptr;
     
-    HeapBlockWrapper<float> mNoiseSpectrum;                                    // Holds the average magnitude spectrum of the noise signal
-    SpectralSubtractor<float> mSpectralSubtractor {mNoiseSpectrum.get()};
+    SpectralSubtractor<float> mSpectralSubtractor;
     std::unique_ptr<juce::AudioFormatManager> mFormatManager;
     
     juce::UnitTestRunner mUnitTestRunner;

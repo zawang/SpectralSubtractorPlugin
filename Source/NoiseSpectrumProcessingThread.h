@@ -72,7 +72,7 @@ public:
             
             setStatusMessage ("Almost finished...");
             
-            mProcessor->loadNewNoiseSpectrum (mTempNoiseSpectrum);
+            mProcessor->loadNoiseSpectrum (mTempNoiseSpectrum);
         }
         else
         {
