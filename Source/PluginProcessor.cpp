@@ -210,8 +210,8 @@ void SpectralSubtractorAudioProcessor::getStateInformation (MemoryBlock& destDat
 {
     juce::File xmlFile = juce::File::getSpecialLocation (juce::File::SpecialLocationType::userDesktopDirectory).getChildFile ("SpectralSubtractor.xml");
     
-    auto& noiseSpectrum = mSpectralSubtractor.mNoiseSpectrum;
-    if (noiseSpectrum.get().get() != nullptr)
+    if (auto& noiseSpectrum = mSpectralSubtractor.mNoiseSpectrum;
+        noiseSpectrum.get().get() != nullptr)
         apvts.state.getChildWithName (IDs::AudioData).setProperty (IDs::NoiseSpectrum, noiseSpectrum.toString(), nullptr);
     
     juce::ValueTree state = apvts.copyState();
