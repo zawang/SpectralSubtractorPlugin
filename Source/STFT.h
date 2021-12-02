@@ -28,8 +28,6 @@ public:
         kWindowTypeHamming,
     };
     
-    //======================================
-    
     STFT() {}
     
     virtual ~STFT() {}
@@ -106,8 +104,40 @@ public:
         mSamplesSinceLastFFT = mCurrentSamplesSinceLastFFT;
     }
     
+protected:
+    // Override this function to do something interesting!
+    virtual void processMagAndPhase (int index, FloatType& magnitude, FloatType& phase) {}
+    
 private:
-    //======================================
+    int mNumChannels {1};
+    int mNumSamples;
+    
+    int mFFTSize;
+    std::unique_ptr<dsp::FFT> mFFT;
+    
+    int mInputBufferLength;
+    juce::AudioBuffer<FloatType> mInputBuffer;
+    
+    int mOutputBufferLength;
+    juce::AudioBuffer<FloatType> mOutputBuffer;
+    
+    HeapBlock<FloatType> mFFTWindow;
+    HeapBlock<dsp::Complex<FloatType>> mTimeDomainBuffer;
+    HeapBlock<dsp::Complex<FloatType>> mFrequencyDomainBuffer;
+    
+    int mOverlap;
+    int mHopSize;
+    FloatType mWindowScaleFactor;
+    
+    int mInputBufferWritePosition;
+    int mOutputBufferWritePosition;
+    int mOutputBufferReadPosition;
+    int mSamplesSinceLastFFT;
+    
+    int mCurrentInputBufferWritePosition;
+    int mCurrentOutputBufferWritePosition;
+    int mCurrentOutputBufferReadPosition;
+    int mCurrentSamplesSinceLastFFT;
     
     void updateFFTSize (const int newFFTSize)
     {
@@ -258,41 +288,6 @@ private:
         if (mCurrentOutputBufferWritePosition >= mOutputBufferLength)
             mCurrentOutputBufferWritePosition = 0;
     }
-    
-    // Override this function to do something interesting!
-    virtual void processMagAndPhase (int index, FloatType& magnitude, FloatType& phase) {}
-    
-protected:
-    //======================================
-    int mNumChannels {1};
-    int mNumSamples;
-    
-    int mFFTSize;
-    std::unique_ptr<dsp::FFT> mFFT;
-    
-    int mInputBufferLength;
-    juce::AudioBuffer<FloatType> mInputBuffer;
-    
-    int mOutputBufferLength;
-    juce::AudioBuffer<FloatType> mOutputBuffer;
-    
-    HeapBlock<FloatType> mFFTWindow;
-    HeapBlock<dsp::Complex<FloatType>> mTimeDomainBuffer;
-    HeapBlock<dsp::Complex<FloatType>> mFrequencyDomainBuffer;
-    
-    int mOverlap;
-    int mHopSize;
-    FloatType mWindowScaleFactor;
-    
-    int mInputBufferWritePosition;
-    int mOutputBufferWritePosition;
-    int mOutputBufferReadPosition;
-    int mSamplesSinceLastFFT;
-    
-    int mCurrentInputBufferWritePosition;
-    int mCurrentOutputBufferWritePosition;
-    int mCurrentOutputBufferReadPosition;
-    int mCurrentSamplesSinceLastFFT;
 };
 
 #if RUN_UNIT_TESTS == 1
