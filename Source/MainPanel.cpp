@@ -26,6 +26,6 @@ void MainPanel::resized()
     int width = getWidth();
     int height = getHeight();
     
-    mTopPanel.setBounds (0, 0, width, 0.2f * height);
+    mTopPanel.setBounds (0, 0, width, 0.4f * height);
     mBottomPanel.setBounds (0, mTopPanel.getHeight(), width, height - mTopPanel.getHeight());
 }

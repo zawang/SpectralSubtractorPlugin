@@ -25,6 +25,7 @@ public:
 private:
     TextButton mLoadFileButton;
     ParameterComboBox mFFTSizeComboBox {mProcessor->apvts, ParameterID[kParameter_FFTSize], ParameterLabel[kParameter_FFTSize]};
+    ParameterComboBox mHopSizeComboBox {mProcessor->apvts, ParameterID[kParameter_HopSize], ParameterLabel[kParameter_HopSize]};
     std::unique_ptr<juce::FileChooser> mFileChooser;
         
     void loadFile();

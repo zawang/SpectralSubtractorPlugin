@@ -14,21 +14,25 @@ enum Parameter
 {
     kParameter_SubtractionStrength = 0,
     kParameter_FFTSize,
+    kParameter_HopSize,
     kParameter_TotalNumParameters
 };
 
-static juce::String ParameterID [kParameter_TotalNumParameters] =
+static const juce::String ParameterID [kParameter_TotalNumParameters] =
 {
     "subtractionStrength",
-    "fftSize"
+    "fftSize",
+    "hopSize"
 };
 
-static juce::String ParameterLabel [kParameter_TotalNumParameters] =
+static const juce::String ParameterLabel [kParameter_TotalNumParameters] =
 {
     "Subtraction Strength",
-    "FFT Size"
+    "FFT Size",
+    "Hop Size"
 };
 
+//==============================================================================
 enum FFTSizeIndex
 {
     kFFTSize32 = 0,
@@ -43,7 +47,7 @@ enum FFTSizeIndex
     kNumFFTSizes
 };
 
-static std::array<int, kNumFFTSizes> FFTSize =
+static const std::array<int, kNumFFTSizes> FFTSize =
 {
     32,
     64,
@@ -64,4 +68,30 @@ inline juce::StringArray getFFTSizeItems()
     return array;
 }
 
-static juce::StringArray FFTSizeItems = getFFTSizeItems();
+static const juce::StringArray FFTSizeItemsUI = getFFTSizeItems();
+
+//==============================================================================
+enum HopSizeIndex
+{
+    kHopSize2 = 0,
+    kHopSize4,
+    kHopSize8,
+    kNumHopSizes
+};
+
+static const std::array<int, kNumHopSizes> HopSize =
+{
+    2,
+    4,
+    8
+};
+
+inline juce::StringArray getHopSizeItems()
+{
+    juce::StringArray array;
+    for (int i = 0; i < HopSize.size(); ++i)
+        array.add (juce::String ("1/") + juce::String (HopSize[i]) + juce::String (" Window"));
+    return array;
+}
+
+static const juce::StringArray HopSizeItemsUI = getHopSizeItems();

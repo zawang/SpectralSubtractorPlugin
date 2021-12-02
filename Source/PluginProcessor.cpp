@@ -58,8 +58,13 @@ juce::AudioProcessorValueTreeState::ParameterLayout SpectralSubtractorAudioProce
     
     params.push_back (std::make_unique<juce::AudioParameterChoice> (ParameterID[kParameter_FFTSize],
                                                                     ParameterLabel[kParameter_FFTSize],
-                                                                    FFTSizeItems,
+                                                                    FFTSizeItemsUI,
                                                                     kFFTSize2048));
+    
+    params.push_back (std::make_unique<juce::AudioParameterChoice> (ParameterID[kParameter_HopSize],
+                                                                    ParameterLabel[kParameter_HopSize],
+                                                                    HopSizeItemsUI,
+                                                                    kHopSize4));
     
     return { params.begin(), params.end() };
 }
@@ -72,6 +77,9 @@ void SpectralSubtractorAudioProcessor::setParams()
     
     mFFTSizeParam = dynamic_cast<juce::AudioParameterChoice*> (apvts.getParameter (ParameterID[kParameter_FFTSize]));
     jassert (mFFTSizeParam);
+    
+    mHopSizeParam = dynamic_cast<juce::AudioParameterChoice*> (apvts.getParameter (ParameterID[kParameter_HopSize]));
+    jassert (mHopSizeParam);
 }
 
 //==============================================================================
@@ -146,7 +154,7 @@ void SpectralSubtractorAudioProcessor::prepareSpectralSubtractor()
 {
     mSpectralSubtractor.prepare (getTotalNumInputChannels(),
                                  FFTSize[mFFTSizeParam->getIndex()],
-                                 FFTSize[mFFTSizeParam->getIndex()] / mHopSize,
+                                 HopSize[mHopSizeParam->getIndex()],
                                  mWindow);
 }
 

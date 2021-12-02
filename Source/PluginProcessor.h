@@ -70,14 +70,15 @@ public:
     juce::AudioFormatManager* getFormatManager() { return mFormatManager.get(); }
     
     int getFFTSize() { return FFTSize[mFFTSizeParam->getIndex()]; }
+    int getHopSize() { return HopSize[mHopSizeParam->getIndex()]; }
     
     // TODO: turn these into actual parameters!!!
-    const int mHopSize = 512;
     const int mWindow = STFT<float>::kWindowTypeHann;
 
 private:
     std::atomic<float>* mSubtractionStrengthParam = nullptr;
     juce::AudioParameterChoice* mFFTSizeParam = nullptr;
+    juce::AudioParameterChoice* mHopSizeParam = nullptr;
     
     SpectralSubtractor<float> mSpectralSubtractor;
     std::unique_ptr<juce::AudioFormatManager> mFormatManager;

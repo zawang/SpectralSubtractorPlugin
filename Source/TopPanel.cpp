@@ -19,6 +19,9 @@ TopPanel::TopPanel (SpectralSubtractorAudioProcessor* inProcessor)
     
     addAndMakeVisible (mFFTSizeComboBox);
     mFFTSizeComboBox.onChange = [this] { DBG ("FFT size: " << FFTSize[mFFTSizeComboBox.getSelectedItemIndex()]); mProcessor->prepareSpectralSubtractor(); };
+    
+    addAndMakeVisible (mHopSizeComboBox);
+    mHopSizeComboBox.onChange = [this] { DBG ("Hop size: " << HopSize[mHopSizeComboBox.getSelectedItemIndex()]); mProcessor->prepareSpectralSubtractor(); };
 }
 
 TopPanel::~TopPanel() {}
@@ -29,9 +32,11 @@ void TopPanel::resized()
     int height = getHeight();
     float borderGap = width * 0.025f;
     
-    mLoadFileButton.setBounds (borderGap, borderGap, width * 0.4f, height * 0.3f);
+    mLoadFileButton.setBounds (borderGap, borderGap, width * 0.4f, height * 0.15f);
+
+    mFFTSizeComboBox.setBounds (borderGap, mLoadFileButton.getBottom() + borderGap, width * 0.5f, height * 0.2f);
     
-    mFFTSizeComboBox.setBounds (mLoadFileButton.getRight() + 2 * borderGap, borderGap, width * 0.5f, height * 0.4f);
+    mHopSizeComboBox.setBounds (borderGap, mFFTSizeComboBox.getBottom() + borderGap, width * 0.5f, height * 0.2f);
 }
 
 void TopPanel::loadFile()
@@ -52,7 +57,7 @@ void TopPanel::loadFile()
                                   juce::File file = fc.getResult();
                                   if (file != juce::File{})
                                   {
-                                      (new NoiseSpectrumProcessingThread<float> (mProcessor, file, mProcessor->getFFTSize(), mProcessor->mHopSize))->launchThread (juce::Thread::realtimeAudioPriority);
+                                      (new NoiseSpectrumProcessingThread<float> (mProcessor, file, mProcessor->getFFTSize(), mProcessor->getFFTSize() / mProcessor->getHopSize()))->launchThread (juce::Thread::realtimeAudioPriority);
                                   }
                                   
                                   mFileChooser = nullptr;
