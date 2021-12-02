@@ -62,7 +62,7 @@ void TopPanel::loadFile()
                                   juce::File file = fc.getResult();
                                   if (file != juce::File{})
                                   {
-                                      (new NoiseSpectrumProcessingThread<float> (mProcessor, file, mProcessor->getFFTSize(), mProcessor->getFFTSize() / mProcessor->getHopSize()))->launchThread (juce::Thread::realtimeAudioPriority);
+                                      (new NoiseSpectrumProcessingThread<float> (mProcessor, file, mProcessor->getFFTSize(), mProcessor->getHopSize()))->launchThread (juce::Thread::realtimeAudioPriority);
                                   }
                                   
                                   mFileChooser = nullptr;

@@ -18,17 +18,21 @@ public:
     // One audio channel of FFT data over time, really 2-dimensional
     using Spectrogram = std::vector<HeapBlock<FloatType>>;
     
-    NoiseSpectrumProcessingThread (SpectralSubtractorAudioProcessor* inProcessor, juce::File inFile, int fftSize, int hopSize)
+    NoiseSpectrumProcessingThread (SpectralSubtractorAudioProcessor* inProcessor, juce::File inFile, int fftSize, int overlap)
         : juce::ThreadWithProgressWindow ("Preparing noise spectrum...", true, true, 10000),
           mProcessor (inProcessor),
           mNoiseFile (inFile),
           mFFT (static_cast<int> (std::log2 (fftSize))),
-          mHop (hopSize),
           mWindow (static_cast<size_t> (fftSize + 1), juce::dsp::WindowingFunction<FloatType>::hann, false)
     {
-        jassert (mNoiseFile != juce::File{});
-        jassert (hopSize <= fftSize);
+        if (overlap != 0)
+            mHop = mFFT.getSize() / overlap;
         
+        jassert (mNoiseFile != juce::File{});
+        jassert (mHop <= mFFT.getSize());
+        
+        DBG ("Background thread FFT size: " << mFFT.getSize());
+        DBG ("Background thread hop size: " << mHop);
         setStatusMessage ("Getting ready...");
     }
 
@@ -59,7 +63,7 @@ public:
             setStatusMessage ("Computing STFT of noise signal...");
             
             Spectrogram noiseSpectrogram;
-            stft (noiseSpectrogram, noiseBuffer.get());
+            makeSpectrogram (noiseSpectrogram, noiseBuffer.get());
             
             if (threadShouldExit()) return;
             
@@ -107,7 +111,7 @@ public:
     }
     
     // Compute the stft on each channel of signal and average the results to produce one spectrogram.
-    void stft (Spectrogram& spectrogram, juce::AudioBuffer<FloatType>* signal)
+    void makeSpectrogram (Spectrogram& spectrogram, juce::AudioBuffer<FloatType>* signal)
     {
         const size_t dataCount = signal->getNumSamples();
         
