@@ -43,7 +43,6 @@ public:
     void allocateFromString (const juce::String& input)
     {
         juce::Array<juce::var> array = delimitedStringToVarArray (input);
-        jassert (array.size() == mNumElements);
         
         realloc (array.size());
         clear (array.size());
