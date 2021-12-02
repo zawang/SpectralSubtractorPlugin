@@ -63,19 +63,17 @@ public:
     void prepareAndResetSpectralSubtractor();
     void loadNoiseSpectrum (HeapBlock<float>& tempNoiseSpectrum);
     
-    // Contains a ValueTree that is used to manage the processor's entire state.
-    // Adding parameters to an APVTS automatically adds them to the attached processor too.
     juce::AudioProcessorValueTreeState apvts {*this, nullptr, juce::Identifier("SpectralSubtractor"), createParameterLayout()};
     
     juce::AudioFormatManager* getFormatManager() { return mFormatManager.get(); }
     
     int getFFTSize() { return FFTSize[mFFTSizeParam->getIndex()]; }
-    int getHopSize() { return HopSize[mHopSizeParam->getIndex()]; }
+    int getWindowOverlap() { return WindowOverlap[mWindowOverlapParam->getIndex()]; }
 
 private:
     std::atomic<float>* mSubtractionStrengthParam = nullptr;
     juce::AudioParameterChoice* mFFTSizeParam = nullptr;
-    juce::AudioParameterChoice* mHopSizeParam = nullptr;
+    juce::AudioParameterChoice* mWindowOverlapParam = nullptr;
     juce::AudioParameterChoice* mWindowParam = nullptr;
     
     SpectralSubtractor<float> mSpectralSubtractor;

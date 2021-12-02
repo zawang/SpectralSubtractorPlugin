@@ -65,10 +65,10 @@ juce::AudioProcessorValueTreeState::ParameterLayout SpectralSubtractorAudioProce
                                                                     FFTSizeItemsUI,
                                                                     kFFTSize2048));
     
-    params.push_back (std::make_unique<juce::AudioParameterChoice> (ParameterID[kParameter_HopSize],
-                                                                    ParameterLabel[kParameter_HopSize],
-                                                                    HopSizeItemsUI,
-                                                                    kHopSize4));
+    params.push_back (std::make_unique<juce::AudioParameterChoice> (ParameterID[kParameter_WindowOverlap],
+                                                                    ParameterLabel[kParameter_WindowOverlap],
+                                                                    WindowOverlapItemsUI,
+                                                                    kWindowOverlap4));
     
     params.push_back (std::make_unique<juce::AudioParameterChoice> (ParameterID[kParameter_Window],
                                                                     ParameterLabel[kParameter_Window],
@@ -87,8 +87,8 @@ void SpectralSubtractorAudioProcessor::setParams()
     mFFTSizeParam = dynamic_cast<juce::AudioParameterChoice*> (apvts.getParameter (ParameterID[kParameter_FFTSize]));
     jassert (mFFTSizeParam);
     
-    mHopSizeParam = dynamic_cast<juce::AudioParameterChoice*> (apvts.getParameter (ParameterID[kParameter_HopSize]));
-    jassert (mHopSizeParam);
+    mWindowOverlapParam = dynamic_cast<juce::AudioParameterChoice*> (apvts.getParameter (ParameterID[kParameter_WindowOverlap]));
+    jassert (mWindowOverlapParam);
     
     mWindowParam = dynamic_cast<juce::AudioParameterChoice*> (apvts.getParameter (ParameterID[kParameter_Window]));
     jassert (mWindowParam);
@@ -166,7 +166,7 @@ void SpectralSubtractorAudioProcessor::prepareAndResetSpectralSubtractor()
 {
     mSpectralSubtractor.prepare (getTotalNumInputChannels(),
                                  FFTSize[mFFTSizeParam->getIndex()],
-                                 HopSize[mHopSizeParam->getIndex()],
+                                 WindowOverlap[mWindowOverlapParam->getIndex()],
                                  mWindowParam->getIndex());
     
     mSpectralSubtractor.reset (FFTSize[mFFTSizeParam->getIndex()]);

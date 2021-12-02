@@ -20,8 +20,8 @@ TopPanel::TopPanel (SpectralSubtractorAudioProcessor* inProcessor)
     addAndMakeVisible (mFFTSizeComboBox);
     mFFTSizeComboBox.onChange = [this] { DBG ("FFT size: " << FFTSize[mFFTSizeComboBox.getSelectedItemIndex()]); mProcessor->prepareAndResetSpectralSubtractor(); };
     
-    addAndMakeVisible (mHopSizeComboBox);
-    mHopSizeComboBox.onChange = [this] { DBG ("Hop size: " << HopSize[mHopSizeComboBox.getSelectedItemIndex()]); mProcessor->prepareAndResetSpectralSubtractor(); };
+    addAndMakeVisible (mWindowOverlapComboBox);
+    mWindowOverlapComboBox.onChange = [this] { DBG ("Window overlap: " << WindowOverlap[mWindowOverlapComboBox.getSelectedItemIndex()]); mProcessor->prepareAndResetSpectralSubtractor(); };
     
     addAndMakeVisible (mWindowComboBox);
     mWindowComboBox.onChange = [this] { DBG ("Window: " << mWindowComboBox.getSelectedItemIndex()); mProcessor->prepareAndResetSpectralSubtractor(); };
@@ -39,9 +39,9 @@ void TopPanel::resized()
 
     mFFTSizeComboBox.setBounds (borderGap, mLoadFileButton.getBottom() + borderGap, width * 0.5f, height * 0.2f);
     
-    mHopSizeComboBox.setBounds (borderGap, mFFTSizeComboBox.getBottom() + borderGap, width * 0.5f, height * 0.2f);
+    mWindowOverlapComboBox.setBounds (borderGap, mFFTSizeComboBox.getBottom() + borderGap, width * 0.5f, height * 0.2f);
     
-    mWindowComboBox.setBounds (borderGap, mHopSizeComboBox.getBottom() + borderGap, width * 0.5f, height * 0.2f);
+    mWindowComboBox.setBounds (borderGap, mWindowOverlapComboBox.getBottom() + borderGap, width * 0.5f, height * 0.2f);
 }
 
 void TopPanel::loadFile()
@@ -62,7 +62,7 @@ void TopPanel::loadFile()
                                   juce::File file = fc.getResult();
                                   if (file != juce::File{})
                                   {
-                                      (new NoiseSpectrumProcessingThread<float> (mProcessor, file, mProcessor->getFFTSize(), mProcessor->getHopSize()))->launchThread (juce::Thread::realtimeAudioPriority);
+                                      (new NoiseSpectrumProcessingThread<float> (mProcessor, file, mProcessor->getFFTSize(), mProcessor->getWindowOverlap()))->launchThread (juce::Thread::realtimeAudioPriority);
                                   }
                                   
                                   mFileChooser = nullptr;

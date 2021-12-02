@@ -14,7 +14,7 @@ enum Parameter
 {
     kParameter_SubtractionStrength = 0,
     kParameter_FFTSize,
-    kParameter_HopSize,
+    kParameter_WindowOverlap,
     kParameter_Window,
     kParameter_TotalNumParameters
 };
@@ -23,7 +23,7 @@ static const juce::String ParameterID [kParameter_TotalNumParameters] =
 {
     "subtractionStrength",
     "fftSize",
-    "hopSize",
+    "windowOverlap",
     "window"
 };
 
@@ -31,7 +31,7 @@ static const juce::String ParameterLabel [kParameter_TotalNumParameters] =
 {
     "Subtraction Strength",
     "FFT Size",
-    "Hop Size",
+    "Window Overlap",
     "Window"
 };
 
@@ -74,30 +74,30 @@ inline juce::StringArray getFFTSizeItems()
 static const juce::StringArray FFTSizeItemsUI = getFFTSizeItems();
 
 //==============================================================================
-enum HopSizeIndex
+enum WindowOverlapIndex
 {
-    kHopSize2 = 0,
-    kHopSize4,
-    kHopSize8,
-    kNumHopSizes
+    kWindowOverlap2 = 0,
+    kWindowOverlap4,
+    kWindowOverlap8,
+    kNumWindowOverlaps
 };
 
-static const std::array<int, kNumHopSizes> HopSize =
+static const std::array<int, kNumWindowOverlaps> WindowOverlap =
 {
     2,
     4,
     8
 };
 
-inline juce::StringArray getHopSizeItems()
+inline juce::StringArray getWindowOverlapItems()
 {
     juce::StringArray array;
-    for (int i = 0; i < HopSize.size(); ++i)
-        array.add (juce::String ("1/") + juce::String (HopSize[i]) + juce::String (" Window"));
+    for (int i = 0; i < WindowOverlap.size(); ++i)
+        array.add (juce::String ("1/") + juce::String (WindowOverlap[i]) + juce::String (" Window"));
     return array;
 }
 
-static const juce::StringArray HopSizeItemsUI = getHopSizeItems();
+static const juce::StringArray WindowOverlapItemsUI = getWindowOverlapItems();
 
 //==============================================================================
 static const StringArray WindowTypeItemsUI =
