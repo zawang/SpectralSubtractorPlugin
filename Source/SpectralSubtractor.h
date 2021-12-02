@@ -28,23 +28,38 @@ public:
     
     ~SpectralSubtractor() {}
     
+    void reset (const int newFFTSize)
+    {
+        const juce::SpinLock::ScopedLockType lock (STFT<FloatType>::mSpinLock);
+        mNoiseSpectrum.calloc (newFFTSize);
+    }
+    
     void setSubtractionStrength (std::atomic<float>* subtractionStrength)
     {
         mSubtractionStrength = subtractionStrength;
         jassert (mSubtractionStrength);
     }
     
-    // Replaces the old noise spectrum with a new noise spectrum.
-    void loadNoiseSpectrum (HeapBlock<float>& tempNoiseSpectrum)
+    const juce::String getNoiseSpectrumAsString()
     {
-        // TODO: add a saftey check to ensure mNoiseSpectrum and tempNoiseSpectrum have the same element type?
-        
-        std::memcpy (mNoiseSpectrum.get(), tempNoiseSpectrum, mNoiseSpectrum.size() * sizeof (float));
+        return mNoiseSpectrum.toString();
     }
-
-    HeapBlockWrapper<FloatType> mNoiseSpectrum;             // Holds the average magnitude spectrum of the noise signal
+    
+    // Replaces the old noise spectrum with a new noise spectrum.
+    void loadNoiseSpectrum (const HeapBlock<float>& newNoiseSpectrum)
+    {
+        // TODO: add a saftey check to ensure mNoiseSpectrum and newNoiseSpectrum have the same element type?
+        
+        std::memcpy (mNoiseSpectrum.get(), newNoiseSpectrum, mNoiseSpectrum.size() * sizeof (float));
+    }
+    
+    void loadNoiseSpectrumFromString (const juce::String& newNoiseSpectrumAsString)
+    {
+        mNoiseSpectrum.allocateFromString (newNoiseSpectrumAsString);
+    }
     
 private:
+    HeapBlockWrapper<FloatType> mNoiseSpectrum;             // Holds the average magnitude spectrum of the noise signal
     std::atomic<float>* mSubtractionStrength = nullptr;
     
     void processMagAndPhase (int index, FloatType& magnitude, FloatType& phase) override

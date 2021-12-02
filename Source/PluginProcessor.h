@@ -60,7 +60,7 @@ public:
     void getStateInformation (MemoryBlock& destData) override;
     void setStateInformation (const void* data, int sizeInBytes) override;
     
-    void initializeDSP();
+    void prepareSpectralSubtractor();
     void loadNoiseSpectrum (HeapBlock<float>& tempNoiseSpectrum);
     
     // Contains a ValueTree that is used to manage the processor's entire state.

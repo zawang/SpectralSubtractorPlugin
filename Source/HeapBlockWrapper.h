@@ -78,8 +78,11 @@ public:
         mHeapBlock.clear (numElements);
     }
     
-    juce::String toString()
+    const juce::String toString()
     {
+        if (mHeapBlock.get() == nullptr)
+            return juce::String{};
+        
         juce::Array<juce::var> array;
         toArray (array);
         return varArrayToDelimitedString (array);

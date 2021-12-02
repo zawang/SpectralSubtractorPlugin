@@ -34,22 +34,36 @@ public:
     
     //======================================
     
-    void setup (const int numInputChannels)
+    void setNumChannels (const int numInputChannels)
     {
+        const juce::SpinLock::ScopedLockType lock (mSpinLock);
         mNumChannels = (numInputChannels > 0) ? numInputChannels : 1;
     }
     
     void updateParameters (const int newFFTSize, const int newOverlap, const int newWindowType)
     {
+        const juce::SpinLock::ScopedLockType lock (mSpinLock);
         updateFFTSize (newFFTSize);
         updateHopSize (newOverlap);
         updateWindow (newWindowType);
     }
     
+    void prepare (const int numInputChannels, const int newFFTSize, const int newOverlap, const int newWindowType)
+    {
+        setNumChannels (numInputChannels);
+        updateParameters (newFFTSize,
+                          newOverlap,
+                          newWindowType);
+    }
+    
     //======================================
     
-    void processBlock (juce::AudioBuffer<FloatType>& block)
+    void process (juce::AudioBuffer<FloatType>& block)
     {
+        const juce::SpinLock::ScopedTryLockType lock (mSpinLock);
+        if (!lock.isLocked())
+            return;
+        
         mNumSamples = block.getNumSamples();
         
         for (int channel = 0; channel < mNumChannels; ++channel)
@@ -105,6 +119,8 @@ public:
     }
     
 protected:
+    juce::SpinLock mSpinLock;
+    
     // Override this function to do something interesting!
     virtual void processMagAndPhase (int index, FloatType& magnitude, FloatType& phase) {}
     
@@ -142,7 +158,7 @@ private:
     void updateFFTSize (const int newFFTSize)
     {
         mFFTSize = newFFTSize;
-        mFFT = std::make_unique<dsp::FFT>(log2 (mFFTSize));
+        mFFT = std::make_unique<dsp::FFT> (log2 (mFFTSize));
         
         mInputBufferLength = mFFTSize;
         mInputBuffer.clear();
@@ -308,10 +324,7 @@ struct STFTTests : public juce::UnitTest
         const int window = STFT<float>::kWindowTypeHann;
         
         STFT<float> stft;
-        stft.setup (numChannels);
-        stft.updateParameters (fftSize,
-                               fftSize / hopSize,
-                               window);
+        stft.prepare (numChannels, fftSize, fftSize / hopSize, window);
         
         // TODO: come up with a cleaner way of finding the proper directory and doing this entire test in general
         juce::File aircommFile {"/Users/zach/Audio Programming/JUCE Projects/Personal Projects/SpectralSubtractor/Test Data/aircomm.wav"};
@@ -359,7 +372,7 @@ struct STFTTests : public juce::UnitTest
             totalNumSamples -= curBlockSize;
 
             AudioBuffer<float> curBuff (audio.getArrayOfWritePointers(), numChannels, samplePtr, curBlockSize);
-            stft.processBlock (curBuff);
+            stft.process (curBuff);
 
             samplePtr += curBlockSize;
         }
