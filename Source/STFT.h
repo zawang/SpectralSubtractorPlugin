@@ -34,12 +34,14 @@ public:
     
     //======================================
     
+    // Do not call this from the audio callback thread!
     void setNumChannels (const int numInputChannels)
     {
         const juce::SpinLock::ScopedLockType lock (mSpinLock);
         mNumChannels = (numInputChannels > 0) ? numInputChannels : 1;
     }
     
+    // Do not call this from the audio callback thread!
     void updateParameters (const int newFFTSize, const int newOverlap, const int newWindowType)
     {
         const juce::SpinLock::ScopedLockType lock (mSpinLock);
@@ -60,6 +62,7 @@ public:
     
     void process (juce::AudioBuffer<FloatType>& block)
     {
+        // Note that we use a try lock here, so that the audio thread doesn't get stuck waiting in the case that another thread is currently modifying parameters.
         const juce::SpinLock::ScopedTryLockType lock (mSpinLock);
         if (!lock.isLocked())
             return;

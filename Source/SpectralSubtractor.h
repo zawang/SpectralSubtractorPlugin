@@ -8,8 +8,6 @@
   ==============================================================================
 */
 
-// https://github.com/juandagilc/Audio-Effects
-
 #pragma once
 
 #include "STFT.h"
@@ -28,6 +26,7 @@ public:
     
     ~SpectralSubtractor() {}
     
+    // Do not call this from the audio callback thread!
     void reset (const int newFFTSize)
     {
         const juce::SpinLock::ScopedLockType lock (STFT<FloatType>::mSpinLock);
