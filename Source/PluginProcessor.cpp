@@ -26,8 +26,6 @@ SpectralSubtractorAudioProcessor::SpectralSubtractorAudioProcessor()
 {
     setParams();
     
-    mSpectralSubtractor.reset (FFTSize[mFFTSizeParam->getIndex()]);
-    
     juce::ValueTree audioDataNode {IDs::AudioData};
     apvts.state.appendChild (audioDataNode, nullptr);
     
@@ -66,6 +64,11 @@ juce::AudioProcessorValueTreeState::ParameterLayout SpectralSubtractorAudioProce
                                                                     HopSizeItemsUI,
                                                                     kHopSize4));
     
+    params.push_back (std::make_unique<juce::AudioParameterChoice> (ParameterID[kParameter_Window],
+                                                                    ParameterLabel[kParameter_Window],
+                                                                    WindowTypeItemsUI,
+                                                                    STFT<float>::kWindowTypeHann));
+    
     return { params.begin(), params.end() };
 }
 
@@ -80,6 +83,9 @@ void SpectralSubtractorAudioProcessor::setParams()
     
     mHopSizeParam = dynamic_cast<juce::AudioParameterChoice*> (apvts.getParameter (ParameterID[kParameter_HopSize]));
     jassert (mHopSizeParam);
+    
+    mWindowParam = dynamic_cast<juce::AudioParameterChoice*> (apvts.getParameter (ParameterID[kParameter_Window]));
+    jassert (mWindowParam);
 }
 
 //==============================================================================
@@ -147,15 +153,17 @@ void SpectralSubtractorAudioProcessor::changeProgramName (int index, const Strin
 //==============================================================================
 void SpectralSubtractorAudioProcessor::prepareToPlay (double sampleRate, int samplesPerBlock)
 {
-    prepareSpectralSubtractor();
+    prepareAndResetSpectralSubtractor();
 }
 
-void SpectralSubtractorAudioProcessor::prepareSpectralSubtractor()
+void SpectralSubtractorAudioProcessor::prepareAndResetSpectralSubtractor()
 {
     mSpectralSubtractor.prepare (getTotalNumInputChannels(),
                                  FFTSize[mFFTSizeParam->getIndex()],
                                  HopSize[mHopSizeParam->getIndex()],
-                                 mWindow);
+                                 mWindowParam->getIndex());
+    
+    mSpectralSubtractor.reset (FFTSize[mFFTSizeParam->getIndex()]);
 }
 
 void SpectralSubtractorAudioProcessor::releaseResources()

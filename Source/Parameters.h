@@ -15,6 +15,7 @@ enum Parameter
     kParameter_SubtractionStrength = 0,
     kParameter_FFTSize,
     kParameter_HopSize,
+    kParameter_Window,
     kParameter_TotalNumParameters
 };
 
@@ -22,14 +23,16 @@ static const juce::String ParameterID [kParameter_TotalNumParameters] =
 {
     "subtractionStrength",
     "fftSize",
-    "hopSize"
+    "hopSize",
+    "window"
 };
 
 static const juce::String ParameterLabel [kParameter_TotalNumParameters] =
 {
     "Subtraction Strength",
     "FFT Size",
-    "Hop Size"
+    "Hop Size",
+    "Window"
 };
 
 //==============================================================================
@@ -95,3 +98,12 @@ inline juce::StringArray getHopSizeItems()
 }
 
 static const juce::StringArray HopSizeItemsUI = getHopSizeItems();
+
+//==============================================================================
+static const StringArray WindowTypeItemsUI =
+{
+    "Rectangular",
+    "Bartlett",
+    "Hann",
+    "Hamming"
+};

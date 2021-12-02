@@ -18,10 +18,13 @@ TopPanel::TopPanel (SpectralSubtractorAudioProcessor* inProcessor)
     mLoadFileButton.onClick = [this] { loadFile(); };
     
     addAndMakeVisible (mFFTSizeComboBox);
-    mFFTSizeComboBox.onChange = [this] { DBG ("FFT size: " << FFTSize[mFFTSizeComboBox.getSelectedItemIndex()]); mProcessor->prepareSpectralSubtractor(); };
+    mFFTSizeComboBox.onChange = [this] { DBG ("FFT size: " << FFTSize[mFFTSizeComboBox.getSelectedItemIndex()]); mProcessor->prepareAndResetSpectralSubtractor(); };
     
     addAndMakeVisible (mHopSizeComboBox);
-    mHopSizeComboBox.onChange = [this] { DBG ("Hop size: " << HopSize[mHopSizeComboBox.getSelectedItemIndex()]); mProcessor->prepareSpectralSubtractor(); };
+    mHopSizeComboBox.onChange = [this] { DBG ("Hop size: " << HopSize[mHopSizeComboBox.getSelectedItemIndex()]); mProcessor->prepareAndResetSpectralSubtractor(); };
+    
+    addAndMakeVisible (mWindowComboBox);
+    mWindowComboBox.onChange = [this] { DBG ("Window: " << mWindowComboBox.getSelectedItemIndex()); mProcessor->prepareAndResetSpectralSubtractor(); };
 }
 
 TopPanel::~TopPanel() {}
@@ -37,6 +40,8 @@ void TopPanel::resized()
     mFFTSizeComboBox.setBounds (borderGap, mLoadFileButton.getBottom() + borderGap, width * 0.5f, height * 0.2f);
     
     mHopSizeComboBox.setBounds (borderGap, mFFTSizeComboBox.getBottom() + borderGap, width * 0.5f, height * 0.2f);
+    
+    mWindowComboBox.setBounds (borderGap, mHopSizeComboBox.getBottom() + borderGap, width * 0.5f, height * 0.2f);
 }
 
 void TopPanel::loadFile()

@@ -60,7 +60,7 @@ public:
     void getStateInformation (MemoryBlock& destData) override;
     void setStateInformation (const void* data, int sizeInBytes) override;
     
-    void prepareSpectralSubtractor();
+    void prepareAndResetSpectralSubtractor();
     void loadNoiseSpectrum (HeapBlock<float>& tempNoiseSpectrum);
     
     // Contains a ValueTree that is used to manage the processor's entire state.
@@ -71,14 +71,12 @@ public:
     
     int getFFTSize() { return FFTSize[mFFTSizeParam->getIndex()]; }
     int getHopSize() { return HopSize[mHopSizeParam->getIndex()]; }
-    
-    // TODO: turn these into actual parameters!!!
-    const int mWindow = STFT<float>::kWindowTypeHann;
 
 private:
     std::atomic<float>* mSubtractionStrengthParam = nullptr;
     juce::AudioParameterChoice* mFFTSizeParam = nullptr;
     juce::AudioParameterChoice* mHopSizeParam = nullptr;
+    juce::AudioParameterChoice* mWindowParam = nullptr;
     
     SpectralSubtractor<float> mSpectralSubtractor;
     std::unique_ptr<juce::AudioFormatManager> mFormatManager;
