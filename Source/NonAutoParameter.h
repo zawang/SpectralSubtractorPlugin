@@ -16,13 +16,19 @@ class NonAutoParameter
 {
 public:
     NonAutoParameter (const juce::String& parameterID, const juce::String& parameterName, T defaultValue)
-        : mParameterName (parameterName)
+        : mParameterID (parameterID),
+          mParameterName (parameterName)
     {
         mParameter.setProperty (idTag, parameterID, nullptr);
         setValue (defaultValue);
     }
     
     ~NonAutoParameter() {}
+    
+    const juce::String& getParameterID()
+    {
+        return mParameterID;
+    }
     
     const juce::String& getParameterName()
     {
@@ -41,8 +47,9 @@ public:
     }
         
 private:
-    juce::ValueTree mParameter {"NON_PARAM_ID"};
+    juce::ValueTree mParameter {"NON_AUTO_PARAM"};
     std::atomic<T> mAtomicValue {T (0)};
+    const juce::String mParameterID;
     const juce::String mParameterName;
     
     const juce::Identifier idTag {"id"};

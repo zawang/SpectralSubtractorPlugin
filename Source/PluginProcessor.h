@@ -58,6 +58,7 @@ public:
     //==============================================================================
     juce::AudioProcessorValueTreeState::ParameterLayout createParameterLayout();
     void setParams();
+    NonAutoParameterChoice& getNonAutoParameterWithID (const String& parameterID);
     void getStateInformation (MemoryBlock& destData) override;
     void setStateInformation (const void* data, int sizeInBytes) override;
     
@@ -70,13 +71,13 @@ public:
     
     int getFFTSize() { return FFTSize[mFFTSizeParam->getIndex()]; }
     int getWindowOverlap() { return WindowOverlap[mWindowOverlapParam->getIndex()]; }
-    
-    std::unique_ptr<NonAutoParameterChoice> mFFTSizeParam;
 
 private:
     std::atomic<float>* mSubtractionStrengthParam = nullptr;
+    std::unique_ptr<NonAutoParameterChoice> mFFTSizeParam;
     juce::AudioParameterChoice* mWindowOverlapParam = nullptr;
     juce::AudioParameterChoice* mWindowParam = nullptr;
+    std::map<juce::String, NonAutoParameterChoice*> mNonAutoParams;
     
     SpectralSubtractor<float> mSpectralSubtractor;
     std::unique_ptr<juce::AudioFormatManager> mFormatManager;

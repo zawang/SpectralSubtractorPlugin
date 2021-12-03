@@ -60,11 +60,6 @@ juce::AudioProcessorValueTreeState::ParameterLayout SpectralSubtractorAudioProce
                                                                    subtractionStrengthRange,
                                                                    subtractionStrengthDefault));
     
-//    params.push_back (std::make_unique<juce::AudioParameterChoice> (ParameterID[kParameter_FFTSize],
-//                                                                    ParameterLabel[kParameter_FFTSize],
-//                                                                    FFTSizeItemsUI,
-//                                                                    kFFTSize2048));
-    
     params.push_back (std::make_unique<juce::AudioParameterChoice> (ParameterID[kParameter_WindowOverlap],
                                                                     ParameterLabel[kParameter_WindowOverlap],
                                                                     WindowOverlapItemsUI,
@@ -88,12 +83,19 @@ void SpectralSubtractorAudioProcessor::setParams()
                                                               ParameterLabel[kParameter_FFTSize],
                                                               FFTSizeItemsUI,
                                                               kFFTSize2048);
+    mNonAutoParams.emplace (mFFTSizeParam->getParameterID(), mFFTSizeParam.get());
     
     mWindowOverlapParam = dynamic_cast<juce::AudioParameterChoice*> (apvts.getParameter (ParameterID[kParameter_WindowOverlap]));
     jassert (mWindowOverlapParam);
     
     mWindowParam = dynamic_cast<juce::AudioParameterChoice*> (apvts.getParameter (ParameterID[kParameter_Window]));
     jassert (mWindowParam);
+}
+
+NonAutoParameterChoice& SpectralSubtractorAudioProcessor::getNonAutoParameterWithID (const String& parameterID)
+{
+    // TODO: add this line once the Projucer supports C++20: jassert (mNonAutoParams.contains (parameterID));
+    return *(mNonAutoParams[parameterID]);
 }
 
 //==============================================================================
