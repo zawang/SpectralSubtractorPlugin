@@ -64,63 +64,62 @@ public:
     void process (juce::AudioBuffer<FloatType>& block)
     {
         // Note that we use a try lock here, so that the audio thread doesn't get stuck waiting in the case that another thread is currently modifying parameters.
-        if (std::unique_lock lock (mSpinMutex, std::try_to_lock); lock.owns_lock())
+        std::unique_lock lock (mSpinMutex, std::try_to_lock);
+        if (!lock.owns_lock())
+            return;
+        
+        mNumSamples = block.getNumSamples();
+                
+        for (int channel = 0; channel < mNumChannels; ++channel)
         {
-            mNumSamples = block.getNumSamples();
+            FloatType* channelData = block.getWritePointer (channel);
             
-            for (int channel = 0; channel < mNumChannels; ++channel)
+            mCurrentInputBufferWritePosition = mInputBufferWritePosition;
+            mCurrentOutputBufferWritePosition = mOutputBufferWritePosition;
+            mCurrentOutputBufferReadPosition = mOutputBufferReadPosition;
+            mCurrentSamplesSinceLastFFT = mSamplesSinceLastFFT;
+            
+            int relativeCurrentOutputBufferReadPosition = 0;
+            int relativeCurrentInputBufferWritePosition = 0;
+            FloatType* inputBufferData = mInputBuffer.getWritePointer (channel, mCurrentInputBufferWritePosition);
+            FloatType* outputBufferData = mOutputBuffer.getWritePointer (channel, mCurrentOutputBufferReadPosition);
+            for (int sample = 0; sample < mNumSamples; ++sample)
             {
-                FloatType* channelData = block.getWritePointer (channel);
-                
-                mCurrentInputBufferWritePosition = mInputBufferWritePosition;
-                mCurrentOutputBufferWritePosition = mOutputBufferWritePosition;
-                mCurrentOutputBufferReadPosition = mOutputBufferReadPosition;
-                mCurrentSamplesSinceLastFFT = mSamplesSinceLastFFT;
-                
-                int relativeCurrentOutputBufferReadPosition = 0;
-                int relativeCurrentInputBufferWritePosition = 0;
-                FloatType* inputBufferData = mInputBuffer.getWritePointer (channel, mCurrentInputBufferWritePosition);
-                FloatType* outputBufferData = mOutputBuffer.getWritePointer (channel, mCurrentOutputBufferReadPosition);
-                for (int sample = 0; sample < mNumSamples; ++sample)
+                const FloatType inputSample = channelData[sample];
+                inputBufferData[relativeCurrentInputBufferWritePosition] = inputSample;
+                ++relativeCurrentInputBufferWritePosition;
+                if (++mCurrentInputBufferWritePosition >= mInputBufferLength)
                 {
-                    const FloatType inputSample = channelData[sample];
-                    inputBufferData[relativeCurrentInputBufferWritePosition] = inputSample;
-                    ++relativeCurrentInputBufferWritePosition;
-                    if (++mCurrentInputBufferWritePosition >= mInputBufferLength)
-                    {
-                        mCurrentInputBufferWritePosition = 0;
-                        inputBufferData = mInputBuffer.getWritePointer (channel, mCurrentInputBufferWritePosition);
-                        relativeCurrentInputBufferWritePosition = 0;
-                    }
+                    mCurrentInputBufferWritePosition = 0;
+                    inputBufferData = mInputBuffer.getWritePointer (channel, mCurrentInputBufferWritePosition);
+                    relativeCurrentInputBufferWritePosition = 0;
+                }
+                
+                channelData[sample] = outputBufferData[relativeCurrentOutputBufferReadPosition];
+                outputBufferData[relativeCurrentOutputBufferReadPosition] = static_cast<FloatType> (0);
+                ++relativeCurrentOutputBufferReadPosition;
+                if (++mCurrentOutputBufferReadPosition >= mOutputBufferLength)
+                {
+                    mCurrentOutputBufferReadPosition = 0;
+                    outputBufferData = mOutputBuffer.getWritePointer (channel, mCurrentOutputBufferReadPosition);
+                    relativeCurrentOutputBufferReadPosition = 0;
+                }
+                
+                if (++mCurrentSamplesSinceLastFFT >= mHopSize)
+                {
+                    mCurrentSamplesSinceLastFFT = 0;
                     
-                    channelData[sample] = outputBufferData[relativeCurrentOutputBufferReadPosition];
-                    outputBufferData[relativeCurrentOutputBufferReadPosition] = static_cast<FloatType> (0);
-                    ++relativeCurrentOutputBufferReadPosition;
-                    if (++mCurrentOutputBufferReadPosition >= mOutputBufferLength)
-                    {
-                        mCurrentOutputBufferReadPosition = 0;
-                        outputBufferData = mOutputBuffer.getWritePointer (channel, mCurrentOutputBufferReadPosition);
-                        relativeCurrentOutputBufferReadPosition = 0;
-                    }
-                    
-                    if (++mCurrentSamplesSinceLastFFT >= mHopSize)
-                    {
-                        mCurrentSamplesSinceLastFFT = 0;
-                        
-                        analysis (channel);
-                        modification();
-                        synthesis (channel);
-                    }
+                    analysis (channel);
+                    modification();
+                    synthesis (channel);
                 }
             }
-            
-            mInputBufferWritePosition = mCurrentInputBufferWritePosition;
-            mOutputBufferWritePosition = mCurrentOutputBufferWritePosition;
-            mOutputBufferReadPosition = mCurrentOutputBufferReadPosition;
-            mSamplesSinceLastFFT = mCurrentSamplesSinceLastFFT;
         }
-        else
-            return;
+        
+        mInputBufferWritePosition = mCurrentInputBufferWritePosition;
+        mOutputBufferWritePosition = mCurrentOutputBufferWritePosition;
+        mOutputBufferReadPosition = mCurrentOutputBufferReadPosition;
+        mSamplesSinceLastFFT = mCurrentSamplesSinceLastFFT;
     }
     
 protected:
