@@ -14,6 +14,7 @@
 #include "SpectralSubtractor.h"
 #include "Parameters.h"
 #include "IDs.h"
+#include "NonAutoParameter.h"
 
 //==============================================================================
 /**
@@ -69,10 +70,11 @@ public:
     
     int getFFTSize() { return FFTSize[mFFTSizeParam->getIndex()]; }
     int getWindowOverlap() { return WindowOverlap[mWindowOverlapParam->getIndex()]; }
+    
+    std::unique_ptr<NonAutoParameterChoice> mFFTSizeParam;
 
 private:
     std::atomic<float>* mSubtractionStrengthParam = nullptr;
-    juce::AudioParameterChoice* mFFTSizeParam = nullptr;
     juce::AudioParameterChoice* mWindowOverlapParam = nullptr;
     juce::AudioParameterChoice* mWindowParam = nullptr;
     

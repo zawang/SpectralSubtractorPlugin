@@ -21,6 +21,8 @@
       <FILE id="Wv7MgY" name="IDs.h" compile="0" resource="0" file="Source/IDs.h"/>
       <FILE id="FqwYnF" name="InterfaceDefines.h" compile="0" resource="0"
             file="Source/InterfaceDefines.h"/>
+      <FILE id="fuLuWs" name="NonAutoParameter.h" compile="0" resource="0"
+            file="Source/NonAutoParameter.h"/>
       <FILE id="kBFviw" name="ParameterComponent.h" compile="0" resource="0"
             file="Source/ParameterComponent.h"/>
       <FILE id="w3rdqX" name="Parameters.h" compile="0" resource="0" file="Source/Parameters.h"/>

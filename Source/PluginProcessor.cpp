@@ -60,10 +60,10 @@ juce::AudioProcessorValueTreeState::ParameterLayout SpectralSubtractorAudioProce
                                                                    subtractionStrengthRange,
                                                                    subtractionStrengthDefault));
     
-    params.push_back (std::make_unique<juce::AudioParameterChoice> (ParameterID[kParameter_FFTSize],
-                                                                    ParameterLabel[kParameter_FFTSize],
-                                                                    FFTSizeItemsUI,
-                                                                    kFFTSize2048));
+//    params.push_back (std::make_unique<juce::AudioParameterChoice> (ParameterID[kParameter_FFTSize],
+//                                                                    ParameterLabel[kParameter_FFTSize],
+//                                                                    FFTSizeItemsUI,
+//                                                                    kFFTSize2048));
     
     params.push_back (std::make_unique<juce::AudioParameterChoice> (ParameterID[kParameter_WindowOverlap],
                                                                     ParameterLabel[kParameter_WindowOverlap],
@@ -84,8 +84,10 @@ void SpectralSubtractorAudioProcessor::setParams()
     jassert (mSubtractionStrengthParam);
     mSpectralSubtractor.setSubtractionStrength (mSubtractionStrengthParam);
     
-    mFFTSizeParam = dynamic_cast<juce::AudioParameterChoice*> (apvts.getParameter (ParameterID[kParameter_FFTSize]));
-    jassert (mFFTSizeParam);
+    mFFTSizeParam = std::make_unique<NonAutoParameterChoice> (ParameterID[kParameter_FFTSize],
+                                                              ParameterLabel[kParameter_FFTSize],
+                                                              FFTSizeItemsUI,
+                                                              kFFTSize2048);
     
     mWindowOverlapParam = dynamic_cast<juce::AudioParameterChoice*> (apvts.getParameter (ParameterID[kParameter_WindowOverlap]));
     jassert (mWindowOverlapParam);

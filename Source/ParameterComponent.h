@@ -68,3 +68,24 @@ private:
     
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (ParameterComboBox)
 };
+
+class NonAutoParameterComboBox
+    : public juce::ComboBox
+{
+public:
+    NonAutoParameterComboBox (NonAutoParameterChoice& parameter)
+          : juce::ComboBox (parameter.getParameterName())
+    {
+        addItemList (parameter.mChoices, 1);
+        setSelectedItemIndex (parameter.getIndex());
+        
+        mAttachment = std::make_unique<ComboBoxNonAutoParameterAttachment> (parameter, *this);
+    }
+    
+    ~NonAutoParameterComboBox() {}
+        
+private:
+    std::unique_ptr<ComboBoxNonAutoParameterAttachment> mAttachment;
+    
+    JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (NonAutoParameterComboBox)
+};
