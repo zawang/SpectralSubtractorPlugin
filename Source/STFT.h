@@ -13,6 +13,7 @@
 #pragma once
 
 #include "JuceHeader.h"
+#include "AudioSpinMutex.h"
 
 //==============================================================================
 
@@ -37,14 +38,14 @@ public:
     // Do not call this from the audio callback thread!
     void setNumChannels (const int numInputChannels)
     {
-        const juce::SpinLock::ScopedLockType lock (mSpinLock);
+        std::lock_guard<audio_spin_mutex> lock (mSpinMutex);
         mNumChannels = (numInputChannels > 0) ? numInputChannels : 1;
     }
     
     // Do not call this from the audio callback thread!
     void updateParameters (const int newFFTSize, const int newOverlap, const int newWindowType)
     {
-        const juce::SpinLock::ScopedLockType lock (mSpinLock);
+        std::lock_guard<audio_spin_mutex> lock (mSpinMutex);
         updateFFTSize (newFFTSize);
         updateHopSize (newOverlap);
         updateWindow (newWindowType);
@@ -63,66 +64,67 @@ public:
     void process (juce::AudioBuffer<FloatType>& block)
     {
         // Note that we use a try lock here, so that the audio thread doesn't get stuck waiting in the case that another thread is currently modifying parameters.
-        const juce::SpinLock::ScopedTryLockType lock (mSpinLock);
-        if (!lock.isLocked())
-            return;
-        
-        mNumSamples = block.getNumSamples();
-        
-        for (int channel = 0; channel < mNumChannels; ++channel)
+        if (std::unique_lock lock (mSpinMutex, std::try_to_lock); lock.owns_lock())
         {
-            FloatType* channelData = block.getWritePointer (channel);
+            mNumSamples = block.getNumSamples();
             
-            mCurrentInputBufferWritePosition = mInputBufferWritePosition;
-            mCurrentOutputBufferWritePosition = mOutputBufferWritePosition;
-            mCurrentOutputBufferReadPosition = mOutputBufferReadPosition;
-            mCurrentSamplesSinceLastFFT = mSamplesSinceLastFFT;
-            
-            int relativeCurrentOutputBufferReadPosition = 0;
-            int relativeCurrentInputBufferWritePosition = 0;
-            FloatType* inputBufferData = mInputBuffer.getWritePointer (channel, mCurrentInputBufferWritePosition);
-            FloatType* outputBufferData = mOutputBuffer.getWritePointer (channel, mCurrentOutputBufferReadPosition);
-            for (int sample = 0; sample < mNumSamples; ++sample)
+            for (int channel = 0; channel < mNumChannels; ++channel)
             {
-                const FloatType inputSample = channelData[sample];
-                inputBufferData[relativeCurrentInputBufferWritePosition] = inputSample;
-                ++relativeCurrentInputBufferWritePosition;
-                if (++mCurrentInputBufferWritePosition >= mInputBufferLength)
-                {
-                    mCurrentInputBufferWritePosition = 0;
-                    inputBufferData = mInputBuffer.getWritePointer (channel, mCurrentInputBufferWritePosition);
-                    relativeCurrentInputBufferWritePosition = 0;
-                }
+                FloatType* channelData = block.getWritePointer (channel);
                 
-                channelData[sample] = outputBufferData[relativeCurrentOutputBufferReadPosition];
-                outputBufferData[relativeCurrentOutputBufferReadPosition] = static_cast<FloatType> (0);
-                ++relativeCurrentOutputBufferReadPosition;
-                if (++mCurrentOutputBufferReadPosition >= mOutputBufferLength)
-                {
-                    mCurrentOutputBufferReadPosition = 0;
-                    outputBufferData = mOutputBuffer.getWritePointer (channel, mCurrentOutputBufferReadPosition);
-                    relativeCurrentOutputBufferReadPosition = 0;
-                }
+                mCurrentInputBufferWritePosition = mInputBufferWritePosition;
+                mCurrentOutputBufferWritePosition = mOutputBufferWritePosition;
+                mCurrentOutputBufferReadPosition = mOutputBufferReadPosition;
+                mCurrentSamplesSinceLastFFT = mSamplesSinceLastFFT;
                 
-                if (++mCurrentSamplesSinceLastFFT >= mHopSize)
+                int relativeCurrentOutputBufferReadPosition = 0;
+                int relativeCurrentInputBufferWritePosition = 0;
+                FloatType* inputBufferData = mInputBuffer.getWritePointer (channel, mCurrentInputBufferWritePosition);
+                FloatType* outputBufferData = mOutputBuffer.getWritePointer (channel, mCurrentOutputBufferReadPosition);
+                for (int sample = 0; sample < mNumSamples; ++sample)
                 {
-                    mCurrentSamplesSinceLastFFT = 0;
+                    const FloatType inputSample = channelData[sample];
+                    inputBufferData[relativeCurrentInputBufferWritePosition] = inputSample;
+                    ++relativeCurrentInputBufferWritePosition;
+                    if (++mCurrentInputBufferWritePosition >= mInputBufferLength)
+                    {
+                        mCurrentInputBufferWritePosition = 0;
+                        inputBufferData = mInputBuffer.getWritePointer (channel, mCurrentInputBufferWritePosition);
+                        relativeCurrentInputBufferWritePosition = 0;
+                    }
                     
-                    analysis (channel);
-                    modification();
-                    synthesis (channel);
+                    channelData[sample] = outputBufferData[relativeCurrentOutputBufferReadPosition];
+                    outputBufferData[relativeCurrentOutputBufferReadPosition] = static_cast<FloatType> (0);
+                    ++relativeCurrentOutputBufferReadPosition;
+                    if (++mCurrentOutputBufferReadPosition >= mOutputBufferLength)
+                    {
+                        mCurrentOutputBufferReadPosition = 0;
+                        outputBufferData = mOutputBuffer.getWritePointer (channel, mCurrentOutputBufferReadPosition);
+                        relativeCurrentOutputBufferReadPosition = 0;
+                    }
+                    
+                    if (++mCurrentSamplesSinceLastFFT >= mHopSize)
+                    {
+                        mCurrentSamplesSinceLastFFT = 0;
+                        
+                        analysis (channel);
+                        modification();
+                        synthesis (channel);
+                    }
                 }
             }
+            
+            mInputBufferWritePosition = mCurrentInputBufferWritePosition;
+            mOutputBufferWritePosition = mCurrentOutputBufferWritePosition;
+            mOutputBufferReadPosition = mCurrentOutputBufferReadPosition;
+            mSamplesSinceLastFFT = mCurrentSamplesSinceLastFFT;
         }
-        
-        mInputBufferWritePosition = mCurrentInputBufferWritePosition;
-        mOutputBufferWritePosition = mCurrentOutputBufferWritePosition;
-        mOutputBufferReadPosition = mCurrentOutputBufferReadPosition;
-        mSamplesSinceLastFFT = mCurrentSamplesSinceLastFFT;
+        else
+            return;
     }
     
 protected:
-    juce::SpinLock mSpinLock;
+    audio_spin_mutex mSpinMutex;
     
     // Override this function to do something interesting!
     virtual void processMagAndPhase (int index, FloatType& magnitude, FloatType& phase) {}

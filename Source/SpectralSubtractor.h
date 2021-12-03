@@ -29,7 +29,7 @@ public:
     // Do not call this from the audio callback thread!
     void reset (const int newFFTSize)
     {
-        const juce::SpinLock::ScopedLockType lock (STFT<FloatType>::mSpinLock);
+        std::lock_guard<audio_spin_mutex> lock (STFT<FloatType>::mSpinMutex);
         mNoiseSpectrum.calloc (newFFTSize);
     }
     

@@ -11,11 +11,9 @@
             file="Source/SpectralSubtractor.h"/>
       <FILE id="ZkxSyO" name="STFT.h" compile="0" resource="0" file="Source/STFT.h"/>
     </GROUP>
-    <GROUP id="{18845E81-3843-C024-4B5D-3B6E9F421EB3}" name="Parameter Control">
-      <FILE id="kBFviw" name="ParameterComponent.h" compile="0" resource="0"
-            file="Source/ParameterComponent.h"/>
-    </GROUP>
     <GROUP id="{54216890-1957-CFAB-FB42-AAC584995484}" name="Helper">
+      <FILE id="Wnpzn4" name="AudioSpinMutex.h" compile="0" resource="0"
+            file="Source/AudioSpinMutex.h"/>
       <FILE id="DwvFkW" name="HeapBlockWrapper.h" compile="0" resource="0"
             file="Source/HeapBlockWrapper.h"/>
       <FILE id="IjqWqX" name="HelperFunctions.h" compile="0" resource="0"
@@ -23,6 +21,8 @@
       <FILE id="Wv7MgY" name="IDs.h" compile="0" resource="0" file="Source/IDs.h"/>
       <FILE id="FqwYnF" name="InterfaceDefines.h" compile="0" resource="0"
             file="Source/InterfaceDefines.h"/>
+      <FILE id="kBFviw" name="ParameterComponent.h" compile="0" resource="0"
+            file="Source/ParameterComponent.h"/>
       <FILE id="w3rdqX" name="Parameters.h" compile="0" resource="0" file="Source/Parameters.h"/>
       <FILE id="QKJmbB" name="PluginParameter.h" compile="0" resource="0"
             file="Source/PluginParameter.h"/>
