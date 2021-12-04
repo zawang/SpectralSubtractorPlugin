@@ -13,9 +13,8 @@
 #include "JuceHeader.h"
 
 /**
-    These classes take JUCE components (Slider, ComboBox) and associate them with an APVTS.
+    Each component wrapper class maintains a connection with a parameter in an APVTS via JUCE's parameter attachment classes.
     This easily allows us to ensure that a JUCE parameter attachment has the same lifetime as its corresponding component.
-    The parmater attachment classes allow the APVTS class to automatically connect to sliders and buttons to keep the state of the UI and the processor up-to-date in a thread safe manner.
 */
 
 class ParameterSlider
@@ -67,25 +66,4 @@ private:
     std::unique_ptr<ComboBoxAttachment> mAttachment;
     
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (ParameterComboBox)
-};
-
-class NonAutoParameterComboBox
-    : public juce::ComboBox
-{
-public:
-    NonAutoParameterComboBox (NonAutoParameterChoice& parameter)
-          : juce::ComboBox (parameter.getParameterName())
-    {
-        addItemList (parameter.mChoices, 1);
-        setSelectedItemIndex (parameter.getIndex());
-        
-        mAttachment = std::make_unique<ComboBoxNonAutoParameterAttachment> (parameter, *this);
-    }
-    
-    ~NonAutoParameterComboBox() {}
-        
-private:
-    std::unique_ptr<ComboBoxNonAutoParameterAttachment> mAttachment;
-    
-    JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (NonAutoParameterComboBox)
 };

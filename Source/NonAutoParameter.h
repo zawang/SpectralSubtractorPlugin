@@ -11,19 +11,52 @@
 #pragma once
 #include "JuceHeader.h"
 
+static const juce::Identifier NonAutoParamIDTag {"id"};
+static const juce::Identifier NonAutoParamValueTag {"value"};
+
+/**
+    NonAutoParameter is somewhat like a non-automatable version of juce::RangedAudioParameter, though it's much simpler.
+    Call getValue() to read the value of the parameter in a thread-safe manner.
+    The only scenario in which the ValueTree member should be directly modified by the client is when the plugin state is restored.
+    All other scenarios that seek to modify the ValueTree member should call setValue(), not juce::ValueTree::setProperty().
+ 
+ How to properly serialize a NonAutoParameter:
+    To store a NonAutoParameter as part of the plugin state, call getValueTree() and append the returned ValueTree to an apvts.
+    
+    Restoring a NonAutoParameter from a saved plugin state is bit more tricky.
+    Because ValueTrees are reference counted, we can't simply call apvts.replaceState().
+    If we call apvts.replaceState(), then the apvts loses its connection to a NonAutoParameter's ValueTree member.
+    To maintain the connection between an apvts and a NonAutoParameter's ValueTree member,
+    copy properties over from the corresponding ValueTree in the saved state.
+    Example: apvtsNonAutoParamValueTree.copyPropertiesFrom (savedStateNonAutoParamValueTree, nullptr);
+*/
 template<typename T>
-class NonAutoParameter
+class NonAutoParameter : private juce::ValueTree::Listener
 {
 public:
     NonAutoParameter (const juce::String& parameterID, const juce::String& parameterName, T defaultValue)
         : mParameterID (parameterID),
           mParameterName (parameterName)
     {
-        mParameter.setProperty (idTag, parameterID, nullptr);
+        mParameter.addListener (this);
+        mParameter.setProperty (NonAutoParamIDTag, parameterID, nullptr);
         setValue (defaultValue);
     }
     
-    ~NonAutoParameter() {}
+    ~NonAutoParameter()
+    {
+        mParameter.removeListener (this);
+        
+        #if __cpp_lib_atomic_is_always_lock_free
+         static_assert (std::atomic<T>::is_always_lock_free,
+                        "NonAutoParameter requires a lock-free std::atomic<T>");
+        #endif
+    }
+    
+    const juce::ValueTree getValueTree()
+    {
+        return mParameter;
+    }
     
     const juce::String& getParameterID()
     {
@@ -37,8 +70,7 @@ public:
     
     void setValue (const juce::var& newValue)
     {
-        mParameter.setProperty (valueTag, newValue, nullptr);
-        mAtomicValue.store (static_cast<T> (newValue));
+        mParameter.setProperty (NonAutoParamValueTag, newValue, nullptr);
     }
     
     const juce::var getValue()
@@ -52,12 +84,17 @@ private:
     const juce::String mParameterID;
     const juce::String mParameterName;
     
-    const juce::Identifier idTag {"id"};
-    const juce::Identifier valueTag {"value"};
+    void valueTreePropertyChanged (juce::ValueTree&, const juce::Identifier&) override
+    {
+        mAtomicValue.store (static_cast<T> (mParameter.getProperty (NonAutoParamValueTag)));
+    }
     
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (NonAutoParameter)
 };
 
+/**
+    NonAutoParameterChoice is like a non-automatable version of juce::AudioParamterChoice.
+*/
 class NonAutoParameterChoice : public NonAutoParameter<int>
 {
 public:
@@ -78,6 +115,9 @@ public:
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (NonAutoParameterChoice)
 };
 
+/**
+    ComboBoxNonAutoParameterAttachment is like juce::ComboBoxParameterAttachment but for non-automatable parameters.
+*/
 class ComboBoxNonAutoParameterAttachment : private juce::ComboBox::Listener
 {
 public:

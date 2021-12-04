@@ -25,9 +25,7 @@ SpectralSubtractorAudioProcessor::SpectralSubtractorAudioProcessor()
 #endif
 {
     setParams();
-    
-    juce::ValueTree audioDataNode {IDs::AudioData};
-    apvts.state.appendChild (audioDataNode, nullptr);
+    attachSubTrees();
     
     mFormatManager = std::make_unique<AudioFormatManager>();
     mFormatManager->registerBasicFormats();
@@ -86,6 +84,14 @@ void SpectralSubtractorAudioProcessor::setParams()
                                                              WindowTypeItemsUI,
                                                              STFT<float>::kWindowTypeHann);
     mNonAutoParams.emplace (mWindowParam->getParameterID(), mWindowParam.get());
+}
+
+void SpectralSubtractorAudioProcessor::attachSubTrees()
+{
+    apvts.state.appendChild (mFFTSizeParam->getValueTree(), nullptr);
+    apvts.state.appendChild (mWindowOverlapParam->getValueTree(), nullptr);
+    apvts.state.appendChild (mWindowParam->getValueTree(), nullptr);
+    apvts.state.appendChild (mAudioDataTree, nullptr);
 }
 
 NonAutoParameterChoice& SpectralSubtractorAudioProcessor::getNonAutoParameterWithID (const String& parameterID)
@@ -255,7 +261,17 @@ void SpectralSubtractorAudioProcessor::setStateInformation (const void* data, in
     {
         if (xmlState->hasTagName (apvts.state.getType()))
         {
-            apvts.replaceState (juce::ValueTree::fromXml (*xmlState));
+            juce::ValueTree savedState = juce::ValueTree::fromXml (*xmlState);
+            
+            int numChildren = apvts.state.getNumChildren();
+            for (int i = 0; i < numChildren; ++i)
+            {
+                juce::ValueTree stateChild = apvts.state.getChild (i);
+                juce::ValueTree savedStateChild = savedState.getChild (i);
+                
+                jassert (savedStateChild.hasType (stateChild.getType()));
+                stateChild.copyPropertiesFrom (savedStateChild, nullptr);
+            }
     
             if (auto noiseSpectrumAsString = apvts.state.getChildWithName (IDs::AudioData).getProperty (IDs::NoiseSpectrum).toString();
                 !noiseSpectrumAsString.isEmpty())

@@ -58,6 +58,7 @@ public:
     //==============================================================================
     juce::AudioProcessorValueTreeState::ParameterLayout createParameterLayout();
     void setParams();
+    void attachSubTrees();
     NonAutoParameterChoice& getNonAutoParameterWithID (const String& parameterID);
     void getStateInformation (MemoryBlock& destData) override;
     void setStateInformation (const void* data, int sizeInBytes) override;
@@ -65,7 +66,7 @@ public:
     void prepareAndResetSpectralSubtractor();
     void loadNoiseSpectrum (HeapBlock<float>& tempNoiseSpectrum);
     
-    juce::AudioProcessorValueTreeState apvts {*this, nullptr, juce::Identifier("SpectralSubtractor"), createParameterLayout()};
+    juce::AudioProcessorValueTreeState apvts {*this, nullptr, juce::Identifier ("SpectralSubtractor"), createParameterLayout()};
     
     juce::AudioFormatManager* getFormatManager() { return mFormatManager.get(); }
     
@@ -79,13 +80,12 @@ private:
     std::unique_ptr<NonAutoParameterChoice> mWindowParam = nullptr;
     std::map<juce::String, NonAutoParameterChoice*> mNonAutoParams;
     
+    juce::ValueTree mAudioDataTree {IDs::AudioData};
+    
     SpectralSubtractor<float> mSpectralSubtractor;
     std::unique_ptr<juce::AudioFormatManager> mFormatManager;
     
     juce::UnitTestRunner mUnitTestRunner;
-
-    void heapBlockToArray (HeapBlock<float>& heapBlock, Array<var>& array);
-    void arrayToHeapBlock (Array<var>& array, HeapBlock<float>& heapBlock);
     
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (SpectralSubtractorAudioProcessor)
 };

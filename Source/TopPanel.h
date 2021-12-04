@@ -11,7 +11,7 @@
 #pragma once
 #include "PanelBase.h"
 #include "NoiseSpectrumProcessingThread.h"
-#include "ParameterComponent.h"
+#include "NonAutoParameterComponent.h"
 
 class TopPanel
 :   public PanelBase
