@@ -18,13 +18,13 @@ TopPanel::TopPanel (SpectralSubtractorAudioProcessor* inProcessor)
     mLoadFileButton.onClick = [this] { loadFile(); };
     
     addAndMakeVisible (mFFTSizeComboBox);
-    mFFTSizeComboBox.onChange = [this] { DBG ("FFT size: " << FFTSize[mFFTSizeComboBox.getSelectedItemIndex()]); mProcessor->prepareAndResetSpectralSubtractor(); };
+    mFFTSizeComboBox.onChange = [this] { mProcessor->prepareAndResetSpectralSubtractor(); };
     
     addAndMakeVisible (mWindowOverlapComboBox);
-    mWindowOverlapComboBox.onChange = [this] { DBG ("Window overlap: " << WindowOverlap[mWindowOverlapComboBox.getSelectedItemIndex()]); mProcessor->prepareAndResetSpectralSubtractor(); };
+    mWindowOverlapComboBox.onChange = [this] { mProcessor->prepareAndResetSpectralSubtractor(); };
     
     addAndMakeVisible (mWindowComboBox);
-    mWindowComboBox.onChange = [this] { DBG ("Window: " << mWindowComboBox.getSelectedItemIndex()); mProcessor->prepareAndResetSpectralSubtractor(); };
+    mWindowComboBox.onChange = [this] { mProcessor->prepareAndResetSpectralSubtractor(); };
 }
 
 TopPanel::~TopPanel() {}

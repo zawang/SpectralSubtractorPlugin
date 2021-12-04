@@ -57,6 +57,7 @@ public:
         updateParameters (newFFTSize,
                           newOverlap,
                           newWindowType);
+        DBG ("");
     }
     
     //======================================
@@ -161,6 +162,8 @@ private:
     
     void updateFFTSize (const int newFFTSize)
     {
+        DBG ("FFT size: " << newFFTSize);
+        
         mFFTSize = newFFTSize;
         mFFT = std::make_unique<dsp::FFT> (log2 (mFFTSize));
         
@@ -189,12 +192,16 @@ private:
     
     void updateHopSize (const int newOverlap)
     {
+        DBG ("Window overlap: 1/" << newOverlap);
+        
         mOverlap = newOverlap;
         if (mOverlap != 0)
         {
             mHopSize = mFFTSize / mOverlap;
             mOutputBufferWritePosition = mHopSize % mOutputBufferLength;
         }
+        else
+            jassertfalse;
     }
     
     void updateWindow (const int newWindowType)
@@ -203,24 +210,28 @@ private:
         {
             case kWindowTypeRectangular:
             {
+                DBG ("Window: Rectangular");
                 for (int sample = 0; sample < mFFTSize; ++sample)
                     mFFTWindow[sample] = 1.0f;
                 break;
             }
             case kWindowTypeBartlett:
             {
+                DBG ("Window: Bartlett");
                 for (int sample = 0; sample < mFFTSize; ++sample)
                     mFFTWindow[sample] = 1.0f - fabs (2.0f * (FloatType) sample / (FloatType) (mFFTSize - 1) - 1.0f);
                 break;
             }
             case kWindowTypeHann:
             {
+                DBG ("Window: Hann");
                 for (int sample = 0; sample < mFFTSize; ++sample)
                     mFFTWindow[sample] = 0.5f - 0.5f * cosf (2.0f * M_PI * (FloatType) sample / (FloatType) (mFFTSize - 1));
                 break;
             }
             case kWindowTypeHamming:
             {
+                DBG ("Window: Hamming");
                 for (int sample = 0; sample < mFFTSize; ++sample)
                     mFFTWindow[sample] = 0.54f - 0.46f * cosf (2.0f * M_PI * (FloatType) sample / (FloatType) (mFFTSize - 1));
                 break;
