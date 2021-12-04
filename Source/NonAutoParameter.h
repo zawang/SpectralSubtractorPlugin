@@ -30,11 +30,11 @@ static const juce::Identifier NonAutoParamValueTag {"value"};
     copy properties over from the corresponding ValueTree in the saved state.
     Example: apvtsNonAutoParamValueTree.copyPropertiesFrom (savedStateNonAutoParamValueTree, nullptr);
 */
-template<typename T>
+template<typename Type>
 class NonAutoParameter : private juce::ValueTree::Listener
 {
 public:
-    NonAutoParameter (const juce::String& parameterID, const juce::String& parameterName, T defaultValue)
+    NonAutoParameter (const juce::String& parameterID, const juce::String& parameterName, Type defaultValue)
         : mParameterID (parameterID),
           mParameterName (parameterName)
     {
@@ -48,8 +48,8 @@ public:
         mParameter.removeListener (this);
         
         #if __cpp_lib_atomic_is_always_lock_free
-         static_assert (std::atomic<T>::is_always_lock_free,
-                        "NonAutoParameter requires a lock-free std::atomic<T>");
+         static_assert (std::atomic<Type>::is_always_lock_free,
+                        "NonAutoParameter can only be used for lock-free types");
         #endif
     }
     
@@ -80,13 +80,13 @@ public:
         
 private:
     juce::ValueTree mParameter {"NON_AUTO_PARAM"};
-    std::atomic<T> mAtomicValue {T (0)};
+    std::atomic<Type> mAtomicValue {Type (0)};
     const juce::String mParameterID;
     const juce::String mParameterName;
     
     void valueTreePropertyChanged (juce::ValueTree&, const juce::Identifier&) override
     {
-        mAtomicValue.store (static_cast<T> (mParameter.getProperty (NonAutoParamValueTag)));
+        mAtomicValue.store (static_cast<Type> (mParameter.getProperty (NonAutoParamValueTag)));
     }
     
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (NonAutoParameter)
