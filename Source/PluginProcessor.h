@@ -74,9 +74,9 @@ public:
 
 private:
     std::atomic<float>* mSubtractionStrengthParam = nullptr;
-    std::unique_ptr<NonAutoParameterChoice> mFFTSizeParam;
-    juce::AudioParameterChoice* mWindowOverlapParam = nullptr;
-    juce::AudioParameterChoice* mWindowParam = nullptr;
+    std::unique_ptr<NonAutoParameterChoice> mFFTSizeParam = nullptr;
+    std::unique_ptr<NonAutoParameterChoice> mWindowOverlapParam = nullptr;
+    std::unique_ptr<NonAutoParameterChoice> mWindowParam = nullptr;
     std::map<juce::String, NonAutoParameterChoice*> mNonAutoParams;
     
     SpectralSubtractor<float> mSpectralSubtractor;

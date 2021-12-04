@@ -60,16 +60,6 @@ juce::AudioProcessorValueTreeState::ParameterLayout SpectralSubtractorAudioProce
                                                                    subtractionStrengthRange,
                                                                    subtractionStrengthDefault));
     
-    params.push_back (std::make_unique<juce::AudioParameterChoice> (ParameterID[kParameter_WindowOverlap],
-                                                                    ParameterLabel[kParameter_WindowOverlap],
-                                                                    WindowOverlapItemsUI,
-                                                                    kWindowOverlap4));
-    
-    params.push_back (std::make_unique<juce::AudioParameterChoice> (ParameterID[kParameter_Window],
-                                                                    ParameterLabel[kParameter_Window],
-                                                                    WindowTypeItemsUI,
-                                                                    STFT<float>::kWindowTypeHann));
-    
     return { params.begin(), params.end() };
 }
 
@@ -85,11 +75,17 @@ void SpectralSubtractorAudioProcessor::setParams()
                                                               kFFTSize2048);
     mNonAutoParams.emplace (mFFTSizeParam->getParameterID(), mFFTSizeParam.get());
     
-    mWindowOverlapParam = dynamic_cast<juce::AudioParameterChoice*> (apvts.getParameter (ParameterID[kParameter_WindowOverlap]));
-    jassert (mWindowOverlapParam);
+    mWindowOverlapParam = std::make_unique<NonAutoParameterChoice> (ParameterID[kParameter_WindowOverlap],
+                                                                    ParameterLabel[kParameter_WindowOverlap],
+                                                                    WindowOverlapItemsUI,
+                                                                    kWindowOverlap4);
+    mNonAutoParams.emplace (mWindowOverlapParam->getParameterID(), mWindowOverlapParam.get());
     
-    mWindowParam = dynamic_cast<juce::AudioParameterChoice*> (apvts.getParameter (ParameterID[kParameter_Window]));
-    jassert (mWindowParam);
+    mWindowParam = std::make_unique<NonAutoParameterChoice> (ParameterID[kParameter_Window],
+                                                             ParameterLabel[kParameter_Window],
+                                                             WindowTypeItemsUI,
+                                                             STFT<float>::kWindowTypeHann);
+    mNonAutoParams.emplace (mWindowParam->getParameterID(), mWindowParam.get());
 }
 
 NonAutoParameterChoice& SpectralSubtractorAudioProcessor::getNonAutoParameterWithID (const String& parameterID)
