@@ -19,7 +19,14 @@
 #include <array>
 #include <thread>
 #include <atomic>
-#include <emmintrin.h>
+
+#if JUCE_INTEL == 1
+    #include <emmintrin.h>
+#elif JUCE_ARM == 1
+    #include <arm_acle.h>
+#else
+    #error "Only Intel and ARM architectures are supported!"
+#endif
 
 struct audio_spin_mutex {
 #if JUCE_INTEL == 1
@@ -83,8 +90,6 @@ struct audio_spin_mutex {
             std::this_thread::yield();
         }
     }
-#else
-    #error "Only Intel and ARM architectures are supported!"
 #endif
 
     bool try_lock() noexcept {
