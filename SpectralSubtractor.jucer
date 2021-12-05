@@ -52,7 +52,9 @@
               file="Source/Plugin/PluginProcessor.h"/>
       </GROUP>
     </GROUP>
-    <GROUP id="{096D5F46-CEC7-1EC6-58EF-92B8253155A1}" name="Tests"/>
+    <GROUP id="{096D5F46-CEC7-1EC6-58EF-92B8253155A1}" name="Tests">
+      <FILE id="fnw2PA" name="STFT_test.cpp" compile="1" resource="0" file="Tests/STFT_test.cpp"/>
+    </GROUP>
   </MAINGROUP>
   <EXPORTFORMATS>
     <XCODE_MAC targetFolder="Builds/MacOSX">
