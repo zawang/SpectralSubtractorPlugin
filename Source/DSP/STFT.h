@@ -13,7 +13,7 @@
 #pragma once
 
 #include "JuceHeader.h"
-#include "AudioSpinMutex.h"
+#include "../Helper/AudioSpinMutex.h"
 
 //==============================================================================
 

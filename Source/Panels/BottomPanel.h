@@ -10,8 +10,8 @@
 
 #pragma once
 #include "PanelBase.h"
-#include "ParameterComponent.h"
-#include "HelperFunctions.h"
+#include "../Helper/ParameterComponent.h"
+#include "../Helper/HelperFunctions.h"
 
 class BottomPanel
 :   public PanelBase

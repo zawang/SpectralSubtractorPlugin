@@ -4,52 +4,55 @@
               displaySplashScreen="1" jucerFormatVersion="1" pluginManufacturer="Zach Wang"
               defines="RUN_UNIT_TESTS=1" cppLanguageStandard="17" pluginFormats="buildAU">
   <MAINGROUP id="aFs5Dz" name="Spectral Subtractor">
-    <GROUP id="{931A4626-700B-5937-316D-6E7DB4E3EB60}" name="DSP">
-      <FILE id="DzKZqz" name="NoiseSpectrumProcessingThread.h" compile="0"
-            resource="0" file="Source/NoiseSpectrumProcessingThread.h"/>
-      <FILE id="VaXtGC" name="SpectralSubtractor.h" compile="0" resource="0"
-            file="Source/SpectralSubtractor.h"/>
-      <FILE id="ZkxSyO" name="STFT.h" compile="0" resource="0" file="Source/STFT.h"/>
-    </GROUP>
-    <GROUP id="{54216890-1957-CFAB-FB42-AAC584995484}" name="Helper">
-      <FILE id="Wnpzn4" name="AudioSpinMutex.h" compile="0" resource="0"
-            file="Source/AudioSpinMutex.h"/>
-      <FILE id="DwvFkW" name="HeapBlockWrapper.h" compile="0" resource="0"
-            file="Source/HeapBlockWrapper.h"/>
-      <FILE id="IjqWqX" name="HelperFunctions.h" compile="0" resource="0"
-            file="Source/HelperFunctions.h"/>
-      <FILE id="Wv7MgY" name="IDs.h" compile="0" resource="0" file="Source/IDs.h"/>
-      <FILE id="FqwYnF" name="InterfaceDefines.h" compile="0" resource="0"
-            file="Source/InterfaceDefines.h"/>
-      <FILE id="fuLuWs" name="NonAutoParameter.h" compile="0" resource="0"
-            file="Source/NonAutoParameter.h"/>
-      <FILE id="LKAkqk" name="NonAutoParameterComponent.h" compile="0" resource="0"
-            file="Source/NonAutoParameterComponent.h"/>
-      <FILE id="kBFviw" name="ParameterComponent.h" compile="0" resource="0"
-            file="Source/ParameterComponent.h"/>
-      <FILE id="w3rdqX" name="Parameters.h" compile="0" resource="0" file="Source/Parameters.h"/>
-      <FILE id="QKJmbB" name="PluginParameter.h" compile="0" resource="0"
-            file="Source/PluginParameter.h"/>
-    </GROUP>
-    <GROUP id="{4EC1A98D-35D8-CF99-71C9-FEFF3528710E}" name="Panels">
-      <FILE id="r009w5" name="BottomPanel.cpp" compile="1" resource="0" file="Source/BottomPanel.cpp"/>
-      <FILE id="WwzD8W" name="BottomPanel.h" compile="0" resource="0" file="Source/BottomPanel.h"/>
-      <FILE id="vkNYCd" name="MainPanel.cpp" compile="1" resource="0" file="Source/MainPanel.cpp"/>
-      <FILE id="r49mMJ" name="MainPanel.h" compile="0" resource="0" file="Source/MainPanel.h"/>
-      <FILE id="Su2fWP" name="PanelBase.cpp" compile="1" resource="0" file="Source/PanelBase.cpp"/>
-      <FILE id="ZrfYbi" name="PanelBase.h" compile="0" resource="0" file="Source/PanelBase.h"/>
-      <FILE id="Bu6e3v" name="TopPanel.cpp" compile="1" resource="0" file="Source/TopPanel.cpp"/>
-      <FILE id="GvyYXa" name="TopPanel.h" compile="0" resource="0" file="Source/TopPanel.h"/>
-    </GROUP>
     <GROUP id="{F585BF52-7287-CE39-DB62-5BFFE459C5EA}" name="Source">
-      <FILE id="SGHNQ8" name="PluginProcessor.cpp" compile="1" resource="0"
-            file="Source/PluginProcessor.cpp"/>
-      <FILE id="nUoxXo" name="PluginProcessor.h" compile="0" resource="0"
-            file="Source/PluginProcessor.h"/>
-      <FILE id="TylPBA" name="PluginEditor.cpp" compile="1" resource="0"
-            file="Source/PluginEditor.cpp"/>
-      <FILE id="jh30yO" name="PluginEditor.h" compile="0" resource="0" file="Source/PluginEditor.h"/>
+      <GROUP id="{B3C75554-A699-38D6-F273-2B4A72FD3584}" name="DSP">
+        <FILE id="vK74kR" name="NoiseSpectrumProcessingThread.h" compile="0"
+              resource="0" file="Source/DSP/NoiseSpectrumProcessingThread.h"/>
+        <FILE id="AzH4NE" name="SpectralSubtractor.h" compile="0" resource="0"
+              file="Source/DSP/SpectralSubtractor.h"/>
+        <FILE id="u1SGZG" name="STFT.h" compile="0" resource="0" file="Source/DSP/STFT.h"/>
+      </GROUP>
+      <GROUP id="{E5549859-15C7-0258-A614-182A5037E6E7}" name="Helper">
+        <FILE id="XrFuRL" name="AudioSpinMutex.h" compile="0" resource="0"
+              file="Source/Helper/AudioSpinMutex.h"/>
+        <FILE id="qd3KlZ" name="HeapBlockWrapper.h" compile="0" resource="0"
+              file="Source/Helper/HeapBlockWrapper.h"/>
+        <FILE id="Jnh7xO" name="HelperFunctions.h" compile="0" resource="0"
+              file="Source/Helper/HelperFunctions.h"/>
+        <FILE id="jBfGBr" name="IDs.h" compile="0" resource="0" file="Source/Helper/IDs.h"/>
+        <FILE id="ghdP2D" name="InterfaceDefines.h" compile="0" resource="0"
+              file="Source/Helper/InterfaceDefines.h"/>
+        <FILE id="AlW0Gk" name="NonAutoParameter.h" compile="0" resource="0"
+              file="Source/Helper/NonAutoParameter.h"/>
+        <FILE id="Qr7qOh" name="NonAutoParameterComponent.h" compile="0" resource="0"
+              file="Source/Helper/NonAutoParameterComponent.h"/>
+        <FILE id="gbEDVO" name="ParameterComponent.h" compile="0" resource="0"
+              file="Source/Helper/ParameterComponent.h"/>
+        <FILE id="Yp3gJz" name="Parameters.h" compile="0" resource="0" file="Source/Helper/Parameters.h"/>
+        <FILE id="qtyMtX" name="PluginParameter.h" compile="0" resource="0"
+              file="Source/Helper/PluginParameter.h"/>
+      </GROUP>
+      <GROUP id="{76582B21-C258-40CE-6913-889CC67F9554}" name="Panels">
+        <FILE id="LrIJoi" name="BottomPanel.cpp" compile="1" resource="0" file="Source/Panels/BottomPanel.cpp"/>
+        <FILE id="F8wy7H" name="BottomPanel.h" compile="0" resource="0" file="Source/Panels/BottomPanel.h"/>
+        <FILE id="m1q16L" name="MainPanel.cpp" compile="1" resource="0" file="Source/Panels/MainPanel.cpp"/>
+        <FILE id="fV4ZiT" name="MainPanel.h" compile="0" resource="0" file="Source/Panels/MainPanel.h"/>
+        <FILE id="vfqrBa" name="PanelBase.cpp" compile="1" resource="0" file="Source/Panels/PanelBase.cpp"/>
+        <FILE id="nfHWs7" name="PanelBase.h" compile="0" resource="0" file="Source/Panels/PanelBase.h"/>
+        <FILE id="uXSO1n" name="TopPanel.cpp" compile="1" resource="0" file="Source/Panels/TopPanel.cpp"/>
+        <FILE id="wp2uVu" name="TopPanel.h" compile="0" resource="0" file="Source/Panels/TopPanel.h"/>
+      </GROUP>
+      <GROUP id="{3AD4749A-73AE-83C3-2D4C-904916EB1F8D}" name="Plugin">
+        <FILE id="Mz7AFV" name="PluginEditor.cpp" compile="1" resource="0"
+              file="Source/Plugin/PluginEditor.cpp"/>
+        <FILE id="xPdfGi" name="PluginEditor.h" compile="0" resource="0" file="Source/Plugin/PluginEditor.h"/>
+        <FILE id="eHGoRC" name="PluginProcessor.cpp" compile="1" resource="0"
+              file="Source/Plugin/PluginProcessor.cpp"/>
+        <FILE id="CMPWBD" name="PluginProcessor.h" compile="0" resource="0"
+              file="Source/Plugin/PluginProcessor.h"/>
+      </GROUP>
     </GROUP>
+    <GROUP id="{096D5F46-CEC7-1EC6-58EF-92B8253155A1}" name="Tests"/>
   </MAINGROUP>
   <EXPORTFORMATS>
     <XCODE_MAC targetFolder="Builds/MacOSX">

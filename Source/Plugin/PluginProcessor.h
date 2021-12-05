@@ -11,10 +11,10 @@
 #pragma once
 
 #include "../JuceLibraryCode/JuceHeader.h"
-#include "SpectralSubtractor.h"
-#include "Parameters.h"
-#include "IDs.h"
-#include "NonAutoParameter.h"
+#include "../DSP/SpectralSubtractor.h"
+#include "../Helper/Parameters.h"
+#include "../Helper/IDs.h"
+#include "../Helper/NonAutoParameter.h"
 
 //==============================================================================
 /**

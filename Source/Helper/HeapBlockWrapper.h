@@ -11,7 +11,6 @@
 #pragma once
 
 #include "JuceHeader.h"
-#include "HelperFunctions.h"
 
 /** Simple wrapper of juce::HeapBlock that can convert to/from a juce::String and has a variable to keep track of the number of elements allocated.  */
 template <class ElementType, bool throwOnFailure = false>

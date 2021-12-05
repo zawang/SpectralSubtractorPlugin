@@ -11,7 +11,7 @@
 #pragma once
 
 #include "STFT.h"
-#include "HeapBlockWrapper.h"
+#include "../Helper/HeapBlockWrapper.h"
 
 //==============================================================================
 
