@@ -30,18 +30,22 @@ struct NoiseSpectrumProcessingTests : public juce::UnitTest
             auto start = time.getMillisecondCounterHiRes();
             makeSpectrogramPreOptimization (cancellationSpectrogram, &angelsAudio, *(mFFT.get()), hopSize, *(mWindow.get()));
             auto stop = time.getMillisecondCounterHiRes();
-            std::cout << "Time elapsed for makeSpectrogramPreOptimization: " << (stop - start) / 1000.0 << std::endl;
+            auto preOptTimeElapsed = (stop - start) / 1000.0;
+            std::cout << "Time elapsed for makeSpectrogramPreOptimization: " << preOptTimeElapsed << std::endl;
             
             start = time.getMillisecondCounterHiRes();
             makeSpectrogram (spectrogram, &angelsAudio, *(mFFT.get()), hopSize, *(mWindow.get()));
             stop = time.getMillisecondCounterHiRes();
-            std::cout << "Time elapsed for makeSpectrogram: " << (stop - start) / 1000.0 << std::endl;
+            auto postOptTimeElapsed = (stop - start) / 1000.0;
+            std::cout << "Time elapsed for makeSpectrogram: " << postOptTimeElapsed << std::endl;
             
             for (int i = 0; i < spectrogram.size(); ++i)
             {
                 for (int j = 0; j < fftSize; ++j)
                     expectEquals (spectrogram[i][j], cancellationSpectrogram[i][j]);
             }
+            
+            expectLessOrEqual (postOptTimeElapsed, preOptTimeElapsed);
         }
         
         // TODO: COMPARE STFT WITH scipy.signal.stft
@@ -87,9 +91,10 @@ struct NoiseSpectrumProcessingTests : public juce::UnitTest
                 
                 fft.performFrequencyOnlyForwardTransform (fftBuffer.data());
                 
+                // Add the positive frequency bins (including the center bin) from fftBuffer to the spectrogram.
                 for (int j = 0; j < numRows; ++j)
                 {
-                    spectrogram[i][j] += (fftBuffer[j] / numChannels);
+                    spectrogram[i][j] += (fftBuffer[j] / numChannels);      // Divide by numChannels because we're calculating the average spectrogram
                 }
                 
                 signalData += hopSize;

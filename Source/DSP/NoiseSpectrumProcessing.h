@@ -43,6 +43,7 @@ inline void makeSpectrogram (Spectrogram<FloatType>& spectrogram,
     size_t numRows = 1UL + (fftSize / 2UL);
     
     int numChannels = signal->getNumChannels();
+    FloatType inverseNumChannels = static_cast<FloatType> (1) / numChannels;
     
     for (int channel = 0; channel < numChannels; ++channel)
     {
@@ -63,10 +64,7 @@ inline void makeSpectrogram (Spectrogram<FloatType>& spectrogram,
             fft.performFrequencyOnlyForwardTransform (fftBuffer.data());
             
             // Add the positive frequency bins (including the center bin) from fftBuffer to the spectrogram.
-            for (int j = 0; j < numRows; ++j)
-            {
-                spectrogram[i][j] += (fftBuffer[j] / numChannels);      // Divide by numChannels because we're calculating the average spectrogram
-            }
+            juce::FloatVectorOperations::addWithMultiply (spectrogram[i].get(), fftBuffer.data(), inverseNumChannels, numRows);
             
             // Next chunk
             signalData += hopSize;
