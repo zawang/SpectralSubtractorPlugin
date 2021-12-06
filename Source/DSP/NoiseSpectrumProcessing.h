@@ -80,14 +80,13 @@ inline void computeAverageSpectrum (HeapBlock<FloatType>& magSpectrum, Spectrogr
     magSpectrum.clear (fftSize);
     
     size_t numColumns = spectrogram.size();
+    FloatType inverseNumColumns = static_cast<FloatType> (1) / numColumns;
 
     // Iterate through frequency bins. We only go up to (fftSize / 2 + 1) in order to ignore the negative frequency bins.
+    int numBins = fftSize / 2 + 1;
     for (int freqColumn = 0; freqColumn < numColumns; ++freqColumn)
     {
-        for (int freqBin = 0; freqBin < fftSize / 2 + 1; ++freqBin)
-        {
-            magSpectrum[freqBin] += spectrogram[freqColumn][freqBin] / numColumns;
-        }
+        juce::FloatVectorOperations::addWithMultiply (magSpectrum.get(), spectrogram[freqColumn].get(), inverseNumColumns, numBins);
     }
 }
 

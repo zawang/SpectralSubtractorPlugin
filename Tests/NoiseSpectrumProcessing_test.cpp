@@ -69,7 +69,9 @@ struct NoiseSpectrumProcessingTests : public juce::UnitTest
             std::cout << "Time elapsed for computeAverageSpectrum: " << postOptTimeElapsed << std::endl;
             
             for (int i = 0; i < fftSize; ++i)
-                expectEquals (magSpectrum[i], cancellationMagSpectrum[i]);
+                expectWithinAbsoluteError (magSpectrum[i], cancellationMagSpectrum[i], static_cast<FloatType> (0.00001));
+            
+            expectLessOrEqual (postOptTimeElapsed, preOptTimeElapsed);
         }
         
         // TODO: COMPARE STFT WITH scipy.signal.stft
