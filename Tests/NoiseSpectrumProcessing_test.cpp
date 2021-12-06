@@ -1,12 +1,8 @@
 #include "../Source/DSP/NoiseSpectrumProcessing.h"
-#include "JuceHeader.h"
-
-#if RUN_UNIT_TESTS == 1
+#include "test_shared.cpp"
 
 struct NoiseSpectrumProcessingTests : public juce::UnitTest
 {
-#define FloatType float
-    
     NoiseSpectrumProcessingTests()
         : juce::UnitTest ("NoiseSpectrumProcessing")
     {}
@@ -52,20 +48,6 @@ struct NoiseSpectrumProcessingTests : public juce::UnitTest
         
         mFFT = nullptr;
         mWindow = nullptr;
-    }
-    
-    void getAudioFile (juce::AudioBuffer<FloatType>& buffer, const juce::File& file)
-    {
-        AudioFormatManager formatManager;
-        formatManager.registerBasicFormats();
-        
-        std::unique_ptr<juce::AudioFormatReader> reader;
-        reader.reset (formatManager.createReaderFor (file));
-        if (reader.get() != nullptr)
-        {
-            buffer.setSize ((int) reader->numChannels, (int) reader->lengthInSamples);
-            reader->read (buffer.getArrayOfWritePointers(), buffer.getNumChannels(), 0, buffer.getNumSamples());
-        }
     }
     
     // This is what the makeSpectrogram function was before optimizations. Used for cancellation test.
@@ -120,5 +102,3 @@ struct NoiseSpectrumProcessingTests : public juce::UnitTest
 };
 
 static NoiseSpectrumProcessingTests noiseSpectrumProcessingTests;
-
-#endif

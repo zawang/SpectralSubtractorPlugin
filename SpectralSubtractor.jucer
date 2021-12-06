@@ -51,6 +51,8 @@
       </GROUP>
     </GROUP>
     <GROUP id="{096D5F46-CEC7-1EC6-58EF-92B8253155A1}" name="Tests">
+      <FILE id="AnrpRK" name="test_main.cpp" compile="1" resource="0" file="Tests/test_main.cpp"/>
+      <FILE id="iPyjiE" name="test_shared.cpp" compile="1" resource="0" file="Tests/test_shared.cpp"/>
       <FILE id="fQzmXz" name="NoiseSpectrumProcessing_test.cpp" compile="1"
             resource="0" file="Tests/NoiseSpectrumProcessing_test.cpp"/>
       <FILE id="fnw2PA" name="STFT_test.cpp" compile="1" resource="0" file="Tests/STFT_test.cpp"/>

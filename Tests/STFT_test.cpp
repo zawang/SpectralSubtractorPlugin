@@ -1,4 +1,5 @@
 #include "../Source/DSP/STFT.h"
+#include "test_shared.cpp"
 
 #if RUN_UNIT_TESTS == 1
 
@@ -38,20 +39,6 @@ struct STFTTests : public juce::UnitTest
             float maxAbsoluteError = 0.0001f;
             for (int i = 0; i < aircommCopy.getNumSamples() - fftSize; ++i)
                 expectWithinAbsoluteError (aircommData[i], aircommCopyData[i], maxAbsoluteError);
-        }
-    }
-    
-    void getAudioFile (juce::AudioBuffer<float>& buffer, const juce::File& file)
-    {
-        AudioFormatManager formatManager;
-        formatManager.registerBasicFormats();
-        
-        std::unique_ptr<juce::AudioFormatReader> reader;
-        reader.reset (formatManager.createReaderFor (file));
-        if (reader.get() != nullptr)
-        {
-            buffer.setSize ((int) reader->numChannels, (int) reader->lengthInSamples);
-            reader->read (buffer.getArrayOfWritePointers(), buffer.getNumChannels(), 0, buffer.getNumSamples());
         }
     }
     
