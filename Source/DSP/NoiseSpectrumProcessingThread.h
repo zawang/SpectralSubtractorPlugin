@@ -10,14 +10,95 @@
 
 #pragma once
 
+// One audio channel of FFT data over time, really 2-dimensional
+template <typename FloatType>
+using Spectrogram = std::vector<HeapBlock<FloatType>>;
+
+// Compute the stft on each channel of signal and average the results to produce one spectrogram.
+template <typename FloatType>
+inline void makeSpectrogram (Spectrogram<FloatType>& spectrogram,
+                             juce::AudioBuffer<FloatType>* signal,
+                             juce::dsp::FFT& fft,
+                             size_t hopSize,
+                             juce::dsp::WindowingFunction<FloatType>& window)
+{
+    const size_t dataCount = signal->getNumSamples();
+    
+    // fftSize will be the number of bins we used to initialize the SpectrogramMaker.
+    ptrdiff_t fftSize = fft.getSize();
+    
+    // Calculate number of hops
+    ptrdiff_t numHops = 1L + static_cast<long>((dataCount - fftSize) / hopSize);
+    
+    // Initialize spectrogram
+    spectrogram.resize (numHops + 1);
+    for (int i = 0; i < spectrogram.size(); ++i)
+    {
+        spectrogram[i].realloc (fftSize);
+        spectrogram[i].clear (fftSize);
+    }
+    
+    // We will discard the negative frequency bins, but leave the center bin.
+    size_t numRows = 1UL + (fftSize / 2UL);
+    
+    int numChannels = signal->getNumChannels();
+    
+    for (int channel = 0; channel < numChannels; ++channel)
+    {
+        // fFft works on the data in place, and needs twice as much space as the input size.
+        std::vector<FloatType> fftBuffer (fftSize * 2UL);
+    
+        // While data remains
+        const FloatType* signalData = signal->getReadPointer (channel, 0);
+        for (int i = 0; i < numHops; ++i)
+        {
+            // Prepare segment to perform FFT on.
+            std::memcpy (fftBuffer.data(), signalData, fftSize * sizeof (FloatType));
+            
+            // Apply the windowing to the chunk of samples before passing it to the FFT.
+            window.multiplyWithWindowingTable (fftBuffer.data(), fftSize);
+            
+            // performFrequencyOnlyForwardTransform produces a magnitude frequency response spectrum.
+            fft.performFrequencyOnlyForwardTransform (fftBuffer.data());
+            
+            // Add the positive frequency bins (including the center bin) from fftBuffer to the spectrogram.
+            for (int j = 0; j < numRows; ++j)
+            {
+                spectrogram[i][j] += (fftBuffer[j] / numChannels);      // Divide by numChannels because we're calculating the average spectrogram
+            }
+            
+            // Next chunk
+            signalData += hopSize;
+        }
+    }
+}
+
+// Calculates the average spectrum from a given spectrogram
+template <typename FloatType>
+inline void computeAverageSpectrum (HeapBlock<FloatType>& magSpectrum, Spectrogram<FloatType>& spectrogram, int fftSize)
+{
+    magSpectrum.realloc (fftSize);
+    magSpectrum.clear (fftSize);
+    
+    size_t numColumns = spectrogram.size();
+
+    // Iterate through frequency bins. We only go up to (fftSize / 2 + 1) in order to ignore the negative frequency bins.
+    for (int freqBin = 0; freqBin < fftSize / 2 + 1; ++freqBin)
+    {
+        FloatType sum = 0.f;
+        
+        for (int freqColumn = 0; freqColumn < numColumns; ++freqColumn)
+            sum += spectrogram[freqColumn][freqBin];
+            
+        magSpectrum[freqBin] = sum / numColumns;
+    }
+}
+
 // Thread that calculates a noise file's average spectrum and replace's the audio processor's old noise spectrum with the one it just calculated.
 template <typename FloatType>
 class NoiseSpectrumProcessingThread : public juce::ThreadWithProgressWindow
 {
 public:
-    // One audio channel of FFT data over time, really 2-dimensional
-    using Spectrogram = std::vector<HeapBlock<FloatType>>;
-    
     NoiseSpectrumProcessingThread (SpectralSubtractorAudioProcessor* inProcessor, juce::File inFile, int fftSize, int overlap)
         : juce::ThreadWithProgressWindow ("Preparing noise spectrum...", true, true, 10000),
           mProcessor (inProcessor),
@@ -26,13 +107,13 @@ public:
           mWindow (static_cast<size_t> (fftSize + 1), juce::dsp::WindowingFunction<FloatType>::hann, false)
     {
         if (overlap != 0)
-            mHop = mFFT.getSize() / overlap;
+            mHopSize = mFFT.getSize() / overlap;
         
         jassert (mNoiseFile != juce::File{});
-        jassert (mHop <= mFFT.getSize());
+        jassert (mHopSize <= mFFT.getSize());
         
         DBG ("Background thread FFT size: " << mFFT.getSize());
-        DBG ("Background thread hop size: " << mHop);
+        DBG ("Background thread hop size: " << mHopSize);
         setStatusMessage ("Getting ready...");
     }
 
@@ -62,12 +143,11 @@ public:
             
             setStatusMessage ("Computing STFT of noise signal...");
             
-            Spectrogram noiseSpectrogram;
-            makeSpectrogram (noiseSpectrogram, noiseBuffer.get());
+            Spectrogram<FloatType> noiseSpectrogram;
+            makeSpectrogram (noiseSpectrogram, noiseBuffer.get(), mFFT, mHopSize, mWindow);
             
             if (threadShouldExit()) return;
-            
-            setProgress (-1.0);
+
             setStatusMessage ("Computing noise spectrum...");
             
             computeAverageSpectrum (mTempNoiseSpectrum, noiseSpectrogram, mFFT.getSize());
@@ -109,94 +189,6 @@ public:
         // ..and clean up by deleting our thread object..
         delete this;
     }
-    
-    // Compute the stft on each channel of signal and average the results to produce one spectrogram.
-    void makeSpectrogram (Spectrogram& spectrogram, juce::AudioBuffer<FloatType>* signal)
-    {
-        const size_t dataCount = signal->getNumSamples();
-        
-        // fftSize will be the number of bins we used to initialize the SpectrogramMaker.
-        ptrdiff_t fftSize = mFFT.getSize();
-        
-        // Calculate number of hops
-        ptrdiff_t numHops = 1L + static_cast<long>((dataCount - fftSize) / mHop);
-        
-        // Initialize spectrogram
-        spectrogram.resize (numHops + 1);
-        for (int i = 0; i < spectrogram.size(); ++i)
-        {
-            if (threadShouldExit()) return;
-            spectrogram[i].realloc (fftSize);
-            spectrogram[i].clear (fftSize);
-        }
-        
-        // We will discard the negative frequency bins, but leave the center bin.
-        size_t numRows = 1UL + (fftSize / 2UL);
-        
-        int numChannels = signal->getNumChannels();
-        
-        size_t thingsToDo = numChannels * numHops;
-        double progress = 0.0;
-        
-        for (int channel = 0; channel < numChannels; ++channel)
-        {
-            if (threadShouldExit()) return;
-            
-            // fFft works on the data in place, and needs twice as much space as the input size.
-            std::vector<FloatType> fftBuffer (fftSize * 2UL);
-        
-            // While data remains
-            const FloatType* signalData = signal->getReadPointer (channel, 0);
-            for (int i = 0; i < numHops; ++i)
-            {
-                if (threadShouldExit()) return;
-                
-                setProgress (progress / thingsToDo);
-                
-                // Prepare segment to perform FFT on.
-                std::memcpy (fftBuffer.data(), signalData, fftSize * sizeof (FloatType));
-                
-                // Apply the windowing to the chunk of samples before passing it to the FFT.
-                mWindow.multiplyWithWindowingTable (fftBuffer.data(), fftSize);
-                
-                // performFrequencyOnlyForwardTransform produces a magnitude frequency response spectrum.
-                mFFT.performFrequencyOnlyForwardTransform (fftBuffer.data());
-                
-                // Add the positive frequency bins (including the center bin) from fftBuffer to the spectrogram.
-                for (int j = 0; j < numRows; ++j)
-                {
-                    spectrogram[i][j] += (fftBuffer[j] / numChannels);      // Divide by numChannels because we're calculating the average spectrogram
-                }
-                
-                // Next chunk
-                signalData += mHop;
-                
-                ++progress;
-            }
-        }
-    }
-    
-    // Calculates the average spectrum from a given spectrogram
-    void computeAverageSpectrum (HeapBlock<FloatType>& magSpectrum, Spectrogram& spectrogram, int fftSize)
-    {
-        magSpectrum.realloc (fftSize);
-        magSpectrum.clear (fftSize);
-        
-        size_t numColumns = spectrogram.size();
-
-        // Iterate through frequency bins. We only go up to (fftSize / 2 + 1) in order to ignore the negative frequency bins.
-        for (int freqBin = 0; freqBin < fftSize / 2 + 1; ++freqBin)
-        {
-            if (threadShouldExit()) return;
-            
-            FloatType sum = 0.f;
-            
-            for (int freqColumn = 0; freqColumn < numColumns; ++freqColumn)
-                sum += spectrogram[freqColumn][freqBin];
-                
-            magSpectrum[freqBin] = sum / numColumns;
-        }
-    }
 
 private:
     SpectralSubtractorAudioProcessor* mProcessor;
@@ -207,7 +199,7 @@ private:
     
     // For creating spectrogram
     juce::dsp::FFT mFFT;
-    size_t mHop;
+    size_t mHopSize;
     juce::dsp::WindowingFunction<FloatType> mWindow;
 };
 
