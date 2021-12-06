@@ -6,8 +6,8 @@
   <MAINGROUP id="aFs5Dz" name="Spectral Subtractor">
     <GROUP id="{F585BF52-7287-CE39-DB62-5BFFE459C5EA}" name="Source">
       <GROUP id="{B3C75554-A699-38D6-F273-2B4A72FD3584}" name="DSP">
-        <FILE id="vK74kR" name="NoiseSpectrumProcessingThread.h" compile="0"
-              resource="0" file="Source/DSP/NoiseSpectrumProcessingThread.h"/>
+        <FILE id="vK74kR" name="NoiseSpectrumProcessing.h" compile="0" resource="0"
+              file="Source/DSP/NoiseSpectrumProcessing.h"/>
         <FILE id="AzH4NE" name="SpectralSubtractor.h" compile="0" resource="0"
               file="Source/DSP/SpectralSubtractor.h"/>
         <FILE id="u1SGZG" name="STFT.h" compile="0" resource="0" file="Source/DSP/STFT.h"/>
@@ -51,6 +51,8 @@
       </GROUP>
     </GROUP>
     <GROUP id="{096D5F46-CEC7-1EC6-58EF-92B8253155A1}" name="Tests">
+      <FILE id="fQzmXz" name="NoiseSpectrumProcessing_test.cpp" compile="1"
+            resource="0" file="Tests/NoiseSpectrumProcessing_test.cpp"/>
       <FILE id="fnw2PA" name="STFT_test.cpp" compile="1" resource="0" file="Tests/STFT_test.cpp"/>
     </GROUP>
   </MAINGROUP>

@@ -9,6 +9,7 @@
 */
 
 #pragma once
+#include "../Plugin/PluginProcessor.h"
 
 // One audio channel of FFT data over time, really 2-dimensional
 template <typename FloatType>
@@ -202,24 +203,3 @@ private:
     size_t mHopSize;
     juce::dsp::WindowingFunction<FloatType> mWindow;
 };
-
-#if RUN_UNIT_TESTS == 1
-
-// TODO: COMPARE STFT WITH scipy.signal.stft
-/*struct NoiseSpectrumProcessingThreadTests : public juce::UnitTest
-{
-    NoiseSpectrumProcessingThreadTests()
-        : juce::UnitTest ("NoiseSpectrumProcessingThread")
-    {}
-    
-    void runTest() override
-    {
-        beginTest ("");
-        {
-        }
-    }
-    
-};
-static NoiseSpectrumProcessingThreadTests noiseSpectrumProcessingThreadTests;*/
-
-#endif

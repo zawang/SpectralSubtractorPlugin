@@ -11,6 +11,7 @@
 #include "PluginProcessor.h"
 #include "PluginEditor.h"
 #include "../Tests/STFT_test.cpp"
+#include "../Tests/NoiseSpectrumProcessing_test.cpp"
 
 //==============================================================================
 SpectralSubtractorAudioProcessor::SpectralSubtractorAudioProcessor()
