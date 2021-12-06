@@ -11,7 +11,6 @@
 #pragma once
 #include "JuceHeader.h"
 #include "../Plugin/PluginProcessor.h"
-#include "../Helper/InterfaceDefines.h"
 
 // All other panels are derived from PanelBase
 

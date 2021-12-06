@@ -20,8 +20,6 @@
         <FILE id="Jnh7xO" name="HelperFunctions.h" compile="0" resource="0"
               file="Source/Helper/HelperFunctions.h"/>
         <FILE id="jBfGBr" name="IDs.h" compile="0" resource="0" file="Source/Helper/IDs.h"/>
-        <FILE id="ghdP2D" name="InterfaceDefines.h" compile="0" resource="0"
-              file="Source/Helper/InterfaceDefines.h"/>
         <FILE id="AlW0Gk" name="NonAutoParameter.h" compile="0" resource="0"
               file="Source/Helper/NonAutoParameter.h"/>
         <FILE id="Qr7qOh" name="NonAutoParameterComponent.h" compile="0" resource="0"

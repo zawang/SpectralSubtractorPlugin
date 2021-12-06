@@ -28,11 +28,21 @@ public:
     void resized() override;
 
 private:
-    // This reference is provided as a quick way for your editor to
-    // access the processor object that created it.
-    SpectralSubtractorAudioProcessor& processor;
+    SpectralSubtractorAudioProcessor& mProcessor;
     
     MainPanel mMainPanel;      // mMainPanel will contain all the other sub panels
+    
+    const int mDefaultWidth = 270;
+    const int mDefaultHeight = 375;
+    
+    const juce::File mSpectralSubtractorDirectory { juce::File::getSpecialLocation (juce::File::userApplicationDataDirectory).getChildFile ("Application Support/Zach Wang/Spectral Subtractor") };
+    const juce::File mSettingsFile { mSpectralSubtractorDirectory.getChildFile ("settings.xml") };
+    juce::XmlElement mSettingsXml {"SpectralSubtractor"};
+    const juce::Identifier mWindowSizeAttrName {"windowHeight"};
+    const int mDefaultWindowHeight {375};
+    
+    void saveWindowHeight (int windowHeight);
+    int getSavedWindowHeight();
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (SpectralSubtractorAudioProcessorEditor)
 };
