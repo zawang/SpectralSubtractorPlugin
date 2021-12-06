@@ -82,14 +82,12 @@ inline void computeAverageSpectrum (HeapBlock<FloatType>& magSpectrum, Spectrogr
     size_t numColumns = spectrogram.size();
 
     // Iterate through frequency bins. We only go up to (fftSize / 2 + 1) in order to ignore the negative frequency bins.
-    for (int freqBin = 0; freqBin < fftSize / 2 + 1; ++freqBin)
+    for (int freqColumn = 0; freqColumn < numColumns; ++freqColumn)
     {
-        FloatType sum = 0.f;
-        
-        for (int freqColumn = 0; freqColumn < numColumns; ++freqColumn)
-            sum += spectrogram[freqColumn][freqBin];
-            
-        magSpectrum[freqBin] = sum / numColumns;
+        for (int freqBin = 0; freqBin < fftSize / 2 + 1; ++freqBin)
+        {
+            magSpectrum[freqBin] += spectrogram[freqColumn][freqBin] / numColumns;
+        }
     }
 }
 

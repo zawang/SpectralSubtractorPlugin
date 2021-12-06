@@ -22,13 +22,16 @@ struct NoiseSpectrumProcessingTests : public juce::UnitTest
         getAudioFile (angelsAudio, angelsFile);
         Spectrogram<FloatType> spectrogram;
         Spectrogram<FloatType> cancellationSpectrogram;
+        HeapBlock<FloatType> magSpectrum;
+        HeapBlock<FloatType> cancellationMagSpectrum;
         
         juce::Time time;
         
-        beginTest ("makeSpectrogram() cancellation test");
         {
+            beginTest ("makeSpectrogram() cancellation test");
+            
             auto start = time.getMillisecondCounterHiRes();
-            makeSpectrogramPreOptimization (cancellationSpectrogram, &angelsAudio, *(mFFT.get()), hopSize, *(mWindow.get()));
+            makeSpectrogramPreOpt (cancellationSpectrogram, &angelsAudio, *(mFFT.get()), hopSize, *(mWindow.get()));
             auto stop = time.getMillisecondCounterHiRes();
             auto preOptTimeElapsed = (stop - start) / 1000.0;
             std::cout << "Time elapsed for makeSpectrogramPreOptimization: " << preOptTimeElapsed << std::endl;
@@ -46,6 +49,27 @@ struct NoiseSpectrumProcessingTests : public juce::UnitTest
             }
             
             expectLessOrEqual (postOptTimeElapsed, preOptTimeElapsed);
+            
+            //==============================================================================
+            //==============================================================================
+            //==============================================================================
+            
+            beginTest ("computeAverageSpectrum() cancellation test");
+        
+            start = time.getMillisecondCounterHiRes();
+            computeAverageSpectrumPreOpt (cancellationMagSpectrum, spectrogram, fftSize);
+            stop = time.getMillisecondCounterHiRes();
+            preOptTimeElapsed = (stop - start) / 1000.0;
+            std::cout << "Time elapsed for computeAverageSpectrumPreOpt: " << preOptTimeElapsed << std::endl;
+            
+            start = time.getMillisecondCounterHiRes();
+            computeAverageSpectrum (magSpectrum, spectrogram, fftSize);
+            stop = time.getMillisecondCounterHiRes();
+            postOptTimeElapsed = (stop - start) / 1000.0;
+            std::cout << "Time elapsed for computeAverageSpectrum: " << postOptTimeElapsed << std::endl;
+            
+            for (int i = 0; i < fftSize; ++i)
+                expectEquals (magSpectrum[i], cancellationMagSpectrum[i]);
         }
         
         // TODO: COMPARE STFT WITH scipy.signal.stft
@@ -54,12 +78,12 @@ struct NoiseSpectrumProcessingTests : public juce::UnitTest
         mWindow = nullptr;
     }
     
-    // This is what the makeSpectrogram function was before optimizations. Used for cancellation test.
-    inline void makeSpectrogramPreOptimization (Spectrogram<FloatType>& spectrogram,
-                                                juce::AudioBuffer<FloatType>* signal,
-                                                juce::dsp::FFT& fft,
-                                                size_t hopSize,
-                                                juce::dsp::WindowingFunction<FloatType>& window)
+    // This is what the makeSpectrogram() function was before optimizations. Used for cancellation test.
+    inline void makeSpectrogramPreOpt (Spectrogram<FloatType>& spectrogram,
+                                       juce::AudioBuffer<FloatType>* signal,
+                                       juce::dsp::FFT& fft,
+                                       size_t hopSize,
+                                       juce::dsp::WindowingFunction<FloatType>& window)
     {
         const size_t dataCount = signal->getNumSamples();
         
@@ -98,6 +122,24 @@ struct NoiseSpectrumProcessingTests : public juce::UnitTest
                 }
                 
                 signalData += hopSize;
+            }
+        }
+    }
+    
+    // This is what the computeAverageSpectrum() function was before optimizations. Used for cancellation test.
+    inline void computeAverageSpectrumPreOpt (HeapBlock<FloatType>& magSpectrum, Spectrogram<FloatType>& spectrogram, int fftSize)
+    {
+        magSpectrum.realloc (fftSize);
+        magSpectrum.clear (fftSize);
+        
+        size_t numColumns = spectrogram.size();
+
+        // Iterate through frequency bins. We only go up to (fftSize / 2 + 1) in order to ignore the negative frequency bins.
+        for (int freqColumn = 0; freqColumn < numColumns; ++freqColumn)
+        {
+            for (int freqBin = 0; freqBin < fftSize / 2 + 1; ++freqBin)
+            {
+                magSpectrum[freqBin] += spectrogram[freqColumn][freqBin] / numColumns;
             }
         }
     }
