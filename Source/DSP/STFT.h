@@ -206,25 +206,25 @@ private:
             case kWindowTypeRectangular:
             {
                 for (int sample = 0; sample < mFFTSize; ++sample)
-                    mFFTWindow[sample] = 1.0f;
+                    mFFTWindow[sample] = static_cast<FloatType> (1);
                 break;
             }
             case kWindowTypeBartlett:
             {
                 for (int sample = 0; sample < mFFTSize; ++sample)
-                    mFFTWindow[sample] = 1.0f - fabs (2.0f * (FloatType) sample / (FloatType) (mFFTSize - 1) - 1.0f);
+                    mFFTWindow[sample] = static_cast<FloatType> (1) - fabs (static_cast<FloatType> (2) * (FloatType) sample / (FloatType) (mFFTSize - 1) - static_cast<FloatType> (1));
                 break;
             }
             case kWindowTypeHann:
             {
                 for (int sample = 0; sample < mFFTSize; ++sample)
-                    mFFTWindow[sample] = 0.5f - 0.5f * cosf (2.0f * M_PI * (FloatType) sample / (FloatType) (mFFTSize - 1));
+                    mFFTWindow[sample] = static_cast<FloatType> (0.5) - static_cast<FloatType> (0.5) * cosf (static_cast<FloatType> (2) * M_PI * (FloatType) sample / (FloatType) (mFFTSize - 1));
                 break;
             }
             case kWindowTypeHamming:
             {
                 for (int sample = 0; sample < mFFTSize; ++sample)
-                    mFFTWindow[sample] = 0.54f - 0.46f * cosf (2.0f * M_PI * (FloatType) sample / (FloatType) (mFFTSize - 1));
+                    mFFTWindow[sample] = static_cast<FloatType> (0.54) - static_cast<FloatType> (0.46) * cosf (static_cast<FloatType> (2) * M_PI * (FloatType) sample / (FloatType) (mFFTSize - 1));
                 break;
             }
         }
@@ -235,7 +235,7 @@ private:
         
         mWindowScaleFactor = static_cast<FloatType> (0);
         if (mOverlap != 0 && windowSum != static_cast<FloatType> (0))
-            mWindowScaleFactor = 1.0f / (FloatType) mOverlap / windowSum * (FloatType) mFFTSize;
+            mWindowScaleFactor = static_cast<FloatType> (1) / (FloatType) mOverlap / windowSum * (FloatType) mFFTSize;
     }
     
     //======================================
