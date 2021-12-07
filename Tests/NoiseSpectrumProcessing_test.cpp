@@ -15,7 +15,7 @@ struct NoiseSpectrumProcessingTests : public juce::UnitTest
         mWindow.reset (new juce::dsp::WindowingFunction<FloatType> (fftSize + 1, juce::dsp::WindowingFunction<FloatType>::hann, false));
         
         // TODO: come up with a cleaner way of finding the proper directory
-        juce::File angelsFile {"/Users/zach/Audio Programming/JUCE Projects/Personal Projects/SpectralSubtractor/Test Data/aircomm.wav"};
+        juce::File angelsFile {"/Users/zach/Audio Programming/JUCE Projects/Personal Projects/SpectralSubtractor/Test Data/angels (from freesound.org).wav"};
         jassert (angelsFile.existsAsFile());
         
         juce::AudioBuffer<FloatType> angelsAudio;
