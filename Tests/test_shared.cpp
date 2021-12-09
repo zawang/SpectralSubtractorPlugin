@@ -34,7 +34,7 @@ class PerformanceProfiler
 {
 public:
     /** Same as juce::PerformanceCounter constructor. */
-    PerformanceProfiler (const juce::String& name, int runsPerPrintout, const juce::File& loggingFile)
+    PerformanceProfiler (const juce::String& name, int runsPerPrintout = 100, const juce::File& loggingFile = juce::File())
         : runsPerPrint (runsPerPrintout), startTime (0), outputFile (loggingFile)
     {
         stats.name = name;

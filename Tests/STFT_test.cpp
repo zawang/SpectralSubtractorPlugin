@@ -284,9 +284,8 @@ struct STFTTests : public juce::UnitTest
         beginTest ("STFT cancellation performance test");
         {
             int numRuns = 50;
-            juce::File desktop = juce::File::getSpecialLocation (juce::File::userDesktopDirectory);
-            PerformanceProfiler ppPreOpt ("STFT PreOpt", numRuns, desktop.getChildFile ("STFT_PreOpt_log.txt"));
-            PerformanceProfiler ppPostOpt ("STFT PostOpt", numRuns, desktop.getChildFile ("STFT_PostOpt_log.txt"));
+            PerformanceProfiler ppPreOpt ("STFT PreOpt", numRuns);
+            PerformanceProfiler ppPostOpt ("STFT PostOpt", numRuns);
             
             cancellationAircomm.makeCopyOf (aircommOG);
             aircommCopy.makeCopyOf (aircommOG);
@@ -302,13 +301,10 @@ struct STFTTests : public juce::UnitTest
                 ppPostOpt.stop();
             }
             
-            double preOptAverageTime = ppPreOpt.getAverageSeconds();
-            double postOptAverageTime = ppPostOpt.getAverageSeconds();
+            expectLessOrEqual (ppPostOpt.getAverageSeconds(), ppPreOpt.getAverageSeconds());
             
             ppPreOpt.printStatisticsAndReset();
             ppPostOpt.printStatisticsAndReset();
-            
-            expectLessOrEqual (postOptAverageTime, preOptAverageTime);
         }
         
         aircommCopy.makeCopyOf (aircommOG);
