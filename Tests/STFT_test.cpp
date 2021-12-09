@@ -270,28 +270,45 @@ struct STFTTests : public juce::UnitTest
         juce::AudioBuffer<FloatType> cancellationAircomm;
         cancellationAircomm.makeCopyOf (aircommOG);
         
-        juce::Time time;
-        
-        beginTest ("STFT cancellation test");
+        beginTest ("STFT cancellation equivalence test");
         {
-            auto start = time.getMillisecondCounterHiRes();
             processPreOpt (stftPreOpt, cancellationAircomm, samplesPerBlock, numChannels);
-            auto stop = time.getMillisecondCounterHiRes();
-            auto preOptTimeElapsed = (stop - start) / 1000.0;
-            std::cout << "Time elapsed for STFTPreOpt: " << preOptTimeElapsed << std::endl;
-            
-            start = time.getMillisecondCounterHiRes();
             process (stft, aircommCopy, samplesPerBlock, numChannels);
-            stop = time.getMillisecondCounterHiRes();
-            auto postOptTimeElapsed = (stop - start) / 1000.0;
-            std::cout << "Time elapsed for STFT: " << postOptTimeElapsed << std::endl;
             
             const FloatType* aircommCopyData = aircommCopy.getReadPointer (0, 0);
             const FloatType* cancellationAircommData = cancellationAircomm.getReadPointer (0, 0);
             for (int i = 0; i < aircommCopy.getNumSamples(); ++i)
                 expectEquals (aircommCopyData[i], cancellationAircommData[i]);
+        }
+        
+        beginTest ("STFT cancellation performance test");
+        {
+            int numRuns = 50;
+            juce::File desktop = juce::File::getSpecialLocation (juce::File::userDesktopDirectory);
+            PerformanceProfiler ppPreOpt ("STFT PreOpt", numRuns, desktop.getChildFile ("STFT_PreOpt_log.txt"));
+            PerformanceProfiler ppPostOpt ("STFT PostOpt", numRuns, desktop.getChildFile ("STFT_PostOpt_log.txt"));
             
-            expectLessOrEqual (postOptTimeElapsed, preOptTimeElapsed);
+            cancellationAircomm.makeCopyOf (aircommOG);
+            aircommCopy.makeCopyOf (aircommOG);
+            
+            for (int i = 0; i < numRuns; ++i)
+            {
+                ppPreOpt.start();
+                processPreOpt (stftPreOpt, cancellationAircomm, samplesPerBlock, numChannels);
+                ppPreOpt.stop();
+                
+                ppPostOpt.start();
+                process (stft, aircommCopy, samplesPerBlock, numChannels);
+                ppPostOpt.stop();
+            }
+            
+            double preOptAverageTime = ppPreOpt.getAverageSeconds();
+            double postOptAverageTime = ppPostOpt.getAverageSeconds();
+            
+            ppPreOpt.printStatisticsAndReset();
+            ppPostOpt.printStatisticsAndReset();
+            
+            expectLessOrEqual (postOptAverageTime, preOptAverageTime);
         }
         
         aircommCopy.makeCopyOf (aircommOG);
