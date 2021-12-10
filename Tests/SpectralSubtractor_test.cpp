@@ -3,11 +3,11 @@
 
 #if RUN_UNIT_TESTS == 1
 
-struct STFTTests : public juce::UnitTest
+struct SpectralSubtractorTests : public juce::UnitTest
 {
     // Taken without modification (except the class name) from
     // https://github.com/juandagilc/Audio-Effects/blob/master/Template%20Frequency%20Domain/Source/STFT.h commit '226660d4ea2a3f888538b414030233dee95f14c3'.
-    class STFTPreOpt
+    class STFT
     {
     public:
         enum windowTypeIndex {
@@ -19,11 +19,11 @@ struct STFTTests : public juce::UnitTest
 
         //======================================
 
-        STFTPreOpt() : numChannels (1)
+        STFT() : numChannels (1)
         {
         }
 
-        virtual ~STFTPreOpt()
+        virtual ~STFT()
         {
         }
 
@@ -239,7 +239,7 @@ struct STFTTests : public juce::UnitTest
         int currentSamplesSinceLastFFT;
     };
     
-    STFTTests()
+    SpectralSubtractorTests()
         : juce::UnitTest ("STFT")
     {}
     
@@ -258,9 +258,9 @@ struct STFTTests : public juce::UnitTest
         spectralSubtractor.reset (fftSize);
         spectralSubtractor.prepare (numChannels, fftSize, windowOverlap, window);
         
-        STFTPreOpt stftPreOpt;
-        stftPreOpt.setup (numChannels);
-        stftPreOpt.updateParameters (fftSize, windowOverlap, window);
+        STFT stft;
+        stft.setup (numChannels);
+        stft.updateParameters (fftSize, windowOverlap, window);
         
         // TODO: come up with a cleaner way of finding the proper directory and doing this entire test in general
         juce::File aircommFile {"/Users/zach/Audio Programming/JUCE Projects/Personal Projects/SpectralSubtractor/Test Data/aircomm.wav"};
@@ -275,8 +275,8 @@ struct STFTTests : public juce::UnitTest
         
         beginTest ("STFT cancellation equivalence test");
         {
-            processPreOpt (stftPreOpt, cancellationAircomm, samplesPerBlock, numChannels);
-            process (spectralSubtractor, aircommCopy, samplesPerBlock, numChannels);
+            stftProcess (stft, cancellationAircomm, samplesPerBlock, numChannels);
+            spectralSubtractorProcess (spectralSubtractor, aircommCopy, samplesPerBlock, numChannels);
             
             const FloatType* aircommCopyData = aircommCopy.getReadPointer (0, 0);
             const FloatType* cancellationAircommData = cancellationAircomm.getReadPointer (0, 0);
@@ -287,37 +287,38 @@ struct STFTTests : public juce::UnitTest
         beginTest ("STFT cancellation performance test");
         {
             int numRuns = 50;
-            PerformanceProfiler ppPreOpt ("STFT PreOpt", numRuns);
-            PerformanceProfiler ppPostOpt ("STFT PostOpt", numRuns);
+            juce::File desktop = juce::File::getSpecialLocation (juce::File::userDesktopDirectory);
+            PerformanceProfiler ppSTFT ("STFT", numRuns, desktop.getChildFile ("STFT_log.txt"));
+            PerformanceProfiler ppSpectralSubtractor ("Spectral Subtractor", numRuns, desktop.getChildFile ("SpectralSubtractor_log.txt"));
             
             cancellationAircomm.makeCopyOf (aircommOG);
             aircommCopy.makeCopyOf (aircommOG);
             
             for (int i = 0; i < numRuns; ++i)
             {
-                ppPreOpt.start();
-                processPreOpt (stftPreOpt, cancellationAircomm, samplesPerBlock, numChannels);
-                ppPreOpt.stop();
+                ppSTFT.start();
+                stftProcess (stft, cancellationAircomm, samplesPerBlock, numChannels);
+                ppSTFT.stop();
             }
             
             for (int i = 0; i < numRuns; ++i)
             {
-                ppPostOpt.start();
-                process (spectralSubtractor, aircommCopy, samplesPerBlock, numChannels);
-                ppPostOpt.stop();
+                ppSpectralSubtractor.start();
+                spectralSubtractorProcess (spectralSubtractor, aircommCopy, samplesPerBlock, numChannels);
+                ppSpectralSubtractor.stop();
             }
             
-            expectLessOrEqual (ppPostOpt.getAverageSeconds(), ppPreOpt.getAverageSeconds());
+            expectLessOrEqual (ppSpectralSubtractor.getAverageSeconds(), ppSTFT.getAverageSeconds());
             
-            ppPreOpt.printStatisticsAndReset();
-            ppPostOpt.printStatisticsAndReset();
+            ppSTFT.printStatisticsAndReset();
+            ppSpectralSubtractor.printStatisticsAndReset();
         }
         
         aircommCopy.makeCopyOf (aircommOG);
         
         beginTest ("STFT self-cancellation test");
         {
-            process (spectralSubtractor, aircommCopy, samplesPerBlock, numChannels);
+            spectralSubtractorProcess (spectralSubtractor, aircommCopy, samplesPerBlock, numChannels);
             
             const FloatType* aircommOGData = aircommOG.getReadPointer (0, 0);
             const FloatType* aircommCopyData = aircommCopy.getReadPointer (0, fftSize);
@@ -329,7 +330,7 @@ struct STFTTests : public juce::UnitTest
         delete dummySubtractionStrength;
     }
     
-    void process (SpectralSubtractor<FloatType>& spectralSubtractor, juce::AudioBuffer<FloatType>& audio, const int blockSize, const int numChannels)
+    void spectralSubtractorProcess (SpectralSubtractor<FloatType>& spectralSubtractor, juce::AudioBuffer<FloatType>& audio, const int blockSize, const int numChannels)
     {
         auto totalNumSamples = audio.getNumSamples();
         int samplePtr = 0;
@@ -346,7 +347,7 @@ struct STFTTests : public juce::UnitTest
         }
     }
     
-    void processPreOpt (STFTPreOpt& stft, juce::AudioBuffer<FloatType>& audio, const int blockSize, const int numChannels)
+    void stftProcess (STFT& stft, juce::AudioBuffer<FloatType>& audio, const int blockSize, const int numChannels)
     {
         auto totalNumSamples = audio.getNumSamples();
         int samplePtr = 0;
@@ -364,6 +365,6 @@ struct STFTTests : public juce::UnitTest
     }
 };
 
-static STFTTests stftTests;
+static SpectralSubtractorTests stftTests;
 
 #endif
