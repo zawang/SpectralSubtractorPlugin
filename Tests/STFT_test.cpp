@@ -295,7 +295,10 @@ struct STFTTests : public juce::UnitTest
                 ppPreOpt.start();
                 processPreOpt (stftPreOpt, cancellationAircomm, samplesPerBlock, numChannels);
                 ppPreOpt.stop();
-                
+            }
+            
+            for (int i = 0; i < numRuns; ++i)
+            {
                 ppPostOpt.start();
                 process (stft, aircommCopy, samplesPerBlock, numChannels);
                 ppPostOpt.stop();
