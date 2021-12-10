@@ -54,7 +54,8 @@
       <FILE id="iPyjiE" name="test_shared.cpp" compile="1" resource="0" file="Tests/test_shared.cpp"/>
       <FILE id="fQzmXz" name="NoiseSpectrumProcessing_test.cpp" compile="1"
             resource="0" file="Tests/NoiseSpectrumProcessing_test.cpp"/>
-      <FILE id="fnw2PA" name="STFT_test.cpp" compile="1" resource="0" file="Tests/STFT_test.cpp"/>
+      <FILE id="fnw2PA" name="SpectralSubtractor_test.cpp" compile="1" resource="0"
+            file="Tests/SpectralSubtractor_test.cpp"/>
     </GROUP>
   </MAINGROUP>
   <EXPORTFORMATS>
