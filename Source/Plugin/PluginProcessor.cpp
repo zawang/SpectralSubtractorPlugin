@@ -31,11 +31,11 @@ SpectralSubtractorAudioProcessor::SpectralSubtractorAudioProcessor()
     mFormatManager = std::make_unique<AudioFormatManager>();
     mFormatManager->registerBasicFormats();
     
-    // Ensure proper correspondence between the window combobox items and the STFT class window enums.
-    jassert (WindowTypeItemsUI[STFT<float>::kWindowTypeRectangular] == "Rectangular");
-    jassert (WindowTypeItemsUI[STFT<float>::kWindowTypeBartlett] == "Bartlett");
-    jassert (WindowTypeItemsUI[STFT<float>::kWindowTypeHann] == "Hann");
-    jassert (WindowTypeItemsUI[STFT<float>::kWindowTypeHamming] == "Hamming");
+    // Ensure proper correspondence between the window combobox items and the Spectral Subtractor class window enums.
+    jassert (WindowTypeItemsUI[SpectralSubtractor<float>::kWindowTypeRectangular] == "Rectangular");
+    jassert (WindowTypeItemsUI[SpectralSubtractor<float>::kWindowTypeBartlett] == "Bartlett");
+    jassert (WindowTypeItemsUI[SpectralSubtractor<float>::kWindowTypeHann] == "Hann");
+    jassert (WindowTypeItemsUI[SpectralSubtractor<float>::kWindowTypeHamming] == "Hamming");
     
 #if RUN_UNIT_TESTS == 1
     std::cout << "Running unit tests..." << std::endl;
@@ -83,7 +83,7 @@ void SpectralSubtractorAudioProcessor::setParams()
     mWindowParam = std::make_unique<NonAutoParameterChoice> (ParameterID[kParameter_Window],
                                                              ParameterLabel[kParameter_Window],
                                                              WindowTypeItemsUI,
-                                                             STFT<float>::kWindowTypeHann);
+                                                             SpectralSubtractor<float>::kWindowTypeHann);
     mNonAutoParams.emplace (mWindowParam->getParameterID(), mWindowParam.get());
 }
 

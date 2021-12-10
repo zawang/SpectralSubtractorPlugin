@@ -1,4 +1,4 @@
-#include "../Source/DSP/STFT.h"
+#include "../Source/DSP/SpectralSubtractor.h"
 #include "test_shared.cpp"
 
 #if RUN_UNIT_TESTS == 1
@@ -250,10 +250,13 @@ struct STFTTests : public juce::UnitTest
         
         const int fftSize = 2048;
         const int windowOverlap = 4;
-        const int window = STFT<FloatType>::kWindowTypeHann;
+        const int window = SpectralSubtractor<FloatType>::kWindowTypeHann;
         
-        STFT<FloatType> stft;
-        stft.prepare (numChannels, fftSize, windowOverlap, window);
+        std::atomic<float>* dummySubtractionStrength = new std::atomic<float>;
+        SpectralSubtractor<FloatType> spectralSubtractor;
+        spectralSubtractor.setSubtractionStrength (dummySubtractionStrength);
+        spectralSubtractor.reset (fftSize);
+        spectralSubtractor.prepare (numChannels, fftSize, windowOverlap, window);
         
         STFTPreOpt stftPreOpt;
         stftPreOpt.setup (numChannels);
@@ -273,7 +276,7 @@ struct STFTTests : public juce::UnitTest
         beginTest ("STFT cancellation equivalence test");
         {
             processPreOpt (stftPreOpt, cancellationAircomm, samplesPerBlock, numChannels);
-            process (stft, aircommCopy, samplesPerBlock, numChannels);
+            process (spectralSubtractor, aircommCopy, samplesPerBlock, numChannels);
             
             const FloatType* aircommCopyData = aircommCopy.getReadPointer (0, 0);
             const FloatType* cancellationAircommData = cancellationAircomm.getReadPointer (0, 0);
@@ -300,7 +303,7 @@ struct STFTTests : public juce::UnitTest
             for (int i = 0; i < numRuns; ++i)
             {
                 ppPostOpt.start();
-                process (stft, aircommCopy, samplesPerBlock, numChannels);
+                process (spectralSubtractor, aircommCopy, samplesPerBlock, numChannels);
                 ppPostOpt.stop();
             }
             
@@ -314,7 +317,7 @@ struct STFTTests : public juce::UnitTest
         
         beginTest ("STFT self-cancellation test");
         {
-            process (stft, aircommCopy, samplesPerBlock, numChannels);
+            process (spectralSubtractor, aircommCopy, samplesPerBlock, numChannels);
             
             const FloatType* aircommOGData = aircommOG.getReadPointer (0, 0);
             const FloatType* aircommCopyData = aircommCopy.getReadPointer (0, fftSize);
@@ -322,9 +325,11 @@ struct STFTTests : public juce::UnitTest
             for (int i = 0; i < aircommOG.getNumSamples() - fftSize; ++i)
                 expectWithinAbsoluteError (aircommCopyData[i], aircommOGData[i], maxAbsoluteError);
         }
+        
+        delete dummySubtractionStrength;
     }
     
-    void process (STFT<FloatType>& stft, juce::AudioBuffer<FloatType>& audio, const int blockSize, const int numChannels)
+    void process (SpectralSubtractor<FloatType>& spectralSubtractor, juce::AudioBuffer<FloatType>& audio, const int blockSize, const int numChannels)
     {
         auto totalNumSamples = audio.getNumSamples();
         int samplePtr = 0;
@@ -335,7 +340,7 @@ struct STFTTests : public juce::UnitTest
             totalNumSamples -= curBlockSize;
 
             AudioBuffer<FloatType> curBuff (audio.getArrayOfWritePointers(), numChannels, samplePtr, curBlockSize);
-            stft.process (curBuff);
+            spectralSubtractor.process (curBuff);
 
             samplePtr += curBlockSize;
         }

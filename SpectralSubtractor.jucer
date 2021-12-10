@@ -10,7 +10,6 @@
               file="Source/DSP/NoiseSpectrumProcessing.h"/>
         <FILE id="AzH4NE" name="SpectralSubtractor.h" compile="0" resource="0"
               file="Source/DSP/SpectralSubtractor.h"/>
-        <FILE id="u1SGZG" name="STFT.h" compile="0" resource="0" file="Source/DSP/STFT.h"/>
       </GROUP>
       <GROUP id="{E5549859-15C7-0258-A614-182A5037E6E7}" name="Helper">
         <FILE id="XrFuRL" name="AudioSpinMutex.h" compile="0" resource="0"
