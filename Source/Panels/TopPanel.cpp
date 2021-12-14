@@ -62,7 +62,27 @@ void TopPanel::loadFile()
                                   juce::File file = fc.getResult();
                                   if (file != juce::File{})
                                   {
-                                      (new NoiseSpectrumProcessingThread<float> (mProcessor, file, mProcessor->getFFTSize(), mProcessor->getWindowOverlap()))->launchThread (juce::Thread::realtimeAudioPriority);
+                                      mReader.reset (mProcessor->getFormatManager()->createReaderFor (file));
+                                      if (mReader.get() != nullptr)
+                                      {
+                                          mProcessor->mNoiseBuffer.reset (new juce::AudioBuffer<float> ((int) mReader->numChannels, (int) mReader->lengthInSamples));
+                                                                                    
+                                          mReader->read (mProcessor->mNoiseBuffer.get(),
+                                                         0,
+                                                         (int) mReader->lengthInSamples,
+                                                         0,
+                                                         true,
+                                                         true);
+                                          
+                                          (new NoiseSpectrumProcessingThread<float> (mProcessor, mProcessor->getFFTSize(), mProcessor->getWindowOverlap()))->launchThread (juce::Thread::realtimeAudioPriority);
+                                      }
+                                      else
+                                      {
+                                          juce::NativeMessageBox::showAsync (MessageBoxOptions()
+                                                                             .withIconType (MessageBoxIconType::InfoIcon)
+                                                                             .withMessage (juce::String("Unable to load ") + file.getFileName()),
+                                                                             nullptr);
+                                      }
                                   }
                                   
                                   mFileChooser = nullptr;

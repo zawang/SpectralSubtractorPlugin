@@ -34,7 +34,7 @@ public:
     bool isBusesLayoutSupported (const BusesLayout& layouts) const override;
    #endif
 
-    void processBlock (AudioBuffer<float>&, MidiBuffer&) override;
+    void processBlock (juce::AudioBuffer<float>&, juce::MidiBuffer&) override;
 
     //==============================================================================
     AudioProcessorEditor* createEditor() override;
@@ -72,6 +72,8 @@ public:
     
     int getFFTSize() { return FFTSize[mFFTSizeParam->getIndex()]; }
     int getWindowOverlap() { return WindowOverlap[mWindowOverlapParam->getIndex()]; }
+    
+    std::unique_ptr<juce::AudioBuffer<float>> mNoiseBuffer;
 
 private:
     std::atomic<float>* mSubtractionStrengthParam = nullptr;

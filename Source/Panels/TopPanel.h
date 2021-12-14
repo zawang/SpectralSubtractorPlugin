@@ -28,6 +28,7 @@ private:
     NonAutoParameterComboBox mWindowOverlapComboBox {mProcessor->getNonAutoParameterWithID (ParameterID[kParameter_WindowOverlap])};
     NonAutoParameterComboBox mWindowComboBox {mProcessor->getNonAutoParameterWithID (ParameterID[kParameter_Window])};
     std::unique_ptr<juce::FileChooser> mFileChooser;
+    std::unique_ptr<juce::AudioFormatReader> mReader;
         
     void loadFile();
 };

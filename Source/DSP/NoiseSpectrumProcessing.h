@@ -95,17 +95,15 @@ template <typename FloatType>
 class NoiseSpectrumProcessingThread : public juce::ThreadWithProgressWindow
 {
 public:
-    NoiseSpectrumProcessingThread (SpectralSubtractorAudioProcessor* inProcessor, juce::File inFile, int fftSize, int overlap)
+    NoiseSpectrumProcessingThread (SpectralSubtractorAudioProcessor* inProcessor, int fftSize, int overlap)
         : juce::ThreadWithProgressWindow ("Preparing noise spectrum...", true, true, 10000),
           mProcessor (inProcessor),
-          mNoiseFile (inFile),
           mFFT (static_cast<int> (std::log2 (fftSize))),
           mWindow (static_cast<size_t> (fftSize + 1), juce::dsp::WindowingFunction<FloatType>::hann, false)
     {
         if (overlap != 0)
             mHopSize = mFFT.getSize() / overlap;
         
-        jassert (mNoiseFile != juce::File{});
         jassert (mHopSize <= mFFT.getSize());
         
         DBG ("Background thread FFT size: " << mFFT.getSize());
@@ -118,47 +116,25 @@ public:
         mProcessor->suspendProcessing (true);
           
         setProgress (-1.0); // setting a value beyond the range 0 -> 1 will show a spinning bar...
-        setStatusMessage ("Reading noise file...");
         
-        // Read the file
-        mReader.reset (mProcessor->getFormatManager()->createReaderFor (mNoiseFile));
-        if (mReader.get() != nullptr)
-        {
-            auto noiseBuffer = std::make_unique<juce::AudioBuffer<FloatType>> ((int) mReader->numChannels, (int) mReader->lengthInSamples);
-            
-            if (threadShouldExit()) return; // must check this as often as possible, because this is how we know if the user's pressed 'cancel'
-            
-            mReader->read (noiseBuffer.get(),
-                           0,
-                           (int) mReader->lengthInSamples,
-                           0,
-                           true,
-                           true);
-            
-            if (threadShouldExit()) return;
-            
-            setStatusMessage ("Computing STFT of noise signal...");
-            
-            Spectrogram<FloatType> noiseSpectrogram;
-            makeSpectrogram (noiseSpectrogram, noiseBuffer.get(), mFFT, mHopSize, mWindow);
-            
-            if (threadShouldExit()) return;
+        setStatusMessage ("Computing STFT of noise signal...");
+        
+        if (threadShouldExit()) return; // must check this as often as possible, because this is how we know if the user's pressed 'cancel'
+        
+        Spectrogram<FloatType> noiseSpectrogram;
+        makeSpectrogram (noiseSpectrogram, mProcessor->mNoiseBuffer.get(), mFFT, mHopSize, mWindow);
+        
+        if (threadShouldExit()) return;
 
-            setStatusMessage ("Computing noise spectrum...");
-            
-            computeAverageSpectrum (mTempNoiseSpectrum, noiseSpectrogram, mFFT.getSize());
-            
-            if (threadShouldExit()) return;
-            
-            setStatusMessage ("Almost finished...");
-            
-            mProcessor->loadNoiseSpectrum (mTempNoiseSpectrum);
-        }
-        else
-        {
-            mErrorLoadingFile = true;
-            return;
-        }
+        setStatusMessage ("Computing noise spectrum...");
+        
+        computeAverageSpectrum (mTempNoiseSpectrum, noiseSpectrogram, mFFT.getSize());
+        
+        if (threadShouldExit()) return;
+        
+        setStatusMessage ("Almost finished...");
+        
+        mProcessor->loadNoiseSpectrum (mTempNoiseSpectrum);
         
         mProcessor->suspendProcessing (false);
     }
@@ -171,8 +147,6 @@ public:
         juce::String messageString;
         if (userPressedCancel)
             messageString = "Operation canceled!";
-        else if (mErrorLoadingFile)
-            messageString = juce::String("Unable to load ") + mNoiseFile.getFileName();
         else
             messageString = "Successfully loaded noise spectrum!";
         
@@ -189,9 +163,6 @@ public:
 private:
     SpectralSubtractorAudioProcessor* mProcessor;
     HeapBlock<FloatType> mTempNoiseSpectrum;
-    juce::File mNoiseFile;
-    std::unique_ptr<juce::AudioFormatReader> mReader;
-    bool mErrorLoadingFile {false};
     
     // For creating spectrogram
     juce::dsp::FFT mFFT;
