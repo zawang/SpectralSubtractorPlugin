@@ -10,7 +10,6 @@
 
 #pragma once
 #include "PanelBase.h"
-#include "../DSP/NoiseSpectrumProcessing.h"
 #include "../Helper/NonAutoParameterComponent.h"
 
 class TopPanel

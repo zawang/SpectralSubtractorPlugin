@@ -250,10 +250,10 @@ struct SpectralSubtractorTests : public juce::UnitTest
         
         const int fftSize = 2048;
         const int windowOverlap = 4;
-        const int window = SpectralSubtractor<FloatType>::kWindowTypeHann;
+        const int window = SpectralSubtractor<TestFloatType>::kWindowTypeHann;
         
         std::atomic<float>* dummySubtractionStrength = new std::atomic<float>;
-        SpectralSubtractor<FloatType> spectralSubtractor;
+        SpectralSubtractor<TestFloatType> spectralSubtractor;
         spectralSubtractor.setSubtractionStrength (dummySubtractionStrength);
         spectralSubtractor.reset (fftSize);
         spectralSubtractor.prepare (numChannels, fftSize, windowOverlap, window);
@@ -266,11 +266,11 @@ struct SpectralSubtractorTests : public juce::UnitTest
         juce::File aircommFile {"/Users/zach/Audio Programming/JUCE Projects/Personal Projects/SpectralSubtractor/Test Data/aircomm.wav"};
         jassert (aircommFile.existsAsFile());
         
-        juce::AudioBuffer<FloatType> aircommOG;
+        juce::AudioBuffer<TestFloatType> aircommOG;
         getAudioFile (aircommOG, aircommFile);
-        juce::AudioBuffer<FloatType> aircommCopy;
+        juce::AudioBuffer<TestFloatType> aircommCopy;
         aircommCopy.makeCopyOf (aircommOG);
-        juce::AudioBuffer<FloatType> cancellationAircomm;
+        juce::AudioBuffer<TestFloatType> cancellationAircomm;
         cancellationAircomm.makeCopyOf (aircommOG);
         
         beginTest ("STFT cancellation equivalence test");
@@ -278,8 +278,8 @@ struct SpectralSubtractorTests : public juce::UnitTest
             stftProcess (stft, cancellationAircomm, samplesPerBlock, numChannels);
             spectralSubtractorProcess (spectralSubtractor, aircommCopy, samplesPerBlock, numChannels);
             
-            const FloatType* aircommCopyData = aircommCopy.getReadPointer (0, 0);
-            const FloatType* cancellationAircommData = cancellationAircomm.getReadPointer (0, 0);
+            const TestFloatType* aircommCopyData = aircommCopy.getReadPointer (0, 0);
+            const TestFloatType* cancellationAircommData = cancellationAircomm.getReadPointer (0, 0);
             for (int i = 0; i < aircommCopy.getNumSamples(); ++i)
                 expectEquals (aircommCopyData[i], cancellationAircommData[i]);
         }
@@ -320,9 +320,9 @@ struct SpectralSubtractorTests : public juce::UnitTest
         {
             spectralSubtractorProcess (spectralSubtractor, aircommCopy, samplesPerBlock, numChannels);
             
-            const FloatType* aircommOGData = aircommOG.getReadPointer (0, 0);
-            const FloatType* aircommCopyData = aircommCopy.getReadPointer (0, fftSize);
-            FloatType maxAbsoluteError = static_cast<FloatType> (0.0001);
+            const TestFloatType* aircommOGData = aircommOG.getReadPointer (0, 0);
+            const TestFloatType* aircommCopyData = aircommCopy.getReadPointer (0, fftSize);
+            TestFloatType maxAbsoluteError = static_cast<TestFloatType> (0.0001);
             for (int i = 0; i < aircommOG.getNumSamples() - fftSize; ++i)
                 expectWithinAbsoluteError (aircommCopyData[i], aircommOGData[i], maxAbsoluteError);
         }
@@ -330,7 +330,7 @@ struct SpectralSubtractorTests : public juce::UnitTest
         delete dummySubtractionStrength;
     }
     
-    void spectralSubtractorProcess (SpectralSubtractor<FloatType>& spectralSubtractor, juce::AudioBuffer<FloatType>& audio, const int blockSize, const int numChannels)
+    void spectralSubtractorProcess (SpectralSubtractor<TestFloatType>& spectralSubtractor, juce::AudioBuffer<TestFloatType>& audio, const int blockSize, const int numChannels)
     {
         auto totalNumSamples = audio.getNumSamples();
         int samplePtr = 0;
@@ -340,14 +340,14 @@ struct SpectralSubtractorTests : public juce::UnitTest
             auto curBlockSize = jmin (totalNumSamples, blockSize);
             totalNumSamples -= curBlockSize;
 
-            AudioBuffer<FloatType> curBuff (audio.getArrayOfWritePointers(), numChannels, samplePtr, curBlockSize);
+            AudioBuffer<TestFloatType> curBuff (audio.getArrayOfWritePointers(), numChannels, samplePtr, curBlockSize);
             spectralSubtractor.process (curBuff);
 
             samplePtr += curBlockSize;
         }
     }
     
-    void stftProcess (STFT& stft, juce::AudioBuffer<FloatType>& audio, const int blockSize, const int numChannels)
+    void stftProcess (STFT& stft, juce::AudioBuffer<TestFloatType>& audio, const int blockSize, const int numChannels)
     {
         auto totalNumSamples = audio.getNumSamples();
         int samplePtr = 0;
@@ -357,7 +357,7 @@ struct SpectralSubtractorTests : public juce::UnitTest
             auto curBlockSize = jmin (totalNumSamples, blockSize);
             totalNumSamples -= curBlockSize;
 
-            AudioBuffer<FloatType> curBuff (audio.getArrayOfWritePointers(), numChannels, samplePtr, curBlockSize);
+            AudioBuffer<TestFloatType> curBuff (audio.getArrayOfWritePointers(), numChannels, samplePtr, curBlockSize);
             stft.processBlock (curBuff);
 
             samplePtr += curBlockSize;

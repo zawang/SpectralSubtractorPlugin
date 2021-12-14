@@ -1,9 +1,9 @@
 #pragma once
 
 #include "JuceHeader.h"
-#define FloatType float
+#define TestFloatType float
 
-void getAudioFile (juce::AudioBuffer<FloatType>& buffer, const juce::File& file)
+void getAudioFile (juce::AudioBuffer<TestFloatType>& buffer, const juce::File& file)
 {
     AudioFormatManager formatManager;
     formatManager.registerBasicFormats();

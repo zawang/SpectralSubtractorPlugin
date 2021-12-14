@@ -74,7 +74,7 @@ void TopPanel::loadFile()
                                                          true,
                                                          true);
                                           
-                                          (new NoiseSpectrumProcessingThread<float> (mProcessor, mProcessor->getFFTSize(), mProcessor->getWindowOverlap()))->launchThread (juce::Thread::realtimeAudioPriority);
+                                          mProcessor->wakeUpBackgroundThread();
                                       }
                                       else
                                       {

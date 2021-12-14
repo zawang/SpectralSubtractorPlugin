@@ -3,8 +3,8 @@
     #include "NoiseSpectrumProcessing_test.cpp"
     #include "SpectralSubtractor_test.cpp"
 
-    #ifdef FloatType
-    #undef FloatType
+    #ifdef TestFloatType
+    #undef TestFloatType
     #endif
 
 #endif
