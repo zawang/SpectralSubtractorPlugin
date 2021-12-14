@@ -179,9 +179,9 @@ private:
     juce::HeapBlock<float> mTempNoiseSpectrum;
     
     // For creating spectrogram
-    std::unique_ptr<juce::dsp::FFT> mFFT;
-    size_t mHopSize;
-    std::unique_ptr<juce::dsp::WindowingFunction<float>> mWindow;
+    std::unique_ptr<juce::dsp::FFT> mBG_FFT;
+    size_t mBG_HopSize;
+    std::unique_ptr<juce::dsp::WindowingFunction<float>> mBG_Window;
 
     void updateBackgroundThread();
     

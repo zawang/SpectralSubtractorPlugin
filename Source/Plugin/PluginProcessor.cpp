@@ -41,6 +41,7 @@ SpectralSubtractorAudioProcessor::SpectralSubtractorAudioProcessor()
     jassert (WindowTypeItemsUI[SpectralSubtractor<float>::kWindowTypeHann] == "Hann");
     jassert (WindowTypeItemsUI[SpectralSubtractor<float>::kWindowTypeHamming] == "Hamming");
 
+    // Give the background thread realtime audio priority since we suspend processing whenever the background thread does work
     startThread (juce::Thread::realtimeAudioPriority);
     
 #if RUN_UNIT_TESTS == 1
@@ -297,23 +298,21 @@ void SpectralSubtractorAudioProcessor::run()
         if (mRequiresUpdate.load()) updateBackgroundThread();
         
         suspendProcessing (true);
-                  
-        // Compute STFT of noise signal
         
         if (threadShouldExit()) return;         // must check this as often as possible, because this is how we know if the user's pressed 'cancel'
-        if (mRequiresUpdate.load()) continue;
+        if (mRequiresUpdate.load()) continue;   // if the FFT settings change while the background thread is doing work, start over with the most up to date settings
         
         if (mNoiseBuffer->getNumChannels() != 0 && mNoiseBuffer->getNumSamples() != 0)
         {
+            // Compute spectrogram of noise signal
             Spectrogram<float> noiseSpectrogram;
-            makeSpectrogram (noiseSpectrogram, mNoiseBuffer.get(), *(mFFT.get()), mHopSize, *(mWindow.get()));
+            makeSpectrogram (noiseSpectrogram, mNoiseBuffer.get(), *(mBG_FFT.get()), mBG_HopSize, *(mBG_Window.get()));
             
             if (threadShouldExit()) return;
             if (mRequiresUpdate.load()) continue;
 
             // Compute noise spectrum
-            
-            computeAverageSpectrum (mTempNoiseSpectrum, noiseSpectrogram, mFFT->getSize());
+            computeAverageSpectrum (mTempNoiseSpectrum, noiseSpectrogram, mBG_FFT->getSize());
             
             if (threadShouldExit()) return;
             if (mRequiresUpdate.load()) continue;
@@ -347,12 +346,13 @@ void SpectralSubtractorAudioProcessor::updateBackgroundThread()
     int fftSize = FFTSize[mFFTSizeParam->getIndex()];
     int overlap = WindowOverlap[mWindowOverlapParam->getIndex()];
     
-    mFFT.reset (new juce::dsp::FFT (static_cast<int> (std::log2 (fftSize))));
-    if (overlap != 0) mHopSize = fftSize / overlap;
-    mWindow.reset (new juce::dsp::WindowingFunction<float> (static_cast<size_t> (fftSize + 1), juce::dsp::WindowingFunction<float>::hann, false));
+    mBG_FFT.reset (new juce::dsp::FFT (static_cast<int> (std::log2 (fftSize))));
+    if (overlap != 0) mBG_HopSize = fftSize / overlap;
+    mBG_Window.reset (new juce::dsp::WindowingFunction<float> (static_cast<size_t> (fftSize + 1), juce::dsp::WindowingFunction<float>::hann, false));
     
-    DBG ("Background thread FFT size: " << mFFT->getSize());
-    DBG ("Background thread hop size: " << mHopSize);
+    DBG ("Background thread FFT size: " << mBG_FFT->getSize());
+    DBG ("Background thread hop size: " << mBG_HopSize);
+    DBG ("");
     
     mRequiresUpdate.store (false);
 }
