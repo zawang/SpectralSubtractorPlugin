@@ -70,17 +70,14 @@ public:
         jassert (mSubtractionStrength);
     }
     
+    HeapBlockWrapper<FloatType>& getNoiseSpectrum()
+    {
+        return mNoiseSpectrum;
+    }
+    
     const juce::String getNoiseSpectrumAsString()
     {
         return mNoiseSpectrum.toString();
-    }
-    
-    // Replaces the old noise spectrum with a new noise spectrum.
-    void loadNoiseSpectrum (const HeapBlock<float>& newNoiseSpectrum)
-    {
-        // TODO: add a saftey check to ensure mNoiseSpectrum and newNoiseSpectrum have the same element type?
-        
-        std::memcpy (mNoiseSpectrum.get(), newNoiseSpectrum, mNoiseSpectrum.size() * sizeof (float));
     }
     
     void loadNoiseSpectrumFromString (const juce::String& newNoiseSpectrumAsString)

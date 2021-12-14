@@ -78,8 +78,9 @@ inline void makeSpectrogram (Spectrogram<FloatType>& spectrogram,
 }
 
 // Calculates the average spectrum from a given spectrogram
+// TODO: SWITCH BACK TO TAKING IN A juce::HeapBlock RATHER THAN HeapBlockWrapper ONCE THE SWITCH IS MADE TO SERIALIZE THE NOISE BUFFER INSTEAD OF NOISE SPECTRUM
 template <typename FloatType>
-inline void computeAverageSpectrum (HeapBlock<FloatType>& magSpectrum, Spectrogram<FloatType>& spectrogram, int fftSize)
+inline void computeAverageSpectrum (HeapBlockWrapper<FloatType>& magSpectrum, Spectrogram<FloatType>& spectrogram, int fftSize)
 {
     magSpectrum.realloc (fftSize);
     magSpectrum.clear (fftSize);
@@ -91,7 +92,7 @@ inline void computeAverageSpectrum (HeapBlock<FloatType>& magSpectrum, Spectrogr
     int numBins = fftSize / 2 + 1;
     for (int freqColumn = 0; freqColumn < numColumns; ++freqColumn)
     {
-        juce::FloatVectorOperations::addWithMultiply (magSpectrum.get(), spectrogram[freqColumn].get(), inverseNumColumns, numBins);
+        juce::FloatVectorOperations::addWithMultiply (magSpectrum.get().get(), spectrogram[freqColumn].get(), inverseNumColumns, numBins);
     }
 }
 
@@ -143,7 +144,6 @@ public:
     void setStateInformation (const void* data, int sizeInBytes) override;
     
     void prepareAndResetSpectralSubtractor();
-    void loadNoiseSpectrum (HeapBlock<float>& tempNoiseSpectrum);
     
     juce::AudioProcessorValueTreeState apvts {*this, nullptr, juce::Identifier ("SpectralSubtractor"), createParameterLayout()};
     
@@ -175,8 +175,6 @@ private:
     // Variables and functions for the background thread
     
     std::atomic<bool> mRequiresUpdate {true};
-    
-    juce::HeapBlock<float> mTempNoiseSpectrum;
     
     // For creating spectrogram
     std::unique_ptr<juce::dsp::FFT> mBG_FFT;

@@ -2,7 +2,7 @@
 
 <JUCERPROJECT id="EKDVK7" name="Spectral Subtractor" projectType="audioplug"
               displaySplashScreen="1" jucerFormatVersion="1" pluginManufacturer="Zach Wang"
-              defines="RUN_UNIT_TESTS=1" cppLanguageStandard="17" pluginFormats="buildAU">
+              defines="RUN_UNIT_TESTS=0" cppLanguageStandard="17" pluginFormats="buildAU">
   <MAINGROUP id="aFs5Dz" name="Spectral Subtractor">
     <GROUP id="{F585BF52-7287-CE39-DB62-5BFFE459C5EA}" name="Source">
       <GROUP id="{B3C75554-A699-38D6-F273-2B4A72FD3584}" name="DSP">

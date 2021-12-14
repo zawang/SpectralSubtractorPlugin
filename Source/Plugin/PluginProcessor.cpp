@@ -228,12 +228,6 @@ void SpectralSubtractorAudioProcessor::processBlock (AudioBuffer<float>& buffer,
         buffer.clear (i, 0, buffer.getNumSamples());
 }
 
-void SpectralSubtractorAudioProcessor::loadNoiseSpectrum (HeapBlock<float>& tempNoiseSpectrum)
-{
-    jassert (isSuspended());
-    mSpectralSubtractor.loadNoiseSpectrum (tempNoiseSpectrum);
-}
-
 //==============================================================================
 bool SpectralSubtractorAudioProcessor::hasEditor() const
 {
@@ -312,12 +306,10 @@ void SpectralSubtractorAudioProcessor::run()
             if (mRequiresUpdate.load()) continue;
 
             // Compute noise spectrum
-            computeAverageSpectrum (mTempNoiseSpectrum, noiseSpectrogram, mBG_FFT->getSize());
+            computeAverageSpectrum (mSpectralSubtractor.getNoiseSpectrum(), noiseSpectrogram, mBG_FFT->getSize());
             
             if (threadShouldExit()) return;
             if (mRequiresUpdate.load()) continue;
-            
-            loadNoiseSpectrum (mTempNoiseSpectrum);
             
             juce::NativeMessageBox::showAsync (MessageBoxOptions()
                                                .withIconType (MessageBoxIconType::InfoIcon)
