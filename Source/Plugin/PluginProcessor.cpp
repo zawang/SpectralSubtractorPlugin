@@ -340,10 +340,11 @@ void SpectralSubtractorAudioProcessor::run()
             if (threadShouldExit()) return;
             if (mRequiresUpdate.load()) continue;
             
-//            juce::NativeMessageBox::showAsync (MessageBoxOptions()
-//                                               .withIconType (MessageBoxIconType::InfoIcon)
-//                                               .withMessage ("Successfully loaded noise spectrum!"),
-//                                               nullptr);
+            if (getActiveEditor() != nullptr)
+                juce::NativeMessageBox::showAsync (MessageBoxOptions()
+                                                   .withIconType (MessageBoxIconType::InfoIcon)
+                                                   .withMessage ("Successfully loaded noise spectrum!"),
+                                                   nullptr);
         }
         else
             mSpectralSubtractor.reset (mBG_FFT->getSize());
