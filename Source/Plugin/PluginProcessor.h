@@ -185,5 +185,3 @@ private:
     
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (SpectralSubtractorAudioProcessor)
 };
-
-// Thread that calculates a noise file's average spectrum and replace's the audio processor's old noise spectrum with the one it just calculated.
