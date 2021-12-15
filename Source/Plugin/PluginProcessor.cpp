@@ -315,7 +315,7 @@ void SpectralSubtractorAudioProcessor::run()
                                                nullptr);
         }
         else
-            mSpectralSubtractor.reset (FFTSize[mFFTSizeParam->getIndex()]);
+            mSpectralSubtractor.reset (mBG_FFT->getSize());
         
         suspendProcessing (false);
         
