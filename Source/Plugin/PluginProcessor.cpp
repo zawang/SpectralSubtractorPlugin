@@ -247,21 +247,21 @@ void SpectralSubtractorAudioProcessor::getStateInformation (MemoryBlock& destDat
     
     if (mNoiseBuffer->getNumChannels() != 0 && mNoiseBuffer->getNumSamples() != 0)
     {
-        juce::MemoryBlock mb;
+        juce::MemoryBlock memoryBlock;
         juce::WavAudioFormat format;
         {
             // MemoryOutputStream is owned, if the writer was created successfully
-            std::unique_ptr<AudioFormatWriter> writer (format.createWriterFor (new MemoryOutputStream (mb, false),
-                                                                               48000,
-                                                                               mNoiseBuffer->getNumChannels(),
-                                                                               32,
-                                                                               juce::StringPairArray(),
-                                                                               0));
+            std::unique_ptr<juce::AudioFormatWriter> writer (format.createWriterFor (new MemoryOutputStream (memoryBlock, false),
+                                                                                     48000,
+                                                                                     mNoiseBuffer->getNumChannels(),
+                                                                                     32,
+                                                                                     juce::StringPairArray(),
+                                                                                     0));
             writer->writeFromAudioSampleBuffer (*(mNoiseBuffer.get()), 0, mNoiseBuffer->getNumSamples());
             // End of scope flushes the writer
         }
         apvts.state.getChildWithName (IDs::AudioData).setProperty (IDs::NoiseBuffer,
-                                                                   mb.toBase64Encoding(),
+                                                                   memoryBlock.toBase64Encoding(),
                                                                    nullptr);
     }
     
@@ -295,13 +295,12 @@ void SpectralSubtractorAudioProcessor::setStateInformation (const void* data, in
                 stateChild.copyPropertiesFrom (savedStateChild, nullptr);
             }
     
-            juce::MemoryBlock mb;
+            juce::MemoryBlock memoryBlock;
             if (auto noiseBufferAsString = apvts.state.getChildWithName (IDs::AudioData).getProperty (IDs::NoiseBuffer).toString();
-                mb.fromBase64Encoding (noiseBufferAsString))
+                memoryBlock.fromBase64Encoding (noiseBufferAsString))
             {
-                juce::MemoryInputStream in (mb.getData(), mb.getSize(), false);
                 juce::WavAudioFormat format;
-                juce::AudioFormatReader* reader = format.createReaderFor (&in, false);
+                std::unique_ptr<juce::AudioFormatReader> reader (format.createReaderFor (new MemoryInputStream (memoryBlock, false), false));
                 mNoiseBuffer.reset (new juce::AudioBuffer<float> ((int) reader->numChannels, (int) reader->lengthInSamples));
                 reader->read (mNoiseBuffer.get(), 0, (int) reader->lengthInSamples, 0, true, true);
                 
