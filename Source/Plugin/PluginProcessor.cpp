@@ -30,8 +30,6 @@ SpectralSubtractorAudioProcessor::SpectralSubtractorAudioProcessor()
     setParams();
     attachSubTrees();
     
-    mNoiseBuffer.reset (new juce::AudioBuffer<float>());
-    
     mFormatManager = std::make_unique<AudioFormatManager>();
     mFormatManager->registerBasicFormats();
     

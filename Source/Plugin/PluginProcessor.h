@@ -152,7 +152,7 @@ public:
     int getFFTSize() { return FFTSize[mFFTSizeParam->getIndex()]; }
     int getWindowOverlap() { return WindowOverlap[mWindowOverlapParam->getIndex()]; }
     
-    std::unique_ptr<juce::AudioBuffer<float>> mNoiseBuffer;
+    std::unique_ptr<juce::AudioBuffer<float>> mNoiseBuffer {new juce::AudioBuffer<float>()};
 
     void run() override;
     void wakeUpBackgroundThread();
