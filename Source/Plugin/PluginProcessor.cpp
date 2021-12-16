@@ -103,7 +103,7 @@ void SpectralSubtractorAudioProcessor::attachSubTrees()
 
 NonAutoParameterChoice& SpectralSubtractorAudioProcessor::getNonAutoParameterWithID (const String& parameterID)
 {
-    // TODO: add this line once the Projucer supports C++20: jassert (mNonAutoParams.contains (parameterID));
+    jassert (mNonAutoParams.contains (parameterID));
     return *(mNonAutoParams[parameterID]);
 }
 
