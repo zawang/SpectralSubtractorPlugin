@@ -18,13 +18,13 @@ TopPanel::TopPanel (SpectralSubtractorAudioProcessor* inProcessor)
     mLoadFileButton.onClick = [this] { loadFile(); };
     
     addAndMakeVisible (mFFTSizeComboBox);
-    mFFTSizeComboBox.onChange = [this] { mProcessor->prepareAndResetSpectralSubtractor(); };
+    mFFTSizeComboBox.onChange = [this] { triggerAsyncUpdate(); };
     
     addAndMakeVisible (mWindowOverlapComboBox);
-    mWindowOverlapComboBox.onChange = [this] { mProcessor->prepareAndResetSpectralSubtractor(); };
+    mWindowOverlapComboBox.onChange = [this] { triggerAsyncUpdate(); };
     
     addAndMakeVisible (mWindowComboBox);
-    mWindowComboBox.onChange = [this] { mProcessor->prepareAndResetSpectralSubtractor(); };
+    mWindowComboBox.onChange = [this] { triggerAsyncUpdate(); };
 }
 
 TopPanel::~TopPanel() {}
@@ -87,4 +87,14 @@ void TopPanel::loadFile()
                                   
                                   mFileChooser = nullptr;
                               }, nullptr);
+}
+
+/**
+ Coalesces FFT setting updates into a single callback.
+ When the top panel is constructed, all three FFT setting comboboxes have their onChange callback triggered.
+ Coalescing these updates with an AsyncUpdater makes it so that the background thread is only woken up once instead of three times.
+*/
+void TopPanel::handleAsyncUpdate()
+{
+    mProcessor->prepareAndResetSpectralSubtractor();
 }

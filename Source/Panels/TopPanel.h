@@ -13,13 +13,15 @@
 #include "../Helper/NonAutoParameterComponent.h"
 
 class TopPanel
-:   public PanelBase
+:   public PanelBase,
+    private juce::AsyncUpdater
 {
 public:
     TopPanel (SpectralSubtractorAudioProcessor* inProcessor);
     ~TopPanel();
     
     void resized() override;
+    void handleAsyncUpdate() override;
 
 private:
     TextButton mLoadFileButton;
