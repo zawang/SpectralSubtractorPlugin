@@ -150,9 +150,9 @@ public:
     
     int getFFTSize() { return FFTSize[mFFTSizeParam->getIndex()]; }
     int getWindowOverlap() { return WindowOverlap[mWindowOverlapParam->getIndex()]; }
-    
-    juce::AudioBuffer<float> mNoiseBuffer;
 
+    void loadNoiseBuffer (const juce::File& noiseFile);
+    
     void run() override;
     void wakeUpBackgroundThread();
 
@@ -166,6 +166,8 @@ private:
     juce::ValueTree mAudioDataTree {IDs::AudioData};
     
     SpectralSubtractor<float> mSpectralSubtractor;
+    juce::AudioBuffer<float> mNoiseBuffer;
+    std::unique_ptr<juce::AudioFormatReader> mReader;
     std::unique_ptr<juce::AudioFormatManager> mFormatManager;
     
     juce::UnitTestRunner mUnitTestRunner;

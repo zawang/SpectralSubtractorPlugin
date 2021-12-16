@@ -311,6 +311,35 @@ void SpectralSubtractorAudioProcessor::setStateInformation (const void* data, in
     }
 }
 
+void SpectralSubtractorAudioProcessor::loadNoiseBuffer (const juce::File& noiseFile)
+{
+    mReader.reset (mFormatManager->createReaderFor (noiseFile));
+    if (mReader.get() != nullptr)
+    {
+        mNoiseBuffer.setSize ((int) mReader->numChannels,
+                              (int) mReader->lengthInSamples,
+                              false,
+                              false,
+                              false);
+                                                  
+        mReader->read (&mNoiseBuffer,
+                       0,
+                       (int) mReader->lengthInSamples,
+                       0,
+                       true,
+                       true);
+        
+        wakeUpBackgroundThread();
+    }
+    else
+    {
+        juce::NativeMessageBox::showAsync (MessageBoxOptions()
+                                           .withIconType (MessageBoxIconType::InfoIcon)
+                                           .withMessage (juce::String("Unable to load ") + noiseFile.getFileName()),
+                                           nullptr);
+    }
+}
+
 //==============================================================================
 // Noise spectrum processing thread functions
 

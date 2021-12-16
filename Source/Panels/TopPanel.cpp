@@ -62,27 +62,7 @@ void TopPanel::loadFile()
                                   juce::File file = fc.getResult();
                                   if (file != juce::File{})
                                   {
-                                      mReader.reset (mProcessor->getFormatManager()->createReaderFor (file));
-                                      if (mReader.get() != nullptr)
-                                      {
-                                          mProcessor->mNoiseBuffer.setSize ((int) mReader->numChannels, (int) mReader->lengthInSamples, false, false, false);
-                                                                                    
-                                          mReader->read (&(mProcessor->mNoiseBuffer),
-                                                         0,
-                                                         (int) mReader->lengthInSamples,
-                                                         0,
-                                                         true,
-                                                         true);
-                                          
-                                          mProcessor->wakeUpBackgroundThread();
-                                      }
-                                      else
-                                      {
-                                          juce::NativeMessageBox::showAsync (MessageBoxOptions()
-                                                                             .withIconType (MessageBoxIconType::InfoIcon)
-                                                                             .withMessage (juce::String("Unable to load ") + file.getFileName()),
-                                                                             nullptr);
-                                      }
+                                      mProcessor->loadNoiseBuffer (file);
                                   }
                                   
                                   mFileChooser = nullptr;
