@@ -39,7 +39,7 @@ SpectralSubtractorAudioProcessor::SpectralSubtractorAudioProcessor()
     jassert (WindowTypeItemsUI[SpectralSubtractor<float>::kWindowTypeHann] == "Hann");
     jassert (WindowTypeItemsUI[SpectralSubtractor<float>::kWindowTypeHamming] == "Hamming");
 
-    // Give the background thread realtime audio priority since we suspend processing whenever the background thread does work
+    // It's ok to give the background thread realtime audio priority since we suspend processing whenever the background thread does work
     startThread (juce::Thread::realtimeAudioPriority);
     
 #if RUN_UNIT_TESTS == 1
@@ -177,6 +177,7 @@ void SpectralSubtractorAudioProcessor::prepareToPlay (double sampleRate, int sam
 
 void SpectralSubtractorAudioProcessor::prepareAndResetSpectralSubtractor()
 {
+    suspendProcessing (true);
     mSpectralSubtractor.prepare (getTotalNumInputChannels(),
                                  FFTSize[mFFTSizeParam->getIndex()],
                                  WindowOverlap[mWindowOverlapParam->getIndex()],
@@ -347,9 +348,9 @@ void SpectralSubtractorAudioProcessor::run()
 {
     while (true)
     {
-        if (mRequiresUpdate.load()) updateBackgroundThread();
-        
         suspendProcessing (true);
+        
+        if (mRequiresUpdate.load()) updateBackgroundThread();
         
         if (threadShouldExit()) return;         // must check this as often as possible, because this is how we know if the user's pressed 'cancel'
         if (mRequiresUpdate.load()) continue;   // if the FFT settings change while the background thread is doing work, start over with the most up to date settings
@@ -378,9 +379,9 @@ void SpectralSubtractorAudioProcessor::run()
         else
             mSpectralSubtractor.reset (mBG_FFT->getSize());
         
-        suspendProcessing (false);
-        
         if (mRequiresUpdate.load()) continue;
+        
+        suspendProcessing (false);
         
         wait (-1);
     }
