@@ -65,9 +65,9 @@ void TopPanel::loadFile()
                                       mReader.reset (mProcessor->getFormatManager()->createReaderFor (file));
                                       if (mReader.get() != nullptr)
                                       {
-                                          mProcessor->mNoiseBuffer.reset (new juce::AudioBuffer<float> ((int) mReader->numChannels, (int) mReader->lengthInSamples));
+                                          mProcessor->mNoiseBuffer.setSize ((int) mReader->numChannels, (int) mReader->lengthInSamples, false, false, false);
                                                                                     
-                                          mReader->read (mProcessor->mNoiseBuffer.get(),
+                                          mReader->read (&(mProcessor->mNoiseBuffer),
                                                          0,
                                                          (int) mReader->lengthInSamples,
                                                          0,

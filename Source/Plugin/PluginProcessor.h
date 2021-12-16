@@ -23,12 +23,12 @@ using Spectrogram = std::vector<HeapBlock<FloatType>>;
 // Compute the stft on each channel of signal and average the results to produce one spectrogram.
 template <typename FloatType>
 inline void makeSpectrogram (Spectrogram<FloatType>& spectrogram,
-                             juce::AudioBuffer<FloatType>* signal,
+                             juce::AudioBuffer<FloatType>& signal,
                              juce::dsp::FFT& fft,
                              size_t hopSize,
                              juce::dsp::WindowingFunction<FloatType>& window)
 {
-    const size_t dataCount = signal->getNumSamples();
+    const size_t dataCount = signal.getNumSamples();
     
     // fftSize will be the number of bins we used to initialize the SpectrogramMaker.
     ptrdiff_t fftSize = fft.getSize();
@@ -47,7 +47,7 @@ inline void makeSpectrogram (Spectrogram<FloatType>& spectrogram,
     // We will discard the negative frequency bins, but leave the center bin.
     size_t numRows = 1UL + (fftSize / 2UL);
     
-    int numChannels = signal->getNumChannels();
+    int numChannels = signal.getNumChannels();
     FloatType inverseNumChannels = static_cast<FloatType> (1) / numChannels;
     
     for (int channel = 0; channel < numChannels; ++channel)
@@ -56,7 +56,7 @@ inline void makeSpectrogram (Spectrogram<FloatType>& spectrogram,
         std::vector<FloatType> fftBuffer (fftSize * 2UL);
     
         // While data remains
-        const FloatType* signalData = signal->getReadPointer (channel, 0);
+        const FloatType* signalData = signal.getReadPointer (channel, 0);
         for (int i = 0; i < numHops; ++i)
         {
             // Prepare segment to perform FFT on.
@@ -151,7 +151,7 @@ public:
     int getFFTSize() { return FFTSize[mFFTSizeParam->getIndex()]; }
     int getWindowOverlap() { return WindowOverlap[mWindowOverlapParam->getIndex()]; }
     
-    std::unique_ptr<juce::AudioBuffer<float>> mNoiseBuffer {new juce::AudioBuffer<float>()};
+    juce::AudioBuffer<float> mNoiseBuffer;
 
     void run() override;
     void wakeUpBackgroundThread();

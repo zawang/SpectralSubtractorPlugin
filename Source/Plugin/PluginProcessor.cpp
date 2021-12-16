@@ -245,7 +245,7 @@ void SpectralSubtractorAudioProcessor::getStateInformation (MemoryBlock& destDat
     
     juce::File xmlFile = juce::File::getSpecialLocation (juce::File::SpecialLocationType::userDesktopDirectory).getChildFile ("SpectralSubtractor.xml");
     
-    if (mNoiseBuffer->getNumChannels() != 0 && mNoiseBuffer->getNumSamples() != 0)
+    if (mNoiseBuffer.getNumChannels() != 0 && mNoiseBuffer.getNumSamples() != 0)
     {
         juce::MemoryBlock memoryBlock;
         juce::WavAudioFormat format;
@@ -253,11 +253,11 @@ void SpectralSubtractorAudioProcessor::getStateInformation (MemoryBlock& destDat
             // MemoryOutputStream is owned, if the writer was created successfully
             std::unique_ptr<juce::AudioFormatWriter> writer (format.createWriterFor (new MemoryOutputStream (memoryBlock, false),
                                                                                      48000,
-                                                                                     mNoiseBuffer->getNumChannels(),
+                                                                                     mNoiseBuffer.getNumChannels(),
                                                                                      32,
                                                                                      juce::StringPairArray(),
                                                                                      0));
-            writer->writeFromAudioSampleBuffer (*(mNoiseBuffer.get()), 0, mNoiseBuffer->getNumSamples());
+            writer->writeFromAudioSampleBuffer (mNoiseBuffer, 0, mNoiseBuffer.getNumSamples());
             // End of scope flushes the writer
         }
         apvts.state.getChildWithName (IDs::AudioData).setProperty (IDs::NoiseBuffer,
@@ -301,8 +301,8 @@ void SpectralSubtractorAudioProcessor::setStateInformation (const void* data, in
             {
                 juce::WavAudioFormat format;
                 std::unique_ptr<juce::AudioFormatReader> reader (format.createReaderFor (new MemoryInputStream (memoryBlock, false), false));
-                mNoiseBuffer.reset (new juce::AudioBuffer<float> ((int) reader->numChannels, (int) reader->lengthInSamples));
-                reader->read (mNoiseBuffer.get(), 0, (int) reader->lengthInSamples, 0, true, true);
+                mNoiseBuffer.setSize ((int) reader->numChannels, (int) reader->lengthInSamples, false, false, false);
+                reader->read (&mNoiseBuffer, 0, (int) reader->lengthInSamples, 0, true, true);
                 
                 // Calculate the noise spectrum from the noise buffer that was just loaded
                 wakeUpBackgroundThread();
@@ -325,11 +325,11 @@ void SpectralSubtractorAudioProcessor::run()
         if (threadShouldExit()) return;         // must check this as often as possible, because this is how we know if the user's pressed 'cancel'
         if (mRequiresUpdate.load()) continue;   // if the FFT settings change while the background thread is doing work, start over with the most up to date settings
         
-        if (mNoiseBuffer->getNumChannels() != 0 && mNoiseBuffer->getNumSamples() != 0)
+        if (mNoiseBuffer.getNumChannels() != 0 && mNoiseBuffer.getNumSamples() != 0)
         {
             // Compute spectrogram of noise signal
             Spectrogram<float> noiseSpectrogram;
-            makeSpectrogram (noiseSpectrogram, mNoiseBuffer.get(), *(mBG_FFT.get()), mBG_HopSize, *(mBG_Window.get()));
+            makeSpectrogram (noiseSpectrogram, mNoiseBuffer, *(mBG_FFT.get()), mBG_HopSize, *(mBG_Window.get()));
             
             if (threadShouldExit()) return;
             if (mRequiresUpdate.load()) continue;
