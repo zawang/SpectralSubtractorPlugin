@@ -301,9 +301,9 @@ void SpectralSubtractorAudioProcessor::setStateInformation (const void* data, in
                 memoryBlock.fromBase64Encoding (noiseBufferAsString))
             {
                 juce::WavAudioFormat format;
-                std::unique_ptr<juce::AudioFormatReader> reader (format.createReaderFor (new MemoryInputStream (memoryBlock, false), false));
-                mNoiseBuffer.setSize ((int) reader->numChannels, (int) reader->lengthInSamples, false, false, false);
-                reader->read (&mNoiseBuffer, 0, (int) reader->lengthInSamples, 0, true, true);
+                mReader.reset (format.createReaderFor (new MemoryInputStream (memoryBlock, false), false));
+                mNoiseBuffer.setSize ((int) mReader->numChannels, (int) mReader->lengthInSamples, false, false, false);
+                mReader->read (&mNoiseBuffer, 0, (int) mReader->lengthInSamples, 0, true, true);
                 
                 // Calculate the noise spectrum from the noise buffer that was just loaded
                 wakeUpBackgroundThread();
