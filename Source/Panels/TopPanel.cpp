@@ -64,6 +64,7 @@ void TopPanel::loadFile()
                                   {
                                       mProcessor->loadNoiseBuffer (file);
                                   }
+                                  // If file == juce::File{}, it means that the user pressed cancel.
                                   
                                   mFileChooser = nullptr;
                               }, nullptr);

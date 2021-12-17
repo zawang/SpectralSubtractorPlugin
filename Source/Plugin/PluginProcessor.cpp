@@ -334,10 +334,11 @@ void SpectralSubtractorAudioProcessor::loadNoiseBuffer (const juce::File& noiseF
     }
     else
     {
-        juce::NativeMessageBox::showAsync (MessageBoxOptions()
-                                           .withIconType (MessageBoxIconType::InfoIcon)
-                                           .withMessage (juce::String("Unable to load ") + noiseFile.getFileName()),
-                                           nullptr);
+        if (getActiveEditor() != nullptr)
+            juce::NativeMessageBox::showAsync (MessageBoxOptions()
+                                               .withIconType (MessageBoxIconType::InfoIcon)
+                                               .withMessage (juce::String("Unable to load ") + noiseFile.getFileName()),
+                                               nullptr);
     }
 }
 
