@@ -32,14 +32,12 @@ public:
     
     ~SpectralSubtractor() {}
     
-    // Do not call this from the audio callback thread!
     void setNumChannels (const int numInputChannels)
     {
         std::lock_guard<audio_spin_mutex> lock (mSpinMutex);
         mNumChannels = (numInputChannels > 0) ? numInputChannels : 1;
     }
     
-    // Do not call this from the audio callback thread!
     void updateParameters (const int newFFTSize, const int newOverlap, const int newWindowType)
     {
         std::lock_guard<audio_spin_mutex> lock (mSpinMutex);
@@ -48,7 +46,6 @@ public:
         updateWindow (newWindowType);
     }
     
-    // Do not call this from the audio callback thread!
     void reset (const int newFFTSize)
     {
         std::lock_guard<audio_spin_mutex> lock (mSpinMutex);
@@ -64,6 +61,7 @@ public:
     // Replaces the old noise spectrum with a new noise spectrum.
     void loadNoiseSpectrum (const juce::HeapBlock<FloatType>& newNoiseSpectrum)
     {
+        std::lock_guard<audio_spin_mutex> lock (mSpinMutex);
         // TODO: add a safety check to ensure mNoiseSpectrum and newNoiseSpectrum have the same float type?
         mNoiseSpectrum.realloc (mFFTSize);
         std::memcpy (mNoiseSpectrum, newNoiseSpectrum, mFFTSize * sizeof (FloatType));

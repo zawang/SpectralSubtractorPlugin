@@ -176,6 +176,10 @@ void SpectralSubtractorAudioProcessor::changeProgramName (int index, const Strin
 //==============================================================================
 void SpectralSubtractorAudioProcessor::prepareToPlay (double sampleRate, int samplesPerBlock)
 {
+    mSpectralSubtractor.setNumChannels (getTotalNumInputChannels());
+    mSpectralSubtractor.updateParameters (FFTSize[mFFTSizeParam->getIndex()],
+                                          WindowOverlap[mWindowOverlapParam->getIndex()],
+                                          mWindowParam->getIndex());
     mRequiresUpdate.store (true);
 }
 
@@ -219,7 +223,6 @@ void SpectralSubtractorAudioProcessor::processBlock (AudioBuffer<float>& buffer,
     auto totalNumInputChannels  = getTotalNumInputChannels();
     auto totalNumOutputChannels = getTotalNumOutputChannels();
     
-    mSpectralSubtractor.setNumChannels (totalNumInputChannels);
     mSpectralSubtractor.process (buffer);
     
     for (auto i = totalNumInputChannels; i < totalNumOutputChannels; ++i)
