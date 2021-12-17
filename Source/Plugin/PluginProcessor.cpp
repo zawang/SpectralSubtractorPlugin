@@ -30,6 +30,12 @@ SpectralSubtractorAudioProcessor::SpectralSubtractorAudioProcessor()
     setParams();
     attachSubTrees();
     
+    mSpectralSubtractor.prepare (getTotalNumInputChannels(),
+                                 FFTSize[mFFTSizeParam->getIndex()],
+                                 WindowOverlap[mWindowOverlapParam->getIndex()],
+                                 mWindowParam->getIndex());
+    mSpectralSubtractor.reset (FFTSize[mFFTSizeParam->getIndex()]);
+    
     mFormatManager = std::make_unique<AudioFormatManager>();
     mFormatManager->registerBasicFormats();
     
@@ -349,6 +355,7 @@ void SpectralSubtractorAudioProcessor::run()
 {
     while (true)
     {
+        wait (-1);
         suspendProcessing (true);
         
         if (mRequiresUpdate.load()) updateBackgroundThread();
@@ -383,8 +390,6 @@ void SpectralSubtractorAudioProcessor::run()
         if (mRequiresUpdate.load()) continue;
         
         suspendProcessing (false);
-        
-        wait (-1);
     }
 }
 
