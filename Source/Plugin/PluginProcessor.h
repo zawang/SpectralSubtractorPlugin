@@ -23,12 +23,12 @@ using Spectrogram = std::vector<HeapBlock<FloatType>>;
 // Compute the stft on each channel of signal and average the results to produce one spectrogram.
 template <typename FloatType>
 inline void makeSpectrogram (Spectrogram<FloatType>& spectrogram,
-                             juce::AudioBuffer<FloatType>* signal,
+                             juce::AudioBuffer<FloatType>& signal,
                              juce::dsp::FFT& fft,
                              size_t hopSize,
                              juce::dsp::WindowingFunction<FloatType>& window)
 {
-    const size_t dataCount = signal->getNumSamples();
+    const size_t dataCount = signal.getNumSamples();
     
     // fftSize will be the number of bins we used to initialize the SpectrogramMaker.
     ptrdiff_t fftSize = fft.getSize();
@@ -47,7 +47,7 @@ inline void makeSpectrogram (Spectrogram<FloatType>& spectrogram,
     // We will discard the negative frequency bins, but leave the center bin.
     size_t numRows = 1UL + (fftSize / 2UL);
     
-    int numChannels = signal->getNumChannels();
+    int numChannels = signal.getNumChannels();
     FloatType inverseNumChannels = static_cast<FloatType> (1) / numChannels;
     
     for (int channel = 0; channel < numChannels; ++channel)
@@ -56,7 +56,7 @@ inline void makeSpectrogram (Spectrogram<FloatType>& spectrogram,
         std::vector<FloatType> fftBuffer (fftSize * 2UL);
     
         // While data remains
-        const FloatType* signalData = signal->getReadPointer (channel, 0);
+        const FloatType* signalData = signal.getReadPointer (channel, 0);
         for (int i = 0; i < numHops; ++i)
         {
             // Prepare segment to perform FFT on.
@@ -78,9 +78,8 @@ inline void makeSpectrogram (Spectrogram<FloatType>& spectrogram,
 }
 
 // Calculates the average spectrum from a given spectrogram
-// TODO: SWITCH BACK TO TAKING IN A juce::HeapBlock RATHER THAN HeapBlockWrapper ONCE THE SWITCH IS MADE TO SERIALIZE THE NOISE BUFFER INSTEAD OF NOISE SPECTRUM
 template <typename FloatType>
-inline void computeAverageSpectrum (HeapBlockWrapper<FloatType>& magSpectrum, Spectrogram<FloatType>& spectrogram, int fftSize)
+inline void computeAverageSpectrum (juce::HeapBlock<FloatType>& magSpectrum, Spectrogram<FloatType>& spectrogram, int fftSize)
 {
     magSpectrum.realloc (fftSize);
     magSpectrum.clear (fftSize);
@@ -92,7 +91,7 @@ inline void computeAverageSpectrum (HeapBlockWrapper<FloatType>& magSpectrum, Sp
     int numBins = fftSize / 2 + 1;
     for (int freqColumn = 0; freqColumn < numColumns; ++freqColumn)
     {
-        juce::FloatVectorOperations::addWithMultiply (magSpectrum.get().get(), spectrogram[freqColumn].get(), inverseNumColumns, numBins);
+        juce::FloatVectorOperations::addWithMultiply (magSpectrum.get(), spectrogram[freqColumn].get(), inverseNumColumns, numBins);
     }
 }
 
@@ -151,9 +150,9 @@ public:
     
     int getFFTSize() { return FFTSize[mFFTSizeParam->getIndex()]; }
     int getWindowOverlap() { return WindowOverlap[mWindowOverlapParam->getIndex()]; }
-    
-    std::unique_ptr<juce::AudioBuffer<float>> mNoiseBuffer {new juce::AudioBuffer<float>()};
 
+    void loadNoiseBuffer (const juce::File& noiseFile);
+    
     void run() override;
     void wakeUpBackgroundThread();
 
@@ -167,6 +166,8 @@ private:
     juce::ValueTree mAudioDataTree {IDs::AudioData};
     
     SpectralSubtractor<float> mSpectralSubtractor;
+    juce::AudioBuffer<float> mNoiseBuffer;
+    std::unique_ptr<juce::AudioFormatReader> mReader;
     std::unique_ptr<juce::AudioFormatManager> mFormatManager;
     
     juce::UnitTestRunner mUnitTestRunner;
@@ -185,5 +186,3 @@ private:
     
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (SpectralSubtractorAudioProcessor)
 };
-
-// Thread that calculates a noise file's average spectrum and replace's the audio processor's old noise spectrum with the one it just calculated.

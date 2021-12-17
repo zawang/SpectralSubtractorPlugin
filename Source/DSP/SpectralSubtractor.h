@@ -10,7 +10,6 @@
 
 #pragma once
 
-#include "../Helper/HeapBlockWrapper.h"
 #include "../Helper/AudioSpinMutex.h"
 
 //==============================================================================
@@ -70,19 +69,9 @@ public:
         jassert (mSubtractionStrength);
     }
     
-    HeapBlockWrapper<FloatType>& getNoiseSpectrum()
+    juce::HeapBlock<FloatType>& getNoiseSpectrum()
     {
         return mNoiseSpectrum;
-    }
-    
-    const juce::String getNoiseSpectrumAsString()
-    {
-        return mNoiseSpectrum.toString();
-    }
-    
-    void loadNoiseSpectrumFromString (const juce::String& newNoiseSpectrumAsString)
-    {
-        mNoiseSpectrum.allocateFromString (newNoiseSpectrumAsString);
     }
     
     //==============================================================================
@@ -151,7 +140,7 @@ public:
     
     
 private:
-    HeapBlockWrapper<FloatType> mNoiseSpectrum;             // Holds the average magnitude spectrum of the noise signal
+    juce::HeapBlock<FloatType> mNoiseSpectrum;             // Holds the average magnitude spectrum of the noise signal
     std::atomic<float>* mSubtractionStrength = nullptr;
     
     audio_spin_mutex mSpinMutex;
@@ -302,7 +291,7 @@ private:
             FloatType magnitude = abs (mFrequencyDomainBuffer[index]);
             FloatType phase = arg (mFrequencyDomainBuffer[index]);
             
-            magnitude -= (*mSubtractionStrength) * (mNoiseSpectrum.get())[index];
+            magnitude -= (*mSubtractionStrength) * mNoiseSpectrum[index];
             magnitude = (magnitude < 0.0f) ? 0.0f : magnitude;
             
             mFrequencyDomainBuffer[index].real (magnitude * cosf (phase));

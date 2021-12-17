@@ -18,13 +18,13 @@ TopPanel::TopPanel (SpectralSubtractorAudioProcessor* inProcessor)
     mLoadFileButton.onClick = [this] { loadFile(); };
     
     addAndMakeVisible (mFFTSizeComboBox);
-    mFFTSizeComboBox.onChange = [this] { mProcessor->prepareAndResetSpectralSubtractor(); };
+    mFFTSizeComboBox.onChange = [this] { triggerAsyncUpdate(); };
     
     addAndMakeVisible (mWindowOverlapComboBox);
-    mWindowOverlapComboBox.onChange = [this] { mProcessor->prepareAndResetSpectralSubtractor(); };
+    mWindowOverlapComboBox.onChange = [this] { triggerAsyncUpdate(); };
     
     addAndMakeVisible (mWindowComboBox);
-    mWindowComboBox.onChange = [this] { mProcessor->prepareAndResetSpectralSubtractor(); };
+    mWindowComboBox.onChange = [this] { triggerAsyncUpdate(); };
 }
 
 TopPanel::~TopPanel() {}
@@ -62,29 +62,20 @@ void TopPanel::loadFile()
                                   juce::File file = fc.getResult();
                                   if (file != juce::File{})
                                   {
-                                      mReader.reset (mProcessor->getFormatManager()->createReaderFor (file));
-                                      if (mReader.get() != nullptr)
-                                      {
-                                          mProcessor->mNoiseBuffer.reset (new juce::AudioBuffer<float> ((int) mReader->numChannels, (int) mReader->lengthInSamples));
-                                                                                    
-                                          mReader->read (mProcessor->mNoiseBuffer.get(),
-                                                         0,
-                                                         (int) mReader->lengthInSamples,
-                                                         0,
-                                                         true,
-                                                         true);
-                                          
-                                          mProcessor->wakeUpBackgroundThread();
-                                      }
-                                      else
-                                      {
-                                          juce::NativeMessageBox::showAsync (MessageBoxOptions()
-                                                                             .withIconType (MessageBoxIconType::InfoIcon)
-                                                                             .withMessage (juce::String("Unable to load ") + file.getFileName()),
-                                                                             nullptr);
-                                      }
+                                      mProcessor->loadNoiseBuffer (file);
                                   }
+                                  // If file == juce::File{}, it means that the user pressed cancel.
                                   
                                   mFileChooser = nullptr;
                               }, nullptr);
+}
+
+/**
+ Coalesces FFT setting updates into a single callback.
+ When the top panel is constructed, all three FFT setting comboboxes have their onChange callback triggered.
+ Coalescing these updates with an AsyncUpdater makes it so that the background thread is only woken up once instead of three times.
+*/
+void TopPanel::handleAsyncUpdate()
+{
+    mProcessor->prepareAndResetSpectralSubtractor();
 }

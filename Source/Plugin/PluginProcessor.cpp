@@ -39,7 +39,7 @@ SpectralSubtractorAudioProcessor::SpectralSubtractorAudioProcessor()
     jassert (WindowTypeItemsUI[SpectralSubtractor<float>::kWindowTypeHann] == "Hann");
     jassert (WindowTypeItemsUI[SpectralSubtractor<float>::kWindowTypeHamming] == "Hamming");
 
-    // Give the background thread realtime audio priority since we suspend processing whenever the background thread does work
+    // It's ok to give the background thread realtime audio priority since we suspend processing whenever the background thread does work
     startThread (juce::Thread::realtimeAudioPriority);
     
 #if RUN_UNIT_TESTS == 1
@@ -103,7 +103,7 @@ void SpectralSubtractorAudioProcessor::attachSubTrees()
 
 NonAutoParameterChoice& SpectralSubtractorAudioProcessor::getNonAutoParameterWithID (const String& parameterID)
 {
-    // TODO: add this line once the Projucer supports C++20: jassert (mNonAutoParams.contains (parameterID));
+    jassert (mNonAutoParams.contains (parameterID));
     return *(mNonAutoParams[parameterID]);
 }
 
@@ -177,6 +177,7 @@ void SpectralSubtractorAudioProcessor::prepareToPlay (double sampleRate, int sam
 
 void SpectralSubtractorAudioProcessor::prepareAndResetSpectralSubtractor()
 {
+    suspendProcessing (true);
     mSpectralSubtractor.prepare (getTotalNumInputChannels(),
                                  FFTSize[mFFTSizeParam->getIndex()],
                                  WindowOverlap[mWindowOverlapParam->getIndex()],
@@ -241,9 +242,29 @@ AudioProcessorEditor* SpectralSubtractorAudioProcessor::createEditor()
 // Store the plugin's state in an XML object
 void SpectralSubtractorAudioProcessor::getStateInformation (MemoryBlock& destData)
 {
+    DBG ("GET STATE INFORMATION");
+    
     juce::File xmlFile = juce::File::getSpecialLocation (juce::File::SpecialLocationType::userDesktopDirectory).getChildFile ("SpectralSubtractor.xml");
     
-    apvts.state.getChildWithName (IDs::AudioData).setProperty (IDs::NoiseSpectrum, mSpectralSubtractor.getNoiseSpectrumAsString(), nullptr);
+    if (mNoiseBuffer.getNumChannels() != 0 && mNoiseBuffer.getNumSamples() != 0)
+    {
+        juce::MemoryBlock memoryBlock;
+        juce::WavAudioFormat format;
+        {
+            // MemoryOutputStream is owned, if the writer was created successfully
+            std::unique_ptr<juce::AudioFormatWriter> writer (format.createWriterFor (new MemoryOutputStream (memoryBlock, false),
+                                                                                     mReader->sampleRate,
+                                                                                     mNoiseBuffer.getNumChannels(),
+                                                                                     mReader->bitsPerSample,
+                                                                                     juce::StringPairArray(),
+                                                                                     0));
+            writer->writeFromAudioSampleBuffer (mNoiseBuffer, 0, mNoiseBuffer.getNumSamples());
+            // End of scope flushes the writer
+        }
+        apvts.state.getChildWithName (IDs::AudioData).setProperty (IDs::NoiseBuffer,
+                                                                   memoryBlock.toBase64Encoding(),
+                                                                   nullptr);
+    }
     
     juce::ValueTree state = apvts.copyState();
     std::unique_ptr<juce::XmlElement> xml (state.createXml());
@@ -255,6 +276,8 @@ void SpectralSubtractorAudioProcessor::getStateInformation (MemoryBlock& destDat
 // Restore the plugin's state from an XML object
 void SpectralSubtractorAudioProcessor::setStateInformation (const void* data, int sizeInBytes)
 {
+    DBG ("SET STATE INFORMATION");
+    
     std::unique_ptr<juce::XmlElement> xmlState (getXmlFromBinary (data, sizeInBytes));
     
     if (xmlState.get() != nullptr)
@@ -264,7 +287,7 @@ void SpectralSubtractorAudioProcessor::setStateInformation (const void* data, in
             juce::ValueTree savedState = juce::ValueTree::fromXml (*xmlState);
             
             int numChildren = apvts.state.getNumChildren();
-            for (int i = 0; i < numChildren; ++i)
+            for (int i = 0; i < numChildren; ++i)   // See NonAutoParameter for why plugin state loading is done like this
             {
                 juce::ValueTree stateChild = apvts.state.getChild (i);
                 juce::ValueTree savedStateChild = savedState.getChild (i);
@@ -273,10 +296,49 @@ void SpectralSubtractorAudioProcessor::setStateInformation (const void* data, in
                 stateChild.copyPropertiesFrom (savedStateChild, nullptr);
             }
     
-            if (auto noiseSpectrumAsString = apvts.state.getChildWithName (IDs::AudioData).getProperty (IDs::NoiseSpectrum).toString();
-                !noiseSpectrumAsString.isEmpty())
-                mSpectralSubtractor.loadNoiseSpectrumFromString (noiseSpectrumAsString);
+            juce::MemoryBlock memoryBlock;
+            if (auto noiseBufferAsString = apvts.state.getChildWithName (IDs::AudioData).getProperty (IDs::NoiseBuffer).toString();
+                memoryBlock.fromBase64Encoding (noiseBufferAsString))
+            {
+                juce::WavAudioFormat format;
+                mReader.reset (format.createReaderFor (new MemoryInputStream (memoryBlock, false), false));
+                mNoiseBuffer.setSize ((int) mReader->numChannels, (int) mReader->lengthInSamples, false, false, false);
+                mReader->read (&mNoiseBuffer, 0, (int) mReader->lengthInSamples, 0, true, true);
+                
+                // Calculate the noise spectrum from the noise buffer that was just loaded
+                wakeUpBackgroundThread();
+            }
         }
+    }
+}
+
+void SpectralSubtractorAudioProcessor::loadNoiseBuffer (const juce::File& noiseFile)
+{
+    mReader.reset (mFormatManager->createReaderFor (noiseFile));
+    if (mReader.get() != nullptr)
+    {
+        mNoiseBuffer.setSize ((int) mReader->numChannels,
+                              (int) mReader->lengthInSamples,
+                              false,
+                              false,
+                              false);
+                                                  
+        mReader->read (&mNoiseBuffer,
+                       0,
+                       (int) mReader->lengthInSamples,
+                       0,
+                       true,
+                       true);
+        
+        wakeUpBackgroundThread();
+    }
+    else
+    {
+        if (getActiveEditor() != nullptr)
+            juce::NativeMessageBox::showAsync (MessageBoxOptions()
+                                               .withIconType (MessageBoxIconType::InfoIcon)
+                                               .withMessage (juce::String("Unable to load ") + noiseFile.getFileName()),
+                                               nullptr);
     }
 }
 
@@ -287,18 +349,18 @@ void SpectralSubtractorAudioProcessor::run()
 {
     while (true)
     {
-        if (mRequiresUpdate.load()) updateBackgroundThread();
-        
         suspendProcessing (true);
+        
+        if (mRequiresUpdate.load()) updateBackgroundThread();
         
         if (threadShouldExit()) return;         // must check this as often as possible, because this is how we know if the user's pressed 'cancel'
         if (mRequiresUpdate.load()) continue;   // if the FFT settings change while the background thread is doing work, start over with the most up to date settings
         
-        if (mNoiseBuffer->getNumChannels() != 0 && mNoiseBuffer->getNumSamples() != 0)
+        if (mNoiseBuffer.getNumChannels() != 0 && mNoiseBuffer.getNumSamples() != 0)
         {
             // Compute spectrogram of noise signal
             Spectrogram<float> noiseSpectrogram;
-            makeSpectrogram (noiseSpectrogram, mNoiseBuffer.get(), *(mBG_FFT.get()), mBG_HopSize, *(mBG_Window.get()));
+            makeSpectrogram (noiseSpectrogram, mNoiseBuffer, *(mBG_FFT.get()), mBG_HopSize, *(mBG_Window.get()));
             
             if (threadShouldExit()) return;
             if (mRequiresUpdate.load()) continue;
@@ -309,17 +371,18 @@ void SpectralSubtractorAudioProcessor::run()
             if (threadShouldExit()) return;
             if (mRequiresUpdate.load()) continue;
             
-            juce::NativeMessageBox::showAsync (MessageBoxOptions()
-                                               .withIconType (MessageBoxIconType::InfoIcon)
-                                               .withMessage ("Successfully loaded noise spectrum!"),
-                                               nullptr);
+            if (getActiveEditor() != nullptr)
+                juce::NativeMessageBox::showAsync (MessageBoxOptions()
+                                                   .withIconType (MessageBoxIconType::InfoIcon)
+                                                   .withMessage ("Successfully loaded noise spectrum!"),
+                                                   nullptr);
         }
         else
             mSpectralSubtractor.reset (mBG_FFT->getSize());
         
-        suspendProcessing (false);
-        
         if (mRequiresUpdate.load()) continue;
+        
+        suspendProcessing (false);
         
         wait (-1);
     }

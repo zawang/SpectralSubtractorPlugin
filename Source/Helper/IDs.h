@@ -14,8 +14,8 @@ namespace IDs
 {
     #define DECLARE_ID(name) static const juce::Identifier name (#name);
 
-    DECLARE_ID (NoiseSpectrum)
     DECLARE_ID (AudioData)
+    DECLARE_ID (NoiseBuffer)
 
     #undef DECLARE_ID
 }
