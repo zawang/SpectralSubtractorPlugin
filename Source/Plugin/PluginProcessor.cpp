@@ -253,9 +253,9 @@ void SpectralSubtractorAudioProcessor::getStateInformation (MemoryBlock& destDat
         {
             // MemoryOutputStream is owned, if the writer was created successfully
             std::unique_ptr<juce::AudioFormatWriter> writer (format.createWriterFor (new MemoryOutputStream (memoryBlock, false),
-                                                                                     48000,
+                                                                                     mReader->sampleRate,
                                                                                      mNoiseBuffer.getNumChannels(),
-                                                                                     32,
+                                                                                     mReader->bitsPerSample,
                                                                                      juce::StringPairArray(),
                                                                                      0));
             writer->writeFromAudioSampleBuffer (mNoiseBuffer, 0, mNoiseBuffer.getNumSamples());
