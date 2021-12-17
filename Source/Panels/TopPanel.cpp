@@ -77,5 +77,5 @@ void TopPanel::loadFile()
 */
 void TopPanel::handleAsyncUpdate()
 {
-    mProcessor->prepareAndResetSpectralSubtractor();
+    mProcessor->mRequiresUpdate.store (true);
 }

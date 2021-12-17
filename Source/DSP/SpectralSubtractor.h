@@ -48,14 +48,6 @@ public:
         updateWindow (newWindowType);
     }
     
-    void prepare (const int numInputChannels, const int newFFTSize, const int newOverlap, const int newWindowType)
-    {
-        setNumChannels (numInputChannels);
-        updateParameters (newFFTSize,
-                          newOverlap,
-                          newWindowType);
-    }
-    
     // Do not call this from the audio callback thread!
     void reset (const int newFFTSize)
     {
@@ -67,6 +59,14 @@ public:
     {
         mSubtractionStrength = subtractionStrength;
         jassert (mSubtractionStrength);
+    }
+    
+    // Replaces the old noise spectrum with a new noise spectrum.
+    void loadNoiseSpectrum (const juce::HeapBlock<FloatType>& newNoiseSpectrum)
+    {
+        // TODO: add a safety check to ensure mNoiseSpectrum and newNoiseSpectrum have the same float type?
+        mNoiseSpectrum.realloc (mFFTSize);
+        std::memcpy (mNoiseSpectrum, newNoiseSpectrum, mFFTSize * sizeof (FloatType));
     }
     
     juce::HeapBlock<FloatType>& getNoiseSpectrum()
