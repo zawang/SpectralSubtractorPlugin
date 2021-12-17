@@ -180,7 +180,11 @@ void SpectralSubtractorAudioProcessor::prepareToPlay (double sampleRate, int sam
     mSpectralSubtractor.updateParameters (FFTSize[mFFTSizeParam->getIndex()],
                                           WindowOverlap[mWindowOverlapParam->getIndex()],
                                           mWindowParam->getIndex());
-    mRequiresUpdate.store (true);
+    
+    {
+        const juce::ScopedLock lock (mBackgroundMutex);
+        mRequiresUpdate = true;
+    }
 }
 
 void SpectralSubtractorAudioProcessor::releaseResources()
@@ -308,7 +312,10 @@ void SpectralSubtractorAudioProcessor::setStateInformation (const void* data, in
                 mReader->read (&mNoiseBuffer, 0, (int) mReader->lengthInSamples, 0, true, true);
                 
                 // Calculate the noise spectrum from the noise buffer that was just loaded
-                mRequiresUpdate.store (true);
+                {
+                    const juce::ScopedLock lock (mBackgroundMutex);
+                    mRequiresUpdate = true;
+                }
             }
         }
     }
@@ -332,7 +339,10 @@ void SpectralSubtractorAudioProcessor::loadNoiseBuffer (const juce::File& noiseF
                        true,
                        true);
         
-        mRequiresUpdate.store (true);
+        {
+            const juce::ScopedLock lock (mBackgroundMutex);
+            mRequiresUpdate = true;
+        }
     }
     else
     {
@@ -351,9 +361,11 @@ void SpectralSubtractorAudioProcessor::run()
 {
     while (!threadShouldExit())
     {
-        if (mRequiresUpdate.load())
+        mBackgroundMutex.enter();
+        if (mRequiresUpdate)
         {
             updateBackgroundThread();
+            mBackgroundMutex.exit();
             
             if (threadShouldExit()) return;         // must check this as often as possible, because this is how we know if the user's pressed 'cancel'
             
@@ -409,6 +421,10 @@ void SpectralSubtractorAudioProcessor::run()
                 mSpectralSubtractor.reset (mBG_FFT->getSize());
             }
         }
+        else
+        {
+            mBackgroundMutex.exit();
+        }
         
         if (threadShouldExit()) return;
         
@@ -418,6 +434,8 @@ void SpectralSubtractorAudioProcessor::run()
 
 void SpectralSubtractorAudioProcessor::updateBackgroundThread()
 {
+    const juce::ScopedLock lock (mBackgroundMutex);
+    
     int fftSize = FFTSize[mFFTSizeParam->getIndex()];
     mBG_overlap = WindowOverlap[mWindowOverlapParam->getIndex()];
     mBG_WindowIndex = mWindowParam->getIndex();
@@ -430,7 +448,7 @@ void SpectralSubtractorAudioProcessor::updateBackgroundThread()
     DBG ("Background thread hop size: " << mBG_HopSize);
     DBG ("");
     
-    mRequiresUpdate.store (false);
+    mRequiresUpdate = false;
 }
 
 //==============================================================================

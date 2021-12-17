@@ -154,7 +154,8 @@ public:
     
     void run() override;
     
-    std::atomic<bool> mRequiresUpdate {true};
+    bool mRequiresUpdate {true};
+    juce::CriticalSection mBackgroundMutex;
 
 private:
     std::atomic<float>* mSubtractionStrengthParam = nullptr;

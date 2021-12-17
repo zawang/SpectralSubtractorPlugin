@@ -77,5 +77,6 @@ void TopPanel::loadFile()
 */
 void TopPanel::handleAsyncUpdate()
 {
-    mProcessor->mRequiresUpdate.store (true);
+    const juce::ScopedLock lock (mProcessor->mBackgroundMutex);
+    mProcessor->mRequiresUpdate = true;
 }
