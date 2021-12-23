@@ -30,6 +30,11 @@ SpectralSubtractorAudioProcessor::SpectralSubtractorAudioProcessor()
     setParams();
     attachSubTrees();
     
+    mSpectralSubtractor.updateParameters (FFTSize[mFFTSizeParam->getIndex()],
+                                          WindowOverlap[mWindowOverlapParam->getIndex()],
+                                          mWindowParam->getIndex());
+    mSpectralSubtractor.reset (FFTSize[mFFTSizeParam->getIndex()]);
+    
     mFormatManager = std::make_unique<AudioFormatManager>();
     mFormatManager->registerBasicFormats();
     
@@ -39,8 +44,7 @@ SpectralSubtractorAudioProcessor::SpectralSubtractorAudioProcessor()
     jassert (WindowTypeItemsUI[SpectralSubtractor<float>::kWindowTypeHann] == "Hann");
     jassert (WindowTypeItemsUI[SpectralSubtractor<float>::kWindowTypeHamming] == "Hamming");
 
-    // It's ok to give the background thread realtime audio priority since we suspend processing whenever the background thread does work
-    startThread (juce::Thread::realtimeAudioPriority);
+    startThread (8);    // set priority as high as possible without being realtime audio priority
     
 #if RUN_UNIT_TESTS == 1
     std::cout << "Running unit tests..." << std::endl;
@@ -172,17 +176,15 @@ void SpectralSubtractorAudioProcessor::changeProgramName (int index, const Strin
 //==============================================================================
 void SpectralSubtractorAudioProcessor::prepareToPlay (double sampleRate, int samplesPerBlock)
 {
-    prepareAndResetSpectralSubtractor();
-}
-
-void SpectralSubtractorAudioProcessor::prepareAndResetSpectralSubtractor()
-{
-    suspendProcessing (true);
-    mSpectralSubtractor.prepare (getTotalNumInputChannels(),
-                                 FFTSize[mFFTSizeParam->getIndex()],
-                                 WindowOverlap[mWindowOverlapParam->getIndex()],
-                                 mWindowParam->getIndex());
-    wakeUpBackgroundThread();
+    mSpectralSubtractor.setNumChannels (getTotalNumInputChannels());
+    mSpectralSubtractor.updateParameters (FFTSize[mFFTSizeParam->getIndex()],
+                                          WindowOverlap[mWindowOverlapParam->getIndex()],
+                                          mWindowParam->getIndex());
+    
+    {
+        const juce::ScopedLock lock (mBackgroundMutex);
+        mRequiresUpdate = true;
+    }
 }
 
 void SpectralSubtractorAudioProcessor::releaseResources()
@@ -217,6 +219,10 @@ bool SpectralSubtractorAudioProcessor::isBusesLayoutSupported (const BusesLayout
 
 void SpectralSubtractorAudioProcessor::processBlock (AudioBuffer<float>& buffer, MidiBuffer& midiMessages)
 {
+    std::unique_lock lock (mSpinMutex, std::try_to_lock);
+    if (!lock.owns_lock())
+        return;
+    
     ScopedNoDenormals noDenormals;
     auto totalNumInputChannels  = getTotalNumInputChannels();
     auto totalNumOutputChannels = getTotalNumOutputChannels();
@@ -306,39 +312,12 @@ void SpectralSubtractorAudioProcessor::setStateInformation (const void* data, in
                 mReader->read (&mNoiseBuffer, 0, (int) mReader->lengthInSamples, 0, true, true);
                 
                 // Calculate the noise spectrum from the noise buffer that was just loaded
-                wakeUpBackgroundThread();
+                {
+                    const juce::ScopedLock lock (mBackgroundMutex);
+                    mRequiresUpdate = true;
+                }
             }
         }
-    }
-}
-
-void SpectralSubtractorAudioProcessor::loadNoiseBuffer (const juce::File& noiseFile)
-{
-    mReader.reset (mFormatManager->createReaderFor (noiseFile));
-    if (mReader.get() != nullptr)
-    {
-        mNoiseBuffer.setSize ((int) mReader->numChannels,
-                              (int) mReader->lengthInSamples,
-                              false,
-                              false,
-                              false);
-                                                  
-        mReader->read (&mNoiseBuffer,
-                       0,
-                       (int) mReader->lengthInSamples,
-                       0,
-                       true,
-                       true);
-        
-        wakeUpBackgroundThread();
-    }
-    else
-    {
-        if (getActiveEditor() != nullptr)
-            juce::NativeMessageBox::showAsync (MessageBoxOptions()
-                                               .withIconType (MessageBoxIconType::InfoIcon)
-                                               .withMessage (juce::String("Unable to load ") + noiseFile.getFileName()),
-                                               nullptr);
     }
 }
 
@@ -347,14 +326,82 @@ void SpectralSubtractorAudioProcessor::loadNoiseBuffer (const juce::File& noiseF
 
 void SpectralSubtractorAudioProcessor::run()
 {
-    while (true)
+    while (!threadShouldExit())
     {
-        suspendProcessing (true);
+        checkForPathToOpen();
+        if (threadShouldExit()) return;
         
-        if (mRequiresUpdate.load()) updateBackgroundThread();
+        checkIfSpectralSubtractorNeedsUpdate();
+        if (threadShouldExit()) return;
         
-        if (threadShouldExit()) return;         // must check this as often as possible, because this is how we know if the user's pressed 'cancel'
-        if (mRequiresUpdate.load()) continue;   // if the FFT settings change while the background thread is doing work, start over with the most up to date settings
+        wait (500);
+    }
+}
+
+void SpectralSubtractorAudioProcessor::checkForPathToOpen()
+{
+    juce::String pathToOpen;
+     
+    {
+        const juce::ScopedLock lock (mPathMutex);
+        pathToOpen.swapWith (mChosenPath);
+    }
+
+    // If pathToOpen is an empty string then we know there isn't a new file to open.
+    if (pathToOpen.isNotEmpty())
+    {
+        juce::File noiseFile (pathToOpen);
+        
+        mReader.reset (mFormatManager->createReaderFor (noiseFile));
+        if (mReader.get() != nullptr)
+        {
+            auto duration = (float) mReader->lengthInSamples / mReader->sampleRate;
+            
+            if (true)   // TODO: restrict how long the noise file can be?
+            {
+                mNoiseBuffer.setSize ((int) mReader->numChannels,
+                                      (int) mReader->lengthInSamples,
+                                      false,
+                                      false,
+                                      false);
+                                                          
+                mReader->read (&mNoiseBuffer,
+                               0,
+                               (int) mReader->lengthInSamples,
+                               0,
+                               true,
+                               true);
+                
+                {
+                    const juce::ScopedLock lock (mBackgroundMutex);
+                    mRequiresUpdate = true;
+                }
+            }
+            else
+            {
+                // handle the error that the noise file is too long
+            }
+        }
+        else
+        {
+            if (getActiveEditor() != nullptr)
+                juce::NativeMessageBox::showAsync (MessageBoxOptions()
+                                                   .withIconType (MessageBoxIconType::InfoIcon)
+                                                   .withMessage (juce::String("Unable to load ") + noiseFile.getFileName()),
+                                                   nullptr);
+        }
+    }
+}
+
+void SpectralSubtractorAudioProcessor::checkIfSpectralSubtractorNeedsUpdate()
+{
+    mBackgroundMutex.enter();
+    if (mRequiresUpdate)
+    {
+        updateBackgroundThread();
+        mBackgroundMutex.exit();
+        
+        if (threadShouldExit()) return;
         
         if (mNoiseBuffer.getNumChannels() != 0 && mNoiseBuffer.getNumSamples() != 0)
         {
@@ -363,13 +410,25 @@ void SpectralSubtractorAudioProcessor::run()
             makeSpectrogram (noiseSpectrogram, mNoiseBuffer, *(mBG_FFT.get()), mBG_HopSize, *(mBG_Window.get()));
             
             if (threadShouldExit()) return;
-            if (mRequiresUpdate.load()) continue;
 
             // Compute noise spectrum
-            computeAverageSpectrum (mSpectralSubtractor.getNoiseSpectrum(), noiseSpectrogram, mBG_FFT->getSize());
+            computeAverageSpectrum (mTempNoiseSpectrum, noiseSpectrogram, mBG_FFT->getSize());
             
             if (threadShouldExit()) return;
-            if (mRequiresUpdate.load()) continue;
+            
+            std::lock_guard<audio_spin_mutex> lock (mSpinMutex);
+            
+            // Update FFT settings
+            mSpectralSubtractor.updateParameters (mBG_FFT->getSize(),
+                                                  mBG_overlap,
+                                                  mBG_WindowIndex);
+            
+            if (threadShouldExit()) return;
+            
+            // Load the new noise spectrum
+            mSpectralSubtractor.loadNoiseSpectrum (mTempNoiseSpectrum);
+            
+            if (threadShouldExit()) return;
             
             if (getActiveEditor() != nullptr)
                 juce::NativeMessageBox::showAsync (MessageBoxOptions()
@@ -378,36 +437,43 @@ void SpectralSubtractorAudioProcessor::run()
                                                    nullptr);
         }
         else
+        {
+            std::lock_guard<audio_spin_mutex> lock (mSpinMutex);
+            
+            // Update FFT settings
+            mSpectralSubtractor.updateParameters (mBG_FFT->getSize(),
+                                                  mBG_overlap,
+                                                  mBG_WindowIndex);
+            
+            if (threadShouldExit()) return;
+            
+            // Initialize empty noise spectrum
             mSpectralSubtractor.reset (mBG_FFT->getSize());
-        
-        if (mRequiresUpdate.load()) continue;
-        
-        suspendProcessing (false);
-        
-        wait (-1);
+        }
     }
-}
-
-void SpectralSubtractorAudioProcessor::wakeUpBackgroundThread()
-{
-    mRequiresUpdate.store (true);
-    notify();
+    else
+    {
+        mBackgroundMutex.exit();
+    }
 }
 
 void SpectralSubtractorAudioProcessor::updateBackgroundThread()
 {
+    const juce::ScopedLock lock (mBackgroundMutex);
+    
     int fftSize = FFTSize[mFFTSizeParam->getIndex()];
-    int overlap = WindowOverlap[mWindowOverlapParam->getIndex()];
+    mBG_overlap = WindowOverlap[mWindowOverlapParam->getIndex()];
+    mBG_WindowIndex = mWindowParam->getIndex();
     
     mBG_FFT.reset (new juce::dsp::FFT (static_cast<int> (std::log2 (fftSize))));
-    if (overlap != 0) mBG_HopSize = fftSize / overlap;
+    if (mBG_overlap != 0) mBG_HopSize = fftSize / mBG_overlap;
     mBG_Window.reset (new juce::dsp::WindowingFunction<float> (static_cast<size_t> (fftSize + 1), juce::dsp::WindowingFunction<float>::hann, false));
     
     DBG ("Background thread FFT size: " << mBG_FFT->getSize());
     DBG ("Background thread hop size: " << mBG_HopSize);
     DBG ("");
     
-    mRequiresUpdate.store (false);
+    mRequiresUpdate = false;
 }
 
 //==============================================================================

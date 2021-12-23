@@ -15,6 +15,7 @@
 #include "../Helper/Parameters.h"
 #include "../Helper/IDs.h"
 #include "../Helper/NonAutoParameter.h"
+#include "../Helper/AudioSpinMutex.h"
 
 // One audio channel of FFT data over time, really 2-dimensional
 template <typename FloatType>
@@ -142,19 +143,19 @@ public:
     void getStateInformation (MemoryBlock& destData) override;
     void setStateInformation (const void* data, int sizeInBytes) override;
     
-    void prepareAndResetSpectralSubtractor();
-    
     juce::AudioProcessorValueTreeState apvts {*this, nullptr, juce::Identifier ("SpectralSubtractor"), createParameterLayout()};
     
     juce::AudioFormatManager* getFormatManager() { return mFormatManager.get(); }
     
     int getFFTSize() { return FFTSize[mFFTSizeParam->getIndex()]; }
     int getWindowOverlap() { return WindowOverlap[mWindowOverlapParam->getIndex()]; }
-
-    void loadNoiseBuffer (const juce::File& noiseFile);
     
     void run() override;
-    void wakeUpBackgroundThread();
+    
+    bool mRequiresUpdate {true};
+    juce::CriticalSection mBackgroundMutex;
+    juce::CriticalSection mPathMutex;
+    juce::String mChosenPath;
 
 private:
     std::atomic<float>* mSubtractionStrengthParam = nullptr;
@@ -167,21 +168,26 @@ private:
     
     SpectralSubtractor<float> mSpectralSubtractor;
     juce::AudioBuffer<float> mNoiseBuffer;
+    juce::HeapBlock<float> mTempNoiseSpectrum;
     std::unique_ptr<juce::AudioFormatReader> mReader;
     std::unique_ptr<juce::AudioFormatManager> mFormatManager;
+    
+    audio_spin_mutex mSpinMutex;
     
     juce::UnitTestRunner mUnitTestRunner;
     
     //==============================================================================
     // Variables and functions for the background thread
-    
-    std::atomic<bool> mRequiresUpdate {true};
-    
+
     // For creating spectrogram
     std::unique_ptr<juce::dsp::FFT> mBG_FFT;
+    int mBG_overlap;
     size_t mBG_HopSize;
+    int mBG_WindowIndex;
     std::unique_ptr<juce::dsp::WindowingFunction<float>> mBG_Window;
 
+    void checkForPathToOpen();
+    void checkIfSpectralSubtractorNeedsUpdate();
     void updateBackgroundThread();
     
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (SpectralSubtractorAudioProcessor)
