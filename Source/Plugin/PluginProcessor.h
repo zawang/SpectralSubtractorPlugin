@@ -186,6 +186,7 @@ private:
     int mBG_WindowIndex;
     std::unique_ptr<juce::dsp::WindowingFunction<float>> mBG_Window;
 
+    void checkIfSpectralSubtractorNeedsUpdate();
     void updateBackgroundThread();
     
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (SpectralSubtractorAudioProcessor)

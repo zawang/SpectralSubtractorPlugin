@@ -361,74 +361,78 @@ void SpectralSubtractorAudioProcessor::run()
 {
     while (!threadShouldExit())
     {
-        mBackgroundMutex.enter();
-        if (mRequiresUpdate)
-        {
-            updateBackgroundThread();
-            mBackgroundMutex.exit();
-            
-            if (threadShouldExit()) return;         // must check this as often as possible, because this is how we know if the user's pressed 'cancel'
-            
-            if (mNoiseBuffer.getNumChannels() != 0 && mNoiseBuffer.getNumSamples() != 0)
-            {
-                // Compute spectrogram of noise signal
-                Spectrogram<float> noiseSpectrogram;
-                makeSpectrogram (noiseSpectrogram, mNoiseBuffer, *(mBG_FFT.get()), mBG_HopSize, *(mBG_Window.get()));
-                
-                if (threadShouldExit()) return;
-
-                // Compute noise spectrum
-                computeAverageSpectrum (mTempNoiseSpectrum, noiseSpectrogram, mBG_FFT->getSize());
-                
-                if (threadShouldExit()) return;
-                
-                std::lock_guard<audio_spin_mutex> lock (mSpinMutex);
-                
-                if (threadShouldExit()) return;
-                
-                // Update FFT settings
-                mSpectralSubtractor.updateParameters (mBG_FFT->getSize(),
-                                                      mBG_overlap,
-                                                      mBG_WindowIndex);
-                
-                if (threadShouldExit()) return;
-                
-                // Load the new noise spectrum
-                mSpectralSubtractor.loadNoiseSpectrum (mTempNoiseSpectrum);
-                
-                if (threadShouldExit()) return;
-                
-                if (getActiveEditor() != nullptr)
-                    juce::NativeMessageBox::showAsync (MessageBoxOptions()
-                                                       .withIconType (MessageBoxIconType::InfoIcon)
-                                                       .withMessage ("Successfully loaded noise spectrum!"),
-                                                       nullptr);
-            }
-            else
-            {
-                std::lock_guard<audio_spin_mutex> lock (mSpinMutex);
-                
-                if (threadShouldExit()) return;
-                
-                // Update FFT settings
-                mSpectralSubtractor.updateParameters (mBG_FFT->getSize(),
-                                                      mBG_overlap,
-                                                      mBG_WindowIndex);
-                
-                if (threadShouldExit()) return;
-                
-                // Initialize empty noise spectrum
-                mSpectralSubtractor.reset (mBG_FFT->getSize());
-            }
-        }
-        else
-        {
-            mBackgroundMutex.exit();
-        }
-        
+        checkIfSpectralSubtractorNeedsUpdate();
         if (threadShouldExit()) return;
         
         wait (500);
+    }
+}
+
+void SpectralSubtractorAudioProcessor::checkIfSpectralSubtractorNeedsUpdate()
+{
+    mBackgroundMutex.enter();
+    if (mRequiresUpdate)
+    {
+        updateBackgroundThread();
+        mBackgroundMutex.exit();
+        
+        if (threadShouldExit()) return;         // must check this as often as possible, because this is how we know if the user's pressed 'cancel'
+        
+        if (mNoiseBuffer.getNumChannels() != 0 && mNoiseBuffer.getNumSamples() != 0)
+        {
+            // Compute spectrogram of noise signal
+            Spectrogram<float> noiseSpectrogram;
+            makeSpectrogram (noiseSpectrogram, mNoiseBuffer, *(mBG_FFT.get()), mBG_HopSize, *(mBG_Window.get()));
+            
+            if (threadShouldExit()) return;
+
+            // Compute noise spectrum
+            computeAverageSpectrum (mTempNoiseSpectrum, noiseSpectrogram, mBG_FFT->getSize());
+            
+            if (threadShouldExit()) return;
+            
+            std::lock_guard<audio_spin_mutex> lock (mSpinMutex);
+            
+            if (threadShouldExit()) return;
+            
+            // Update FFT settings
+            mSpectralSubtractor.updateParameters (mBG_FFT->getSize(),
+                                                  mBG_overlap,
+                                                  mBG_WindowIndex);
+            
+            if (threadShouldExit()) return;
+            
+            // Load the new noise spectrum
+            mSpectralSubtractor.loadNoiseSpectrum (mTempNoiseSpectrum);
+            
+            if (threadShouldExit()) return;
+            
+            if (getActiveEditor() != nullptr)
+                juce::NativeMessageBox::showAsync (MessageBoxOptions()
+                                                   .withIconType (MessageBoxIconType::InfoIcon)
+                                                   .withMessage ("Successfully loaded noise spectrum!"),
+                                                   nullptr);
+        }
+        else
+        {
+            std::lock_guard<audio_spin_mutex> lock (mSpinMutex);
+            
+            if (threadShouldExit()) return;
+            
+            // Update FFT settings
+            mSpectralSubtractor.updateParameters (mBG_FFT->getSize(),
+                                                  mBG_overlap,
+                                                  mBG_WindowIndex);
+            
+            if (threadShouldExit()) return;
+            
+            // Initialize empty noise spectrum
+            mSpectralSubtractor.reset (mBG_FFT->getSize());
+        }
+    }
+    else
+    {
+        mBackgroundMutex.exit();
     }
 }
 
