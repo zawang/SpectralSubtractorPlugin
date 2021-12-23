@@ -62,7 +62,14 @@ void TopPanel::loadFile()
                                   juce::File file = fc.getResult();
                                   if (file != juce::File{})
                                   {
-                                      mProcessor->loadNoiseBuffer (file);
+                                      juce::String path = file.getFullPathName();
+                                      
+                                      {
+                                          const juce::ScopedLock lock (mProcessor->mPathMutex);
+                                          mProcessor->mChosenPath.swapWith (path);
+                                      }
+                                      
+                                      mProcessor->notify();
                                   }
                                   // If file == juce::File{}, it means that the user pressed cancel.
                                   

@@ -149,13 +149,13 @@ public:
     
     int getFFTSize() { return FFTSize[mFFTSizeParam->getIndex()]; }
     int getWindowOverlap() { return WindowOverlap[mWindowOverlapParam->getIndex()]; }
-
-    void loadNoiseBuffer (const juce::File& noiseFile);
     
     void run() override;
     
     bool mRequiresUpdate {true};
     juce::CriticalSection mBackgroundMutex;
+    juce::CriticalSection mPathMutex;
+    juce::String mChosenPath;
 
 private:
     std::atomic<float>* mSubtractionStrengthParam = nullptr;
@@ -186,6 +186,7 @@ private:
     int mBG_WindowIndex;
     std::unique_ptr<juce::dsp::WindowingFunction<float>> mBG_Window;
 
+    void checkForPathToOpen();
     void checkIfSpectralSubtractorNeedsUpdate();
     void updateBackgroundThread();
     

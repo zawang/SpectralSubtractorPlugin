@@ -321,39 +321,6 @@ void SpectralSubtractorAudioProcessor::setStateInformation (const void* data, in
     }
 }
 
-void SpectralSubtractorAudioProcessor::loadNoiseBuffer (const juce::File& noiseFile)
-{
-    mReader.reset (mFormatManager->createReaderFor (noiseFile));
-    if (mReader.get() != nullptr)
-    {
-        mNoiseBuffer.setSize ((int) mReader->numChannels,
-                              (int) mReader->lengthInSamples,
-                              false,
-                              false,
-                              false);
-                                                  
-        mReader->read (&mNoiseBuffer,
-                       0,
-                       (int) mReader->lengthInSamples,
-                       0,
-                       true,
-                       true);
-        
-        {
-            const juce::ScopedLock lock (mBackgroundMutex);
-            mRequiresUpdate = true;
-        }
-    }
-    else
-    {
-        if (getActiveEditor() != nullptr)
-            juce::NativeMessageBox::showAsync (MessageBoxOptions()
-                                               .withIconType (MessageBoxIconType::InfoIcon)
-                                               .withMessage (juce::String("Unable to load ") + noiseFile.getFileName()),
-                                               nullptr);
-    }
-}
-
 //==============================================================================
 // Noise spectrum processing thread functions
 
@@ -361,10 +328,68 @@ void SpectralSubtractorAudioProcessor::run()
 {
     while (!threadShouldExit())
     {
+        checkForPathToOpen();
+        if (threadShouldExit()) return;
+        
         checkIfSpectralSubtractorNeedsUpdate();
         if (threadShouldExit()) return;
         
         wait (500);
+    }
+}
+
+void SpectralSubtractorAudioProcessor::checkForPathToOpen()
+{
+    juce::String pathToOpen;
+     
+    {
+        const juce::ScopedLock lock (mPathMutex);
+        pathToOpen.swapWith (mChosenPath);
+    }
+
+    // If pathToOpen is an empty string then we know there isn't a new file to open.
+    if (pathToOpen.isNotEmpty())
+    {
+        juce::File noiseFile (pathToOpen);
+        
+        mReader.reset (mFormatManager->createReaderFor (noiseFile));
+        if (mReader.get() != nullptr)
+        {
+            auto duration = (float) mReader->lengthInSamples / mReader->sampleRate;
+            
+            if (true)   // TODO: restrict how long the noise file can be?
+            {
+                mNoiseBuffer.setSize ((int) mReader->numChannels,
+                                      (int) mReader->lengthInSamples,
+                                      false,
+                                      false,
+                                      false);
+                                                          
+                mReader->read (&mNoiseBuffer,
+                               0,
+                               (int) mReader->lengthInSamples,
+                               0,
+                               true,
+                               true);
+                
+                {
+                    const juce::ScopedLock lock (mBackgroundMutex);
+                    mRequiresUpdate = true;
+                }
+            }
+            else
+            {
+                // handle the error that the noise file is too long
+            }
+        }
+        else
+        {
+            if (getActiveEditor() != nullptr)
+                juce::NativeMessageBox::showAsync (MessageBoxOptions()
+                                                   .withIconType (MessageBoxIconType::InfoIcon)
+                                                   .withMessage (juce::String("Unable to load ") + noiseFile.getFileName()),
+                                                   nullptr);
+        }
     }
 }
 
@@ -376,7 +401,7 @@ void SpectralSubtractorAudioProcessor::checkIfSpectralSubtractorNeedsUpdate()
         updateBackgroundThread();
         mBackgroundMutex.exit();
         
-        if (threadShouldExit()) return;         // must check this as often as possible, because this is how we know if the user's pressed 'cancel'
+        if (threadShouldExit()) return;
         
         if (mNoiseBuffer.getNumChannels() != 0 && mNoiseBuffer.getNumSamples() != 0)
         {
@@ -392,8 +417,6 @@ void SpectralSubtractorAudioProcessor::checkIfSpectralSubtractorNeedsUpdate()
             if (threadShouldExit()) return;
             
             std::lock_guard<audio_spin_mutex> lock (mSpinMutex);
-            
-            if (threadShouldExit()) return;
             
             // Update FFT settings
             mSpectralSubtractor.updateParameters (mBG_FFT->getSize(),
@@ -416,8 +439,6 @@ void SpectralSubtractorAudioProcessor::checkIfSpectralSubtractorNeedsUpdate()
         else
         {
             std::lock_guard<audio_spin_mutex> lock (mSpinMutex);
-            
-            if (threadShouldExit()) return;
             
             // Update FFT settings
             mSpectralSubtractor.updateParameters (mBG_FFT->getSize(),
