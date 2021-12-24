@@ -220,10 +220,6 @@ bool SpectralSubtractorAudioProcessor::isBusesLayoutSupported (const BusesLayout
 
 void SpectralSubtractorAudioProcessor::processBlock (AudioBuffer<float>& buffer, MidiBuffer& midiMessages)
 {
-    std::unique_lock lock (mSpinMutex, std::try_to_lock);
-    if (!lock.owns_lock())
-        return;
-    
     ScopedNoDenormals noDenormals;
     auto totalNumInputChannels  = getTotalNumInputChannels();
     auto totalNumOutputChannels = getTotalNumOutputChannels();
@@ -417,8 +413,6 @@ void SpectralSubtractorAudioProcessor::checkIfSpectralSubtractorNeedsUpdate()
             
             if (threadShouldExit()) return;
             
-            std::lock_guard<audio_spin_mutex> lock (mSpinMutex);
-            
             // Update the FFT settings and load the new noise spectrum
             mSpectralSubtractor.updateParameters (mBG_FFT->getSize(),
                                                   mBG_overlap,
@@ -435,8 +429,6 @@ void SpectralSubtractorAudioProcessor::checkIfSpectralSubtractorNeedsUpdate()
         }
         else
         {
-            std::lock_guard<audio_spin_mutex> lock (mSpinMutex);
-            
             // Update FFT settings and allocate an empty noise spectrum
             mSpectralSubtractor.updateParameters (mBG_FFT->getSize(),
                                                   mBG_overlap,

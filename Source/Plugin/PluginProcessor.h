@@ -172,8 +172,6 @@ private:
     std::unique_ptr<juce::AudioFormatReader> mReader;
     std::unique_ptr<juce::AudioFormatManager> mFormatManager;
     
-    audio_spin_mutex mSpinMutex;
-    
     juce::UnitTestRunner mUnitTestRunner;
     
     //==============================================================================
