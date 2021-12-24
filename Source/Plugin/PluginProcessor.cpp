@@ -348,44 +348,50 @@ void SpectralSubtractorAudioProcessor::checkForPathToOpen()
     if (pathToOpen.isNotEmpty())
     {
         juce::File noiseFile (pathToOpen);
+        juce::String errorMessage;
         
         mReader.reset (mFormatManager->createReaderFor (noiseFile));
         if (mReader.get() != nullptr)
         {
-            auto duration = (float) mReader->lengthInSamples / mReader->sampleRate;
-            
-            if (true)   // TODO: restrict how long the noise file can be?
+            if (mReader->numChannels == 1 || mReader->numChannels == 2)
             {
-                mNoiseBuffer.setSize ((int) mReader->numChannels,
-                                      (int) mReader->lengthInSamples,
-                                      false,
-                                      false,
-                                      false);
-                                                          
-                mReader->read (&mNoiseBuffer,
-                               0,
-                               (int) mReader->lengthInSamples,
-                               0,
-                               true,
-                               true);
+                auto duration = (float) mReader->lengthInSamples / mReader->sampleRate;
                 
+                if (true)   // TODO: restrict how long the noise file can be?
                 {
-                    const juce::ScopedLock lock (mBackgroundMutex);
-                    mRequiresUpdate = true;
+                    mNoiseBuffer.setSize ((int) mReader->numChannels,
+                                          (int) mReader->lengthInSamples,
+                                          false,
+                                          false,
+                                          false);
+                                                              
+                    mReader->read (&mNoiseBuffer,
+                                   0,
+                                   (int) mReader->lengthInSamples,
+                                   0,
+                                   true,
+                                   true);
+                    
+                    {
+                        const juce::ScopedLock lock (mBackgroundMutex);
+                        mRequiresUpdate = true;
+                    }
                 }
+                else
+                    errorMessage = juce::String ("Noise file must be under _____ seconds!");
             }
             else
-            {
-                // handle the error that the noise file is too long
-            }
+                errorMessage = juce::String ("Noise file must be either mono or stereo!");
         }
         else
+            errorMessage = juce::String ("Unable to read ") + noiseFile.getFileName();
+        
+        if (errorMessage.isNotEmpty() && getActiveEditor() != nullptr)
         {
-            if (getActiveEditor() != nullptr)
-                juce::NativeMessageBox::showAsync (MessageBoxOptions()
-                                                   .withIconType (MessageBoxIconType::InfoIcon)
-                                                   .withMessage (juce::String("Unable to load ") + noiseFile.getFileName()),
-                                                   nullptr);
+            juce::NativeMessageBox::showAsync (MessageBoxOptions()
+                                               .withIconType (MessageBoxIconType::InfoIcon)
+                                               .withMessage (errorMessage),
+                                               nullptr);
         }
     }
 }
