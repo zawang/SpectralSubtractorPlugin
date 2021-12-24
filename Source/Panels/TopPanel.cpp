@@ -80,7 +80,7 @@ void TopPanel::loadFile()
 /**
  Coalesces FFT setting updates into a single callback.
  When the top panel is constructed, all three FFT setting comboboxes have their onChange callback triggered.
- Coalescing these updates with an AsyncUpdater makes it so that the background thread is only woken up once instead of three times.
+ Coalescing these updates with an AsyncUpdater makes it so that the body of this function  executes probably only once instead of three times.
 */
 void TopPanel::handleAsyncUpdate()
 {

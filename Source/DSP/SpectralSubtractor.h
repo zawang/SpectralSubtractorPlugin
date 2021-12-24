@@ -63,8 +63,8 @@ public:
     
     void setSubtractionStrength (std::atomic<float>* subtractionStrength)
     {
+        jassert (subtractionStrength);
         mSubtractionStrength = subtractionStrength;
-        jassert (mSubtractionStrength);
     }
     
     //==============================================================================
