@@ -38,38 +38,33 @@ public:
         mNumChannels = (numInputChannels > 0) ? numInputChannels : 1;
     }
     
-    void updateParameters (const int newFFTSize, const int newOverlap, const int newWindowType)
+    /**
+        It's important to set the number of channels with setNumChannels before updateParameters is called!
+        This is because the size of the audio buffers are set in updateFFTSize.
+    */
+    void updateParameters (const int newFFTSize, const int newOverlap, const int newWindowType, juce::HeapBlock<FloatType>* newNoiseSpectrum)
     {
         std::lock_guard<audio_spin_mutex> lock (mSpinMutex);
         updateFFTSize (newFFTSize);
         updateHopSize (newOverlap);
         updateWindow (newWindowType);
-    }
-    
-    void reset (const int newFFTSize)
-    {
-        std::lock_guard<audio_spin_mutex> lock (mSpinMutex);
-        mNoiseSpectrum.calloc (newFFTSize);
+        
+        if (newNoiseSpectrum == nullptr)
+        {
+            mNoiseSpectrum.calloc (newFFTSize);
+        }
+        else
+        {
+            // TODO: add a safety check to ensure mNoiseSpectrum and newNoiseSpectrum have the same float type and number of elements?
+            mNoiseSpectrum.realloc (mFFTSize);
+            std::memcpy (mNoiseSpectrum, *newNoiseSpectrum, mFFTSize * sizeof (FloatType));
+        }
     }
     
     void setSubtractionStrength (std::atomic<float>* subtractionStrength)
     {
         mSubtractionStrength = subtractionStrength;
         jassert (mSubtractionStrength);
-    }
-    
-    // Replaces the old noise spectrum with a new noise spectrum.
-    void loadNoiseSpectrum (const juce::HeapBlock<FloatType>& newNoiseSpectrum)
-    {
-        std::lock_guard<audio_spin_mutex> lock (mSpinMutex);
-        // TODO: add a safety check to ensure mNoiseSpectrum and newNoiseSpectrum have the same float type?
-        mNoiseSpectrum.realloc (mFFTSize);
-        std::memcpy (mNoiseSpectrum, newNoiseSpectrum, mFFTSize * sizeof (FloatType));
-    }
-    
-    juce::HeapBlock<FloatType>& getNoiseSpectrum()
-    {
-        return mNoiseSpectrum;
     }
     
     //==============================================================================

@@ -32,8 +32,8 @@ SpectralSubtractorAudioProcessor::SpectralSubtractorAudioProcessor()
     
     mSpectralSubtractor.updateParameters (FFTSize[mFFTSizeParam->getIndex()],
                                           WindowOverlap[mWindowOverlapParam->getIndex()],
-                                          mWindowParam->getIndex());
-    mSpectralSubtractor.reset (FFTSize[mFFTSizeParam->getIndex()]);
+                                          mWindowParam->getIndex(),
+                                          nullptr);
     
     mFormatManager = std::make_unique<AudioFormatManager>();
     mFormatManager->registerBasicFormats();
@@ -179,7 +179,8 @@ void SpectralSubtractorAudioProcessor::prepareToPlay (double sampleRate, int sam
     mSpectralSubtractor.setNumChannels (getTotalNumInputChannels());
     mSpectralSubtractor.updateParameters (FFTSize[mFFTSizeParam->getIndex()],
                                           WindowOverlap[mWindowOverlapParam->getIndex()],
-                                          mWindowParam->getIndex());
+                                          mWindowParam->getIndex(),
+                                          nullptr);
     
     {
         const juce::ScopedLock lock (mBackgroundMutex);
@@ -250,7 +251,7 @@ void SpectralSubtractorAudioProcessor::getStateInformation (MemoryBlock& destDat
 {
     DBG ("GET STATE INFORMATION");
     
-    juce::File xmlFile = juce::File::getSpecialLocation (juce::File::SpecialLocationType::userDesktopDirectory).getChildFile ("SpectralSubtractor.xml");
+//    juce::File xmlFile = juce::File::getSpecialLocation (juce::File::SpecialLocationType::userDesktopDirectory).getChildFile ("SpectralSubtractor.xml");
     
     if (mNoiseBuffer.getNumChannels() != 0 && mNoiseBuffer.getNumSamples() != 0)
     {
@@ -276,7 +277,7 @@ void SpectralSubtractorAudioProcessor::getStateInformation (MemoryBlock& destDat
     std::unique_ptr<juce::XmlElement> xml (state.createXml());
     copyXmlToBinary (*xml, destData);
     
-    xml->writeTo (xmlFile, XmlElement::TextFormat());
+//    xml->writeTo (xmlFile, XmlElement::TextFormat());
 }
 
 // Restore the plugin's state from an XML object
@@ -418,15 +419,11 @@ void SpectralSubtractorAudioProcessor::checkIfSpectralSubtractorNeedsUpdate()
             
             std::lock_guard<audio_spin_mutex> lock (mSpinMutex);
             
-            // Update FFT settings
+            // Update the FFT settings and load the new noise spectrum
             mSpectralSubtractor.updateParameters (mBG_FFT->getSize(),
                                                   mBG_overlap,
-                                                  mBG_WindowIndex);
-            
-            if (threadShouldExit()) return;
-            
-            // Load the new noise spectrum
-            mSpectralSubtractor.loadNoiseSpectrum (mTempNoiseSpectrum);
+                                                  mBG_WindowIndex,
+                                                  &mTempNoiseSpectrum);
             
             if (threadShouldExit()) return;
             
@@ -440,15 +437,11 @@ void SpectralSubtractorAudioProcessor::checkIfSpectralSubtractorNeedsUpdate()
         {
             std::lock_guard<audio_spin_mutex> lock (mSpinMutex);
             
-            // Update FFT settings
+            // Update FFT settings and allocate an empty noise spectrum
             mSpectralSubtractor.updateParameters (mBG_FFT->getSize(),
                                                   mBG_overlap,
-                                                  mBG_WindowIndex);
-            
-            if (threadShouldExit()) return;
-            
-            // Initialize empty noise spectrum
-            mSpectralSubtractor.reset (mBG_FFT->getSize());
+                                                  mBG_WindowIndex,
+                                                  nullptr);
         }
     }
     else
