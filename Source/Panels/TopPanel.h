@@ -25,9 +25,15 @@ public:
 
 private:
     TextButton mLoadFileButton;
+    
     NonAutoParameterComboBox mFFTSizeComboBox {mProcessor->getNonAutoParameterWithID (ParameterID[kParameter_FFTSize])};
     NonAutoParameterComboBox mWindowOverlapComboBox {mProcessor->getNonAutoParameterWithID (ParameterID[kParameter_WindowOverlap])};
     NonAutoParameterComboBox mWindowComboBox {mProcessor->getNonAutoParameterWithID (ParameterID[kParameter_Window])};
+    
+    juce::Label mFFTSizeLabel {ParameterID[kParameter_FFTSize], ParameterLabel[kParameter_FFTSize]};
+    juce::Label mWindowOverlapLabel {ParameterID[kParameter_WindowOverlap], ParameterLabel[kParameter_WindowOverlap]};
+    juce::Label mWindowComboLabel {ParameterID[kParameter_Window], ParameterLabel[kParameter_Window]};
+    
     std::unique_ptr<juce::FileChooser> mFileChooser;
         
     void loadFile();

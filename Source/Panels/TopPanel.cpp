@@ -25,6 +25,18 @@ TopPanel::TopPanel (SpectralSubtractorAudioProcessor* inProcessor)
     
     addAndMakeVisible (mWindowComboBox);
     mWindowComboBox.onChange = [this] { triggerAsyncUpdate(); };
+    
+    addAndMakeVisible (mFFTSizeLabel);
+    mFFTSizeLabel.setColour (juce::Label::textColourId, juce::Colours::black);
+    mFFTSizeLabel.attachToComponent (&mFFTSizeComboBox, true);
+    
+    addAndMakeVisible (mWindowOverlapLabel);
+    mWindowOverlapLabel.setColour (juce::Label::textColourId, juce::Colours::black);
+    mWindowOverlapLabel.attachToComponent (&mWindowOverlapComboBox, true);
+    
+    addAndMakeVisible (mWindowComboLabel);
+    mWindowComboLabel.setColour (juce::Label::textColourId, juce::Colours::black);
+    mWindowComboLabel.attachToComponent (&mWindowComboBox, true);
 }
 
 TopPanel::~TopPanel() {}
@@ -34,7 +46,7 @@ void TopPanel::resized()
     int height = getHeight();
     float padding = 0.04f * height;
     float componentHeight = 0.2f * height;
-    auto area = getLocalBounds().reduced (padding);
+    auto area = getLocalBounds().reduced (padding).removeFromRight (0.6f * getWidth());
     
     mLoadFileButton.setBounds (area.removeFromTop (componentHeight));
     area.removeFromTop (padding);
