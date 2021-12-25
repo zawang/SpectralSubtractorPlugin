@@ -31,17 +31,18 @@ TopPanel::~TopPanel() {}
 
 void TopPanel::resized()
 {
-    int width = getWidth();
     int height = getHeight();
-    float borderGap = width * 0.025f;
+    float padding = 0.04f * height;
+    float componentHeight = 0.2f * height;
+    auto area = getLocalBounds().reduced (padding);
     
-    mLoadFileButton.setBounds (borderGap, borderGap, width * 0.4f, height * 0.15f);
-
-    mFFTSizeComboBox.setBounds (borderGap, mLoadFileButton.getBottom() + borderGap, width * 0.5f, height * 0.2f);
-    
-    mWindowOverlapComboBox.setBounds (borderGap, mFFTSizeComboBox.getBottom() + borderGap, width * 0.5f, height * 0.2f);
-    
-    mWindowComboBox.setBounds (borderGap, mWindowOverlapComboBox.getBottom() + borderGap, width * 0.5f, height * 0.2f);
+    mLoadFileButton.setBounds (area.removeFromTop (componentHeight));
+    area.removeFromTop (padding);
+    mFFTSizeComboBox.setBounds (area.removeFromTop (componentHeight));
+    area.removeFromTop (padding);
+    mWindowOverlapComboBox.setBounds (area.removeFromTop (componentHeight));
+    area.removeFromTop (padding);
+    mWindowComboBox.setBounds (area.removeFromTop (componentHeight));
 }
 
 void TopPanel::loadFile()
@@ -80,7 +81,7 @@ void TopPanel::loadFile()
 /**
  Coalesces FFT setting updates into a single callback.
  When the top panel is constructed, all three FFT setting comboboxes have their onChange callback triggered.
- Coalescing these updates with an AsyncUpdater makes it so that the body of this function  executes probably only once instead of three times.
+ Coalescing these updates with an AsyncUpdater makes it so that the body of this function executes probably only once instead of three times.
 */
 void TopPanel::handleAsyncUpdate()
 {
