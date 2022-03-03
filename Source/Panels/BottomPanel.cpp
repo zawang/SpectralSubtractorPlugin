@@ -10,6 +10,8 @@
 
 #include "BottomPanel.h"
 
+#include "../Helper/HelperFunctions.h"
+
 BottomPanel::BottomPanel (SpectralSubtractorAudioProcessor* inProcessor)
     : PanelBase (inProcessor)
 {

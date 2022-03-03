@@ -78,8 +78,8 @@ void TopPanel::loadFile()
                                       juce::String path = file.getFullPathName();
                                       
                                       {
-                                          const juce::ScopedLock lock (mProcessor->mPathMutex);
-                                          mProcessor->mChosenPath.swapWith (path);
+                                          const juce::ScopedLock lock (mProcessor->pathMutex);
+                                          mProcessor->chosenPath.swapWith (path);
                                       }
                                       
                                       mProcessor->notify();
@@ -97,6 +97,6 @@ void TopPanel::loadFile()
 */
 void TopPanel::handleAsyncUpdate()
 {
-    const juce::ScopedLock lock (mProcessor->mBackgroundMutex);
-    mProcessor->mRequiresUpdate = true;
+    const juce::ScopedLock lock (mProcessor->backgroundMutex);
+    mProcessor->requiresUpdate = true;
 }

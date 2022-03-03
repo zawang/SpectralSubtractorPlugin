@@ -12,11 +12,11 @@
 
 MainPanel::MainPanel (SpectralSubtractorAudioProcessor* inProcessor)
     : PanelBase (inProcessor),
-      mTopPanel (inProcessor),
-      mBottomPanel (inProcessor)
+      mTopPanel (inProcessor)/*,
+      mBottomPanel (inProcessor)*/
 {
     addAndMakeVisible (mTopPanel);
-    addAndMakeVisible (mBottomPanel);
+//    addAndMakeVisible (mBottomPanel);
 }
 
 MainPanel::~MainPanel() {}
@@ -27,5 +27,5 @@ void MainPanel::resized()
     int height = getHeight();
     
     mTopPanel.setBounds (0, 0, width, 0.4f * height);
-    mBottomPanel.setBounds (0, mTopPanel.getHeight(), width, height - mTopPanel.getHeight());
+//    mBottomPanel.setBounds (0, mTopPanel.getHeight(), width, height - mTopPanel.getHeight());
 }

@@ -11,6 +11,7 @@
 #pragma once
 
 #include "JuceHeader.h"
+#include "NonAutoParameter.h"
 
 /**
     Each component wrapper class maintains a connection with a non-automatable parameter.

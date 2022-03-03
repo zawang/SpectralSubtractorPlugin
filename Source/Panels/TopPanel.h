@@ -11,6 +11,8 @@
 #pragma once
 #include "PanelBase.h"
 #include "../Helper/NonAutoParameterComponent.h"
+#include "../Helper/Parameters.h"
+#include "../Plugin/PluginProcessor.h"
 
 class TopPanel
 :   public PanelBase,
@@ -26,9 +28,9 @@ public:
 private:
     TextButton mLoadFileButton;
     
-    NonAutoParameterComboBox mFFTSizeComboBox {mProcessor->getNonAutoParameterWithID (ParameterID[kParameter_FFTSize])};
-    NonAutoParameterComboBox mWindowOverlapComboBox {mProcessor->getNonAutoParameterWithID (ParameterID[kParameter_WindowOverlap])};
-    NonAutoParameterComboBox mWindowComboBox {mProcessor->getNonAutoParameterWithID (ParameterID[kParameter_Window])};
+    NonAutoParameterComboBox mFFTSizeComboBox {*mProcessor->getNonAutoParameterWithID (ParameterID[kParameter_FFTSize])};
+    NonAutoParameterComboBox mWindowOverlapComboBox {*mProcessor->getNonAutoParameterWithID (ParameterID[kParameter_WindowOverlap])};
+    NonAutoParameterComboBox mWindowComboBox {*mProcessor->getNonAutoParameterWithID (ParameterID[kParameter_Window])};
     
     juce::Label mFFTSizeLabel {ParameterID[kParameter_FFTSize], ParameterLabel[kParameter_FFTSize]};
     juce::Label mWindowOverlapLabel {ParameterID[kParameter_WindowOverlap], ParameterLabel[kParameter_WindowOverlap]};

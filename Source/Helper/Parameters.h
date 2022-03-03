@@ -50,7 +50,7 @@ enum FFTSizeIndex
     kNumFFTSizes
 };
 
-static const std::array<int, kNumFFTSizes> FFTSize =
+static constexpr std::array<int, kNumFFTSizes> FFTSize =
 {
     32,
     64,
@@ -82,7 +82,7 @@ enum WindowOverlapIndex
     kNumWindowOverlaps
 };
 
-static const std::array<int, kNumWindowOverlaps> WindowOverlap =
+static constexpr std::array<int, kNumWindowOverlaps> WindowOverlap =
 {
     2,
     4,

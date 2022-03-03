@@ -11,7 +11,8 @@
 #pragma once
 #include "PanelBase.h"
 #include "../Helper/ParameterComponent.h"
-#include "../Helper/HelperFunctions.h"
+#include "../Helper/Parameters.h"
+#include "../Plugin/PluginProcessor.h"
 
 class BottomPanel
 :   public PanelBase
