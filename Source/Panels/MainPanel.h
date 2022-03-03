@@ -11,7 +11,7 @@
 #pragma once
 #include "PanelBase.h"
 #include "TopPanel.h"
-//#include "BottomPanel.h"
+#include "BottomPanel.h"
 
 // This class will be the parent component of all the other sub panels
 
@@ -26,5 +26,5 @@ public:
 
 private:
     TopPanel mTopPanel;
-//    BottomPanel mBottomPanel;
+    BottomPanel mBottomPanel;
 };
