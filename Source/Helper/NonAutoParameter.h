@@ -11,8 +11,10 @@
 #pragma once
 #include "JuceHeader.h"
 
-static const juce::Identifier NonAutoParamIDTag {"id"};
-static const juce::Identifier NonAutoParamValueTag {"value"};
+namespace {
+    const juce::Identifier NonAutoParamIDTag {"id"};
+    const juce::Identifier NonAutoParamValueTag {"value"};
+}
 
 /**
     NonAutoParameter is somewhat like a non-automatable version of juce::RangedAudioParameter, though it's much simpler.

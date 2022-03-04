@@ -10,9 +10,6 @@
 
 #pragma once
 #include "JuceHeader.h"
-//#include "../Plugin/PluginProcessor.h"
-
-// All other panels are derived from PanelBase
 
 class SpectralSubtractorAudioProcessor;
 

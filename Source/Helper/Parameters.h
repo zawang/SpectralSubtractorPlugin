@@ -10,6 +10,8 @@
 
 #pragma once
 
+#include "../JuceLibraryCode/JuceHeader.h"
+
 enum Parameter
 {
     kParameter_SubtractionStrength = 0,
@@ -100,7 +102,7 @@ inline juce::StringArray getWindowOverlapItems()
 static const juce::StringArray WindowOverlapItemsUI = getWindowOverlapItems();
 
 //==============================================================================
-static const StringArray WindowTypeItemsUI =
+static const juce::StringArray WindowTypeItemsUI =
 {
     "Rectangular",
     "Bartlett",

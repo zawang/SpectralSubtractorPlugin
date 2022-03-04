@@ -10,8 +10,9 @@
 
 #include "PluginProcessor.h"
 #include "PluginEditor.h"
-//#include "../Tests/test_main.cpp"
+#include "../Helper/Parameters.h"
 #include "../Helper/NonAutoParameter.h"
+//#include "../Tests/test_main.cpp"
 
 namespace {
     // One audio channel of FFT data over time, really 2-dimensional

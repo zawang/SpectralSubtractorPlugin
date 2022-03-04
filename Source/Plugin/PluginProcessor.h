@@ -13,11 +13,13 @@
 #include "../JuceLibraryCode/JuceHeader.h"
 #include "../DSP/SpectralSubtractor.h"
 #include "../Helper/IDs.h"
-#include "../Helper/NonAutoParameter.h"
 
 //==============================================================================
 /**
 */
+
+class NonAutoParameterChoice;
+
 class SpectralSubtractorAudioProcessor  : public AudioProcessor, public juce::Thread
 {
 public:
@@ -76,10 +78,10 @@ public:
     juce::String chosenPath;
 
 private:
-    std::atomic<float>* mSubtractionStrengthParam = nullptr;
-    std::unique_ptr<NonAutoParameterChoice> mFFTSizeParam = nullptr;
-    std::unique_ptr<NonAutoParameterChoice> mWindowOverlapParam = nullptr;
-    std::unique_ptr<NonAutoParameterChoice> mWindowParam = nullptr;
+    std::atomic<float>* mSubtractionStrengthParam {nullptr};
+    std::unique_ptr<NonAutoParameterChoice> mFFTSizeParam;
+    std::unique_ptr<NonAutoParameterChoice> mWindowOverlapParam;
+    std::unique_ptr<NonAutoParameterChoice> mWindowParam;
     std::map<juce::String, NonAutoParameterChoice*> mNonAutoParams;
     
     juce::ValueTree mAudioDataTree {IDs::AudioData};
