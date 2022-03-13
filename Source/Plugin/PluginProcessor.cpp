@@ -485,7 +485,7 @@ void SpectralSubtractorAudioProcessor::checkForPathToOpen()
         else
             errorMessage = juce::String ("Unable to read ") + noiseFile.getFullPathName();
         
-        if (errorMessage.isNotEmpty() && getActiveEditor() != nullptr)
+        if (errorMessage.isNotEmpty())
         {
             juce::NativeMessageBox::showAsync (MessageBoxOptions()
                                                .withIconType (MessageBoxIconType::InfoIcon)
