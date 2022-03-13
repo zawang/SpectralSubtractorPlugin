@@ -94,7 +94,8 @@ private:
     juce::HeapBlock<float> mTempNoiseSpectrum;
     std::unique_ptr<juce::AudioFormatReader> mReader;
     std::unique_ptr<juce::AudioFormatManager> mFormatManager;
-    juce::String mStatusMessage {"TODO..."};
+    juce::String mNoiseFileName {""};
+    juce::String mStatusMessage {""};
     
     juce::UnitTestRunner mUnitTestRunner;
     

@@ -462,9 +462,10 @@ void SpectralSubtractorAudioProcessor::checkForPathToOpen()
                 
                 if (true)   // TODO: restrict how long the noise file can be?
                 {
+                    mNoiseFileName = noiseFile.getFileName();
                     {
                         const juce::ScopedLock lock (statusMessageMutex);
-//                        mStatusMessage = juce::String ("Loading \"" +  + "\"...");
+                        mStatusMessage = juce::String ("Loading \"" + mNoiseFileName + "\"...");
                     }
                     
                     mNoiseBuffer.setSize ((int) mReader->numChannels,
@@ -518,7 +519,7 @@ void SpectralSubtractorAudioProcessor::checkIfSpectralSubtractorNeedsUpdate()
         {
             {
                 const juce::ScopedLock lock (statusMessageMutex);
-//                mStatusMessage = juce::String ("Calculating \"" +  + "\" spectrum...");
+                mStatusMessage = juce::String ("Calculating \"" + mNoiseFileName + "\" spectrum...");
             }
             
             // Compute spectrogram of noise signal
@@ -542,9 +543,9 @@ void SpectralSubtractorAudioProcessor::checkIfSpectralSubtractorNeedsUpdate()
             
             {
                 const juce::ScopedLock lock (statusMessageMutex);
-//                mStatusMessage = ;
+                mStatusMessage = mNoiseFileName;
             }
-//            DBG ("Successfully loaded \"" +  + "\"");
+            DBG ("Successfully loaded \"" + mNoiseFileName + "\"");
         }
         else
         {
