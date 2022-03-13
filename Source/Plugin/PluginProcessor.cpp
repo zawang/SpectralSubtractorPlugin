@@ -194,19 +194,9 @@ NonAutoParameterChoice* SpectralSubtractorAudioProcessor::getNonAutoParameterWit
     return mNonAutoParams[parameterID];
 }
 
-juce::AudioFormatManager* SpectralSubtractorAudioProcessor::getFormatManager()
+const juce::AudioFormatManager* SpectralSubtractorAudioProcessor::getFormatManager() const
 {
     return mFormatManager.get();
-}
-
-int SpectralSubtractorAudioProcessor::getFFTSize()
-{
-    return FFTSize[mFFTSizeParam->getIndex()];
-}
-
-int SpectralSubtractorAudioProcessor::getWindowOverlap()
-{
-    return WindowOverlap[mWindowOverlapParam->getIndex()];
 }
 
 const juce::String& SpectralSubtractorAudioProcessor::getStatusMessage() const
@@ -524,7 +514,7 @@ void SpectralSubtractorAudioProcessor::checkIfSpectralSubtractorNeedsUpdate()
             
             // Compute spectrogram of noise signal
             Spectrogram<float> noiseSpectrogram;
-            makeSpectrogram (noiseSpectrogram, mNoiseBuffer, *(mBG_FFT.get()), mBG_HopSize, *(mBG_Window.get()));
+            makeSpectrogram (noiseSpectrogram, mNoiseBuffer, *mBG_FFT, mBG_HopSize, *mBG_Window);
             
             if (threadShouldExit()) return;
 

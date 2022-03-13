@@ -55,17 +55,17 @@ public:
         #endif
     }
     
-    const juce::ValueTree getValueTree()
+    const juce::ValueTree getValueTree() const
     {
         return mParameter;
     }
     
-    const juce::String& getParameterID()
+    const juce::String& getParameterID() const
     {
         return mParameterID;
     }
     
-    const juce::String& getParameterName()
+    const juce::String& getParameterName() const
     {
         return mParameterName;
     }
@@ -75,7 +75,7 @@ public:
         mParameter.setProperty (NonAutoParamValueTag, newValue, nullptr);
     }
     
-    const juce::var getValue()
+    const juce::var getValue() const
     {
         return mAtomicValue.load();
     }
@@ -107,7 +107,7 @@ public:
     
     ~NonAutoParameterChoice() {}
     
-    int getIndex()
+    const int getIndex() const
     {
         return getValue();
     }

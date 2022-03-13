@@ -66,9 +66,7 @@ public:
     
     juce::AudioProcessorValueTreeState apvts {*this, nullptr, juce::Identifier ("SpectralSubtractor"), createParameterLayout()};
     
-    juce::AudioFormatManager* getFormatManager();
-    int getFFTSize();
-    int getWindowOverlap();
+    const juce::AudioFormatManager* getFormatManager() const;
     
     const juce::String& getStatusMessage() const;
     
