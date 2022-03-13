@@ -15,7 +15,8 @@
 #include "../Plugin/PluginProcessor.h"
 
 class BottomPanel
-:   public PanelBase
+:   public PanelBase,
+    public juce::Timer
 {
 public:
     BottomPanel (SpectralSubtractorAudioProcessor* inProcessor);
@@ -24,6 +25,9 @@ public:
     void resized() override;
     void paint (Graphics& g) override;
     
+    void timerCallback() override;
+    
 private:
     ParameterSlider mSlider {mProcessor->apvts, ParameterID[kParameter_SubtractionStrength], ParameterLabel[kParameter_SubtractionStrength]};
+    juce::Label mNoiseSpectrumStatus {"NoiseSpectrumStatus", ""};
 };

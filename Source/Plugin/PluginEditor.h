@@ -32,9 +32,6 @@ private:
     
     MainPanel mMainPanel;      // mMainPanel will contain all the other sub panels
     
-    const int mDefaultWidth = 270;
-    const int mDefaultHeight = 375;
-    
     const juce::File mSpectralSubtractorDirectory { juce::File::getSpecialLocation (juce::File::userApplicationDataDirectory).getChildFile ("Application Support/Zach Wang/Spectral Subtractor") };
     const juce::File mSettingsFile { mSpectralSubtractorDirectory.getChildFile ("settings.xml") };
     juce::XmlElement mSettingsXml {"SpectralSubtractor"};

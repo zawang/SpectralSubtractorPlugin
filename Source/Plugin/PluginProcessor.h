@@ -70,11 +70,14 @@ public:
     int getFFTSize();
     int getWindowOverlap();
     
+    const juce::String& getStatusMessage() const;
+    
     void run() override;
     
     bool requiresUpdate {true};
     juce::CriticalSection backgroundMutex;
     juce::CriticalSection pathMutex;
+    juce::CriticalSection statusMessageMutex;
     juce::String chosenPath;
 
 private:
@@ -91,6 +94,7 @@ private:
     juce::HeapBlock<float> mTempNoiseSpectrum;
     std::unique_ptr<juce::AudioFormatReader> mReader;
     std::unique_ptr<juce::AudioFormatManager> mFormatManager;
+    juce::String mStatusMessage {"TODO..."};
     
     juce::UnitTestRunner mUnitTestRunner;
     

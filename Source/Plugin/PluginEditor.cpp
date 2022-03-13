@@ -9,6 +9,7 @@
 */
 
 #include "PluginEditor.h"
+#include "../Helper/InterfaceConstants.h"
 
 //==============================================================================
 SpectralSubtractorAudioProcessorEditor::SpectralSubtractorAudioProcessorEditor (SpectralSubtractorAudioProcessor& p)
@@ -21,7 +22,7 @@ SpectralSubtractorAudioProcessorEditor::SpectralSubtractorAudioProcessorEditor (
     getConstrainer()->setFixedAspectRatio (0.72);
     setSize (getConstrainer()->getFixedAspectRatio() * getSavedWindowHeight(), getSavedWindowHeight());
     setResizable (true, true);
-    setResizeLimits (mDefaultWidth, mDefaultHeight, 3 * mDefaultWidth, 3 * mDefaultHeight);
+    setResizeLimits (EditorDefaultWidth, EditorDefaultHeight, 3 * EditorDefaultWidth, 3 * EditorDefaultHeight);
 }
 
 SpectralSubtractorAudioProcessorEditor::~SpectralSubtractorAudioProcessorEditor()
@@ -52,7 +53,7 @@ int SpectralSubtractorAudioProcessorEditor::getSavedWindowHeight()
 {
     std::unique_ptr<juce::XmlElement> parsedSettings {juce::XmlDocument::parse (mSettingsFile)};
     if (parsedSettings)
-        return parsedSettings->getIntAttribute (mWindowSizeAttrName, mDefaultHeight);
+        return parsedSettings->getIntAttribute (mWindowSizeAttrName, EditorDefaultHeight);
     else
-        return mDefaultHeight;
+        return EditorDefaultHeight;
 }

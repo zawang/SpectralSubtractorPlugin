@@ -209,6 +209,11 @@ int SpectralSubtractorAudioProcessor::getWindowOverlap()
     return WindowOverlap[mWindowOverlapParam->getIndex()];
 }
 
+const juce::String& SpectralSubtractorAudioProcessor::getStatusMessage() const
+{
+    return mStatusMessage;
+}
+
 //==============================================================================
 const String SpectralSubtractorAudioProcessor::getName() const
 {
@@ -457,6 +462,11 @@ void SpectralSubtractorAudioProcessor::checkForPathToOpen()
                 
                 if (true)   // TODO: restrict how long the noise file can be?
                 {
+                    {
+                        const juce::ScopedLock lock (statusMessageMutex);
+//                        mStatusMessage = juce::String ("Loading \"" +  + "\"...");
+                    }
+                    
                     mNoiseBuffer.setSize ((int) mReader->numChannels,
                                           (int) mReader->lengthInSamples,
                                           false,
@@ -482,7 +492,7 @@ void SpectralSubtractorAudioProcessor::checkForPathToOpen()
                 errorMessage = juce::String ("Noise file must be either mono or stereo!");
         }
         else
-            errorMessage = juce::String ("Unable to read ") + noiseFile.getFileName();
+            errorMessage = juce::String ("Unable to read ") + noiseFile.getFullPathName();
         
         if (errorMessage.isNotEmpty() && getActiveEditor() != nullptr)
         {
@@ -506,6 +516,11 @@ void SpectralSubtractorAudioProcessor::checkIfSpectralSubtractorNeedsUpdate()
         
         if (mNoiseBuffer.getNumChannels() != 0 && mNoiseBuffer.getNumSamples() != 0)
         {
+            {
+                const juce::ScopedLock lock (statusMessageMutex);
+//                mStatusMessage = juce::String ("Calculating \"" +  + "\" spectrum...");
+            }
+            
             // Compute spectrogram of noise signal
             Spectrogram<float> noiseSpectrogram;
             makeSpectrogram (noiseSpectrogram, mNoiseBuffer, *(mBG_FFT.get()), mBG_HopSize, *(mBG_Window.get()));
@@ -525,11 +540,11 @@ void SpectralSubtractorAudioProcessor::checkIfSpectralSubtractorNeedsUpdate()
             
             if (threadShouldExit()) return;
             
-            if (getActiveEditor() != nullptr)
-                juce::NativeMessageBox::showAsync (MessageBoxOptions()
-                                                   .withIconType (MessageBoxIconType::InfoIcon)
-                                                   .withMessage ("Successfully loaded noise spectrum!"),
-                                                   nullptr);
+            {
+                const juce::ScopedLock lock (statusMessageMutex);
+//                mStatusMessage = ;
+            }
+//            DBG ("Successfully loaded \"" +  + "\"");
         }
         else
         {
